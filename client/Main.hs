@@ -6,14 +6,11 @@ module Main where
 import Common (haskellMisoComponent)
 -----------------------------------------------------------------------------
 import Miso
-import Miso.String
 -----------------------------------------------------------------------------
 #ifdef WASM
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
 main :: IO ()
-main = run $ miso $ \uri -> (haskellMisoComponent uri)
-  { logLevel = DebugAll
-  }
+main = run (miso haskellMisoComponent)
 -----------------------------------------------------------------------------

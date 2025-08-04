@@ -87,7 +87,6 @@ secs = (*1000000)
 haskellMisoComponent :: URI -> HaskellMisoComponent
 haskellMisoComponent uri = (app uri)
   { subs = [ uriSub HandleURI ]
-  , logLevel = DebugAll
   }
 -----------------------------------------------------------------------------  
 app :: URI -> App Model Action

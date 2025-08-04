@@ -178,9 +178,9 @@ analytics =
 pages :: [ (String, Page) ]
 pages =
   [ "community.html" =: mkPage uriCommunity
-  , "example.html"   =: mkPage uriExamples
+  , "examples.html"  =: mkPage uriExamples
   , "docs.html"      =: mkPage uriDocs
-  , "index.html"      =: mkPage uriHome
+  , "index.html"     =: mkPage uriHome
   , "404.html"       =: mkPage uri404
   ] where
       mkPage :: URI -> Page
