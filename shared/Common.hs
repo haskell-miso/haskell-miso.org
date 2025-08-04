@@ -204,7 +204,7 @@ docs = template $
   ]
 -----------------------------------------------------------------------------
 misoSrc :: MisoString
-misoSrc = pack "static/miso.png"
+misoSrc = pack "miso.png"
 -----------------------------------------------------------------------------
 examples :: Model -> View model Action
 examples = template $

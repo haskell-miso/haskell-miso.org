@@ -106,7 +106,7 @@ instance ToHtml Page where
           ]
         , link_
           [ rel_ "icon"
-          , href_ "static/favicon.ico"
+          , href_ "/favicon.ico"
           , type_ "image/x-icon"
           ]
         , meta_
