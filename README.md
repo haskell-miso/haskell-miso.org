@@ -1,9 +1,9 @@
 :ramen: haskell-miso.org
 ====================
 
-The official haskell-miso.org website.
+The official [haskell-miso.org](https://haskell-miso.org) website.
 
-See [live](https://official.haskell-miso.org)
+See [live](https://haskell-miso.org)
 
 ### Development
 
