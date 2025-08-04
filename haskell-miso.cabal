@@ -48,7 +48,7 @@ common common-modules
   other-modules:
      Common
 
-executable server
+executable prerender
   import:
      server-only, common-modules, common-options
   main-is:
@@ -62,12 +62,13 @@ executable server
     base < 5,
     bytestring,
     miso,
+    mtl,
     servant,
     text
   default-language:
     Haskell2010
 
-executable client
+executable app
   import:
     client-only, common-modules, common-options
   main-is:

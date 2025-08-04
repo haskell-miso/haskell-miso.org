@@ -33,3 +33,6 @@ coverage/
 
 # haddocks
 haddocks/
+haddocks/dist*
+result
+public

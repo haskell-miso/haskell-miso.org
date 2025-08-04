@@ -1,4 +1,3 @@
-
 .PHONY= update build optim
 
 all: update build prerender optim
@@ -7,15 +6,15 @@ update:
 	wasm32-wasi-cabal update
 
 build:
-	wasm32-wasi-cabal build client
+	wasm32-wasi-cabal build app
 	rm -rf public
 	cp -rv static public
-	$(eval my_wasm=$(shell wasm32-wasi-cabal list-bin client | tail -n 1))
+	$(eval my_wasm=$(shell wasm32-wasi-cabal list-bin app | tail -n 1))
 	$(shell wasm32-wasi-ghc --print-libdir)/post-link.mjs --input $(my_wasm) --output public/ghc_wasm_jsffi.js
 	cp -v $(my_wasm) public/
 
 prerender:
-	nix develop --command bash -c "cabal run server"
+	nix develop --command bash -c "cabal run prerender"
 
 optim:
 	wasm-opt -all -O2 public/app.wasm -o public/app.wasm

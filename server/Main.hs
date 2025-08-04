@@ -15,7 +15,6 @@ module Main (main) where
 import Common
   ( Page (..)
   , Model
-  , ServerRoutes
   , haskellMisoComponent
   , uri404
   , uriCommunity
@@ -24,12 +23,13 @@ import Common
   , uriHome
   )
 -----------------------------------------------------------------------------
-import           Data.Aeson (ToJSON)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
+import           Control.Monad (forM_)
+import           Data.Aeson (ToJSON, encodeFile)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Text                  as T
+import qualified Data.Text.IO               as T
 import           GHC.Generics (Generic)
-import           Servant
+import           Servant.API
 -----------------------------------------------------------------------------
 import           Miso hiding (run)
 import           Miso.String
@@ -38,17 +38,20 @@ import           Miso.String
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
--- |
 main :: IO ()
 main = prerender
 -----------------------------------------------------------------------------
 -- | Render out, pages, manifest, robots.txt, llms.txt?
 prerender :: IO ()
 prerender = do
+  putStrLn "Generating server assets..."
+  putStrLn "Writing robots.txt..."
   T.writeFile "public/robots.txt" robotsTxt
+  putStrLn "Writing manifest.json..."
   encodeFile "public/manifest.json" misoManifest
-  forM_ pages $ \(fileName, page) ->
-    BL8.writeFile ("public/" <> fileName) (toHtml page)
+  forM_ pages $ \(fileName, page_) -> do
+    putStrLn ("Writing " <> fileName <> "...")
+    BL8.writeFile ("public/" <> fileName) (toHtml page_)
 -----------------------------------------------------------------------------
 robotsTxt :: Text
 robotsTxt =
@@ -131,7 +134,7 @@ instance ToHtml Page where
         , cssRef fontAwesomeRef
         , jsRef "https://buttons.github.io/buttons.js"
         , script_ [] analytics
-        , jsRef "static/all.js"
+        , jsRef "index.js"
         , body_ [] [toView @Model x]
         ]
       ]
@@ -142,6 +145,7 @@ instance ToHtml Page where
         [ src_ href
         , async_ "true"
         , defer_ "true"
+        , type_ "module"
         ] mempty
       cssRef href =
         link_
@@ -171,12 +175,12 @@ analytics =
   ]
 -----------------------------------------------------------------------------
 -- | Server handlers
-pages :: [ (MisoString, Page) ]
+pages :: [ (String, Page) ]
 pages =
   [ "community.html" =: mkPage uriCommunity
   , "example.html"   =: mkPage uriExamples
   , "docs.html"      =: mkPage uriDocs
-  , "home.html"      =: mkPage uriHome
+  , "index.html"      =: mkPage uriHome
   , "404.html"       =: mkPage uri404
   ] where
       mkPage :: URI -> Page
