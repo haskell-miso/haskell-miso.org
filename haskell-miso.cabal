@@ -78,8 +78,9 @@ executable client
     -DGHCJS_BROWSER
   hs-source-dirs:
     client, shared
-  other-modules:
-    DevelMain
+  if flag(dev)
+    other-modules:
+      DevelMain
   build-depends:
     aeson,
     base < 5,
