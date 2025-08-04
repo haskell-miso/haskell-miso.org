@@ -94,9 +94,9 @@ instance ToHtml Page where
       [ lang_ "en"
       ]
       [ head_
+        []
         [ title_ "Miso: A tasty Haskell web and mobile framework"
-        ]
-        [ link_
+        , link_
           [ rel_ "stylesheet"
           , href_ "https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css"
           ]
