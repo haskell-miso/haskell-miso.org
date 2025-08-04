@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Common where
 -----------------------------------------------------------------------------
-import           Control.Monad.State
 import           Data.Bool
 import           Data.Proxy
 import           Servant.API
@@ -19,6 +18,7 @@ import           Servant.Links
 -----------------------------------------------------------------------------
 import           Miso
 import           Miso.String
+import           Miso.Lens
 import qualified Miso.Style as CSS
 -----------------------------------------------------------------------------
 {- | We can pretty much share everything
@@ -29,9 +29,15 @@ import qualified Miso.Style as CSS
 -----------------------------------------------------------------------------
 data Model
   = Model
-  { uri :: URI
-  , navMenuOpen :: Bool
+  { _uri :: URI
+  , _navMenuOpen :: Bool
   } deriving (Show, Eq)
+-----------------------------------------------------------------------------
+uri :: Lens Model URI
+uri = lens _uri $ \record field -> record { _uri = field }
+-----------------------------------------------------------------------------
+navMenuOpen :: Lens Model Bool
+navMenuOpen = lens _navMenuOpen $ \record field -> record { _navMenuOpen = field }
 -----------------------------------------------------------------------------
 data Action
   = ChangeURI URI
@@ -55,16 +61,11 @@ type Routes a =
 -----------------------------------------------------------------------------
 type ClientRoutes = Routes (View Model Action)
 -----------------------------------------------------------------------------
-type ServerRoutes = Routes (Get '[HTML] Page)
------------------------------------------------------------------------------
 type HaskellMisoComponent = App Model Action
 -----------------------------------------------------------------------------
 uriHome, uriExamples, uriDocs, uriCommunity, uri404 :: URI
-uriExamples
-  :<|> uriDocs
-  :<|> uriCommunity
-  :<|> uriHome
-  :<|> uri404 = allLinks' linkURI (Proxy @ClientRoutes)
+uriExamples :<|> uriDocs :<|> uriCommunity :<|> uriHome :<|> uri404 =
+  allLinks' linkURI (Proxy @ClientRoutes)
 -----------------------------------------------------------------------------
 newtype Page = Page HaskellMisoComponent
 -----------------------------------------------------------------------------
@@ -85,32 +86,31 @@ secs :: Int -> Int
 secs = (*1000000)
 -----------------------------------------------------------------------------
 haskellMisoComponent :: URI -> HaskellMisoComponent
-haskellMisoComponent uri = (app uri)
+haskellMisoComponent uri_ = (haskellMiso uri_)
   { subs = [ uriSub HandleURI ]
   }
 -----------------------------------------------------------------------------  
-app :: URI -> App Model Action
-app currentUri = component emptyModel updateModel viewModel
+haskellMiso :: URI -> App Model Action
+haskellMiso currentUri = component emptyModel updateModel viewModel
   where
     emptyModel = Model currentUri False
     viewModel m =
-      case route (Proxy :: Proxy ClientRoutes) clientHandlers uri m of
+      case route (Proxy :: Proxy ClientRoutes) clientHandlers _uri m of
         Left _ -> the404 m
         Right view_ -> view_
 -----------------------------------------------------------------------------
 updateModel :: Action -> Transition Model Action
 updateModel = \case
   HandleURI u ->
-    modify $ \m -> m { uri = u }
+    uri .= u
   ChangeURI u -> do
-    modify $ \m -> m { navMenuOpen = False }
+    navMenuOpen .= False
     io_ (pushURI u)
-  ToggleNavMenu -> do
-    m@Model{..} <- get
-    put m { navMenuOpen = not navMenuOpen }
+  ToggleNavMenu ->
+    navMenuOpen %= not
 -----------------------------------------------------------------------------
 -- | Views
-community :: Model -> View model Action
+community :: Model -> View Model Action
 community = template $
   div_
   [ class_ "animated fadeIn"
@@ -165,7 +165,7 @@ community = template $
     ]
   ]
 -----------------------------------------------------------------------------
-docs :: Model -> View model Action
+docs :: Model -> View Model Action
 docs = template $
   div_
   [ class_ "animated fadeIn" ]
@@ -203,9 +203,9 @@ docs = template $
   ]
 -----------------------------------------------------------------------------
 misoSrc :: MisoString
-misoSrc = pack "miso.png"
+misoSrc = "miso.png"
 -----------------------------------------------------------------------------
-examples :: Model -> View model Action
+examples :: Model -> View Model Action
 examples = template $
   div_
   [ class_ "animated fadeIn" ]
@@ -263,7 +263,7 @@ examples = template $
     ]
   ]
 -----------------------------------------------------------------------------
-home :: Model -> View model Action
+home :: Model -> View Model Action
 home = template $
   div_
   [ class_ "animated fadeIn" ]
@@ -298,25 +298,25 @@ home = template $
     ]
   ]
 -----------------------------------------------------------------------------
-template :: View model Action -> Model -> View model Action
-template content Model{..} =
+template :: View Model Action -> Model -> View Model Action
+template content m =
   div_
   []
   [ a_
     [ class_ "github-fork-ribbon left-top fixed"
     , href_ "http://github.com/dmjio/miso"
-    , textProp "data-ribbon" ("Fork me on GitHub" :: MisoString)
+    , data_ "ribbon" "Fork me on GitHub"
     , target_ "blank"
     , rel_ "noopener"
     , title_ "Fork me on GitHub"
     ]
     [ "Fork me on GitHub" ]
-  , hero content uri navMenuOpen
+  , hero content (m ^. uri) (m ^. navMenuOpen)
   , middle
   , footer
   ]
 -----------------------------------------------------------------------------
-middle :: View model action
+middle :: View Model action
 middle =
   section_
   [ class_ "hero" ]
@@ -425,7 +425,7 @@ middle =
     ]
   ]
 
-cols :: View model action
+cols :: View Model action
 cols =
   section_
   []
@@ -467,7 +467,7 @@ cols =
     ]
   ]
 -----------------------------------------------------------------------------
-the404 :: Model -> View model Action
+the404 :: Model -> View Model Action
 the404 = template $
   div_
   []
@@ -496,33 +496,33 @@ the404 = template $
   ]
 -----------------------------------------------------------------------------
 -- | Github stars
-starMiso :: View model action
+starMiso :: View Model action
 starMiso =
   a_
-  [ class_ (pack "github-button")
-  , href_ (pack "https://github.com/dmjio/miso")
-  , textProp (pack "data-icon") "octicon-star"
-  , textProp (pack "data-size") "large"
-  , textProp (pack "data-show-count") "true"
-  , textProp (pack "aria-label") "Star dmjio/miso on GitHub"
+  [ class_ "github-button"
+  , href_ "https://github.com/dmjio/miso"
+  , data_ "icon" "octicon-star"
+  , data_ "size" "large"
+  , data_ "show-count" "true"
+  , aria_ "label" "Star dmjio/miso on GitHub"
   ]
   [ "Star"
   ]
 -----------------------------------------------------------------------------
-forkMiso :: View model action
+forkMiso :: View Model action
 forkMiso =
   a_
-  [ class_ (pack "github-button")
-  , href_ (pack "https://github.com/dmjio/miso/fork")
-  , textProp (pack "data-icon") "octicon-repo-forked"
-  , textProp (pack "data-size") "large"
-  , textProp (pack "data-show-count") "true"
-  , textProp (pack "aria-label") "Fork dmjio/miso on GitHub"
+  [ class_ "github-button"
+  , href_ "https://github.com/dmjio/miso/fork"
+  , data_ "icon" "octicon-repo-forked"
+  , data_ "size" "large"
+  , data_ "show-count" "true"
+  , aria_ "label" "Fork dmjio/miso on GitHub"
   ]
   [ "Fork" ]
 -----------------------------------------------------------------------------
 -- | Hero
-hero :: View model Action -> URI -> Bool -> View model Action
+hero :: View Model Action -> URI -> Bool -> View Model Action
 hero content uri' navMenuOpen' =
   section_
   [ class_ "hero is-medium is-primary is-bold has-text-centered" ]
@@ -626,7 +626,7 @@ onPreventClick action =
       (\() -> const action)
 -----------------------------------------------------------------------------
 -- | Footer
-footer :: View model action
+footer :: View Model action
 footer =
   footer_
   [ class_ "footer" ]
@@ -687,7 +687,7 @@ footer =
     ]
   ]
 -----------------------------------------------------------------------------
-newNav :: Bool -> View model Action
+newNav :: Bool -> View Model Action
 newNav navMenuOpen' =
   div_
   [ class_ "container" ]
@@ -734,8 +734,8 @@ newNav navMenuOpen' =
             ]
           ]
         , div_
-          [ class_ $ "navbar-burger burger " <> bool mempty "is-active" navMenuOpen'
-          , textProp (pack "data-target") (pack "navMenuIndex")
+          [ class_ ("navbar-burger burger " <> bool mempty "is-active" navMenuOpen')
+          , data_ "target" "navMenuIndex"
           , onClick ToggleNavMenu
           ]
           [ span_ [] []
@@ -836,7 +836,7 @@ newNav navMenuOpen' =
             , div_
               [ id_ "blogDropdown"
               , class_ "navbar-dropdown is-boxed"
-              , textProp (pack "data-style_") (pack "width: 18rem;")
+              , data_ "style_" "width: 18rem;"
               ]
               [ a_
                 [ class_ "navbar-item"
@@ -1014,9 +1014,9 @@ newNav navMenuOpen' =
                 [ a_
                   [ id_ "twitter"
                   , class_ "button"
-                  , textProp (pack "data-social-network_") (pack "Twitter")
-                  , textProp (pack "data-social-action_") (pack "tweet")
-                  , textProp (pack "data-social-target") (pack "http://bulma.io")
+                  , data_ "social-network_" "Twitter"
+                  , data_ "social-action_" "tweet"
+                  , data_ "social-target" "http://bulma.io"
                   , target_ "_blank"
                   , href_ "https://twitter.com/intent/tweet?text=Miso: a tasty Haskell front-end web and mobile framework&url=https://haskell-miso.org&via=dmjio"
                   ]
