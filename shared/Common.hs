@@ -16,10 +16,17 @@ import           Data.Proxy
 import           Servant.API
 import           Servant.Links
 -----------------------------------------------------------------------------
-import           Miso
+import           Miso hiding (URI(..))
 import           Miso.String
 import           Miso.Lens
-import qualified Miso.Style as CSS
+import qualified Miso.Html.Element as H
+import qualified Miso.Html.Event as E
+import qualified Miso.Html.Property as P
+import           Miso.Lens hiding (view)
+import qualified Miso.Router as R
+import qualified Miso.CSS as CSS
+-----------------------------------------------------------------------------
+import           Servant.Miso.Router
 -----------------------------------------------------------------------------
 {- | We can pretty much share everything
    | model, action, view, router, links, events map
@@ -95,7 +102,7 @@ haskellMiso currentUri = component emptyModel updateModel viewModel
   where
     emptyModel = Model currentUri False
     viewModel m =
-      case route (Proxy :: Proxy ClientRoutes) clientHandlers _uri m of
+      case route (Proxy :: Proxy ClientRoutes) clientHandlers undefined m of
         Left _ -> the404 m
         Right view_ -> view_
 -----------------------------------------------------------------------------
@@ -112,53 +119,53 @@ updateModel = \case
 -- | Views
 community :: Model -> View Model Action
 community = template $
-  div_
-  [ class_ "animated fadeIn"
+  H.div_
+  [ P.class_ "animated fadeIn"
   ]
-  [ a_
-    [ href_ "https://github.com/dmjio/miso"
+  [ H.a_
+    [ P.href_ "https://github.com/dmjio/miso"
     ]
-    [ img_
-      [ width_ "100"
-      , class_ "animated bounceInDown"
-      , src_ misoSrc
-      , alt_ "miso logo"
+    [ H.img_
+      [ P.width_ "100"
+      , P.class_ "animated bounceInDown"
+      , P.src_ misoSrc
+      , P.alt_ "miso logo"
       ]
     ]
-  , h1_
-    [ class_ "title animated pulse"
+  , H.h1_
+    [ P.class_ "title animated pulse"
     , CSS.style_
       [ CSS.fontSize "82px"
       , CSS.fontWeight "100"
       ]
     ]
     [ "community" ]
-  , h2_
-    [ class_ "subtitle animated pulse" ]
-    [ a_
-      [ href_ "https://github.com/haskell-miso"
-      , target_ "_blank"
+  , H.h2_
+    [ P.class_ "subtitle animated pulse" ]
+    [ H.a_
+      [ P.href_ "https://github.com/haskell-miso"
+      , P.target_ "_blank"
       ]
       [ "GitHub"
       ]
     , text " / "
-    , a_
-      [ href_ "https://matrix.to/#/#haskell-miso:matrix.org"
-      , target_ "_blank"
+    , H.a_
+      [ P.href_ "https://matrix.to/#/#haskell-miso:matrix.org"
+      , P.target_ "_blank"
       ]
       [ text "Matrix.org"
       ]
     , text " / "
-    , a_
-      [ href_ "https://www.irccloud.com/invite?channel=%23haskell-miso&hostname=irc.libera.chat&port=6697&ssl=1"
-      , target_ "_blank"
+    , H.a_
+      [ P.href_ "https://www.irccloud.com/invite?channel=%23haskell-miso&hostname=irc.libera.chat&port=6697&ssl=1"
+      , P.target_ "_blank"
       ]
       [ "#haskell-miso"
       ]
     , text " / "
-    , a_
-      [ href_ "https://discord.gg/QVDtfYNSxq"
-      , target_ "_blank"
+    , H.a_
+      [ P.href_ "https://discord.gg/QVDtfYNSxq"
+      , P.target_ "_blank"
       ]
       [ "Discord"
       ]
@@ -167,36 +174,36 @@ community = template $
 -----------------------------------------------------------------------------
 docs :: Model -> View Model Action
 docs = template $
-  div_
-  [ class_ "animated fadeIn" ]
-  [ a_
-    [ href_ "https://github.com/dmjio/miso" ]
-    [ img_
-      [ width_ "100"
-      , class_ "animated bounceInDown"
-      , src_ misoSrc
-      , alt_ "miso logo"
+  H.div_
+  [ P.class_ "animated fadeIn" ]
+  [ H.a_
+    [ P.href_ "https://github.com/dmjio/miso" ]
+    [ H.img_
+      [ P.width_ "100"
+      , P.class_ "animated bounceInDown"
+      , P.src_ misoSrc
+      , P.alt_ "miso logo"
       ]
     ]
-  , h1_
-    [ class_ "title animated pulse"
+  , H.h1_
+    [ P.class_ "title animated pulse"
     , CSS.style_
       [ CSS.fontSize "82px"
       , CSS.fontWeight "100"
       ]
     ]
     [ "docs" ]
-  , h2_
-    [ class_ "subtitle animated pulse" ]
-    [ a_
-      [ href_ "http://haddocks.haskell-miso.org/"
-      , target_ "_blank"
+  , H.h2_
+    [ P.class_ "subtitle animated pulse" ]
+    [ H.a_
+      [ P.href_ "http://haddocks.haskell-miso.org/"
+      , P.target_ "_blank"
       ]
       [ "Haddocks" ]
     , text " / "
-    , a_
-      [ href_ "https://github.com/dmjio/miso/blob/master/README.md"
-      , target_ "_blank"
+    , H.a_
+      [ P.href_ "https://github.com/dmjio/miso/blob/master/README.md"
+      , P.target_ "_blank"
       ]
       [ "README" ]
     ]
@@ -207,57 +214,57 @@ misoSrc = "miso.png"
 -----------------------------------------------------------------------------
 examples :: Model -> View Model Action
 examples = template $
-  div_
-  [ class_ "animated fadeIn" ]
-  [ a_
-    [ href_ "https://github.com/dmjio/miso" ]
-    [ img_
-      [ width_ "100"
-      , class_ "animated bounceInDown"
-      , src_ misoSrc
-      , alt_ "miso logo"
+  H.div_
+  [ P.class_ "animated fadeIn" ]
+  [ H.a_
+    [ P.href_ "https://github.com/dmjio/miso" ]
+    [ H.img_
+      [ P.width_ "100"
+      , P.class_ "animated bounceInDown"
+      , P.src_ misoSrc
+      , P.alt_ "miso logo"
       ]
     ]
-  , h1_
-    [ class_ "title animated pulse"
+  , H.h1_
+    [ P.class_ "title animated pulse"
     , CSS.style_
       [ CSS.fontSize "82px"
       , CSS.fontWeight "100"
       ]
     ]
     [ "examples" ]
-  , a_
-    [ class_ "subtitle animated pulse"
+  , H.a_
+    [ P.class_ "subtitle animated pulse"
     ]
-    [ a_
-      [ target_ "_blank"
-      , href_ "https://threejs.haskell-miso.org"
+    [ H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://threejs.haskell-miso.org"
       ]
       [ "three.js"
       ]
     , text " / "
-    , a_
-      [ target_ "_blank"
-      , href_ "https://todomvc.haskell-miso.org"
+    , H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://todomvc.haskell-miso.org"
       ]
       [ text "TodoMVC"
       ]
     , text " / "
-    , a_
-      [ target_ "_blank"
-      , href_ "https://mario.haskell-miso.org/"
+    , H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://mario.haskell-miso.org/"
       ]
       [ "Mario" ]
     , text " / "
-    , a_
-      [ target_ "_blank"
-      , href_ "https://flatris.haskell-miso.org/"
+    , H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://flatris.haskell-miso.org/"
       ]
       [ "Flatris" ]
     , text " / "
-    , a_
-      [ target_ "_blank"
-      , href_ "https://2048.haskell-miso.org/"
+    , H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://2048.haskell-miso.org/"
       ]
       [ "2048" ]
     ]
@@ -265,34 +272,34 @@ examples = template $
 -----------------------------------------------------------------------------
 home :: Model -> View Model Action
 home = template $
-  div_
-  [ class_ "animated fadeIn" ]
-  [ a_
-    [ href_ "https://github.com/dmjio/miso" ]
-    [ img_
-      [ width_ "100"
-      , class_ "animated bounceInDown"
-      , src_ misoSrc
-      , alt_ "miso logo"
+  H.div_
+  [ P.class_ "animated fadeIn" ]
+  [ H.a_
+    [ P.href_ "https://github.com/dmjio/miso" ]
+    [ H.img_
+      [ P.width_ "100"
+      , P.class_ "animated bounceInDown"
+      , P.src_ misoSrc
+      , P.alt_ "miso logo"
       ]
     ]
-  , h1_
-    [ class_ "title animated pulse"
+  , H.h1_
+    [ P.class_ "title animated pulse"
     , CSS.style_
       [ CSS.fontSize "82px"
       , CSS.fontWeight "100"
       ]
     ]
     [ "miso" ]
-  , h2_
-    [ class_ "subtitle animated pulse" ]
+  , H.h2_
+    [ P.class_ "subtitle animated pulse" ]
     [ text "A tasty "
-    , a_
-      [ href_ "https://www.haskell.org/"
-      , rel_ "noopener"
-      , target_ "_blank"
+    , H.a_
+      [ P.href_ "https://www.haskell.org/"
+      , P.rel_ "noopener"
+      , P.target_ "_blank"
       ]
-      [ strong_ [] [text "Haskell"]
+      [ H.strong_ [] [text "Haskell"]
       ]
     , text " web and mobile framework"
     ]
@@ -300,15 +307,15 @@ home = template $
 -----------------------------------------------------------------------------
 template :: View Model Action -> Model -> View Model Action
 template content m =
-  div_
+  H.div_
   []
-  [ a_
-    [ class_ "github-fork-ribbon left-top fixed"
-    , href_ "http://github.com/dmjio/miso"
-    , data_ "ribbon" "Fork me on GitHub"
-    , target_ "blank"
-    , rel_ "noopener"
-    , title_ "Fork me on GitHub"
+  [ H.a_
+    [ P.class_ "github-fork-ribbon left-top fixed"
+    , P.href_ "http://github.com/dmjio/miso"
+    , P.data_ "ribbon" "Fork me on GitHub"
+    , P.target_ "blank"
+    , P.rel_ "noopener"
+    , P.title_ "Fork me on GitHub"
     ]
     [ "Fork me on GitHub" ]
   , hero content (m ^. uri) (m ^. navMenuOpen)
@@ -318,105 +325,105 @@ template content m =
 -----------------------------------------------------------------------------
 middle :: View Model action
 middle =
-  section_
-  [ class_ "hero" ]
-  [ div_
-    [ class_ "hero-body" ]
-    [ div_
-      [ class_ "container" ]
-      [ nav_
-        [ class_ "columns" ]
-        [ a_
-          [ class_ "column has-text-centered"
-          , href_ "https://krausest.github.io/js-framework-benchmark/2024/table_chrome_130.0.6723.58.html"
-          , target_ "_blank"
-          , rel_ "noopener"
+  H.section_
+  [ P.class_ "hero" ]
+  [ H.div_
+    [ P.class_ "hero-body" ]
+    [ H.div_
+      [ P.class_ "container" ]
+      [ H.nav_
+        [ P.class_ "columns" ]
+        [ H.a_
+          [ P.class_ "column has-text-centered"
+          , P.href_ "https://krausest.github.io/js-framework-benchmark/2024/table_chrome_130.0.6723.58.html"
+          , P.target_ "_blank"
+          , P.rel_ "noopener"
           ]
-          [ span_
-            [class_ "icon is-large"]
-            [ i_ [class_ "fa fa-flash"] []
+          [ H.span_
+            [P.class_ "icon is-large"]
+            [ H.i_ [P.class_ "fa fa-flash"] []
             ]
-          , p_
-            [ class_ "title is-4" ]
-            [ strong_ [] [text "Fast"]
+          , H.p_
+            [ P.class_ "title is-4" ]
+            [ H.strong_ [] [text "Fast"]
             ]
-          , p_
-            [class_ "subtitle"]
+          , H.p_
+            [P.class_ "subtitle"]
             [ text "Virtual DOM"
             ]
           ]
-        , a_
-          [ class_ "column has-text-centered"
-          , href_ "https://en.wikipedia.org/wiki/Isomorphic_JavaScript"
-          , target_ "_blank"
-          , rel_ "noopener"
+        , H.a_
+          [ P.class_ "column has-text-centered"
+          , P.href_ "https://en.wikipedia.org/wiki/Isomorphic_JavaScript"
+          , P.target_ "_blank"
+          , P.rel_ "noopener"
           ]
-          [ span_
-            [ class_ "icon is-large" ]
-            [ i_ [class_ "fa fa-refresh"] []
+          [ H.span_
+            [ P.class_ "icon is-large" ]
+            [ H.i_ [P.class_ "fa fa-refresh"] []
             ]
-          , p_
-            [class_ "title is-4"]
-            [ strong_ [] [text "Isomorphic"]
+          , H.p_
+            [P.class_ "title is-4"]
+            [ H.strong_ [] [text "Isomorphic"]
             ]
-          , p_
-            [class_ "subtitle"]
+          , H.p_
+            [P.class_ "subtitle"]
             [text "Seamless experience"]
           ]
-        , a_
-          [ class_ "column has-text-centered"
-          , target_ "_blank"
-          , href_ "http://book.realworldhaskell.org/read/concurrent-and-multicore-programming.html"
-          , rel_ "noopener"
+        , H.a_
+          [ P.class_ "column has-text-centered"
+          , P.target_ "_blank"
+          , P.href_ "http://book.realworldhaskell.org/read/concurrent-and-multicore-programming.html"
+          , P.rel_ "noopener"
           ]
-          [ span_
-            [class_ "icon is-large"]
-            [ i_ [class_ "fa fa-gears"] []
+          [ H.span_
+            [P.class_ "icon is-large"]
+            [ H.i_ [P.class_ "fa fa-gears"] []
             ]
-          , p_
-            [class_ "title is-4"]
-            [ strong_ [] [text "Concurrent"]
+          , H.p_
+            [P.class_ "title is-4"]
+            [ H.strong_ [] [text "Concurrent"]
             ]
-          , p_
-            [class_ "subtitle"]
+          , H.p_
+            [P.class_ "subtitle"]
             [ text "Multi-threaded apps"
             ]
           ]
-        , a_
-          [ class_ "column has-text-centered"
-          , href_ "https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html#javascript-ffi-in-the-wasm-backend"
-          , rel_ "noopener"
-          , target_ "_blank"
+        , H.a_
+          [ P.class_ "column has-text-centered"
+          , P.href_ "https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html#javascript-ffi-in-the-wasm-backend"
+          , P.rel_ "noopener"
+          , P.target_ "_blank"
           ]
-          [ span_
-            [class_ "icon is-large"]
-            [ i_ [class_ "fa fa-code-fork"] []
+          [ H.span_
+            [P.class_ "icon is-large"]
+            [ H.i_ [P.class_ "fa fa-code-fork"] []
             ]
-          , p_
-            [class_ "title is-4"]
-            [ strong_ [] [text "Interoperable"]
+          , H.p_
+            [P.class_ "title is-4"]
+            [ H.strong_ [] [text "Interoperable"]
             ]
-          , p_
-            [class_ "subtitle"]
+          , H.p_
+            [P.class_ "subtitle"]
             [ text "via the FFI"
             ]
           ]
-        , a_
-          [ class_ "column has-text-centered"
-          , href_ "https://github.com/haskell-miso/miso-lynx"
-          , rel_ "noopener"
-          , target_ "_blank"
+        , H.a_
+          [ P.class_ "column has-text-centered"
+          , P.href_ "https://github.com/haskell-miso/miso-lynx"
+          , P.rel_ "noopener"
+          , P.target_ "_blank"
           ]
-          [ span_
-            [class_ "icon is-large"]
-            [ i_ [class_ "fa fa-mobile"] []
+          [ H.span_
+            [P.class_ "icon is-large"]
+            [ H.i_ [P.class_ "fa fa-mobile"] []
             ]
-          , p_
-            [class_ "title is-4"]
-            [ strong_ [] [text "Cross Platform"]
+          , H.p_
+            [P.class_ "title is-4"]
+            [ H.strong_ [] [text "Cross Platform"]
             ]
-          , p_
-            [ class_ "subtitle" ]
+          , H.p_
+            [ P.class_ "subtitle" ]
             [ text "iOS, Android"
             ]
           ]
@@ -427,40 +434,40 @@ middle =
 
 cols :: View Model action
 cols =
-  section_
+  H.section_
   []
-  [ div_
-    [ class_ "container" ]
-    [ div_
-      [ class_ "columns" ]
-      [ div_
-        [ class_ "column" ]
-        [ h1_
-          [ class_ "title" ]
-          [ span_
-            [ class_ "icon is-large"]
-            [ i_
-              [ class_ "fa fa-flash"
+  [ H.div_
+    [ P.class_ "container" ]
+    [ H.div_
+      [ P.class_ "columns" ]
+      [ H.div_
+        [ P.class_ "column" ]
+        [ H.h1_
+          [ P.class_ "title" ]
+          [ H.span_
+            [ P.class_ "icon is-large"]
+            [ H.i_
+              [ P.class_ "fa fa-flash"
               ]
               []
             ]
           , text "Fast"
           ]
-        , h2_
-          [ class_ "subtitle" ]
+        , H.h2_
+          [ P.class_ "subtitle" ]
           [ text "Mutable virtual dom implementation"
           ]
         ]
-      , div_
-        [ class_ "column" ]
+      , H.div_
+        [ P.class_ "column" ]
         [ text "Second column"
         ]
-      , div_
-        [ class_ "column" ]
+      , H.div_
+        [ P.class_ "column" ]
         [ text "Third column"
         ]
-      , div_
-        [ class_ "column" ]
+      , H.div_
+        [ P.class_ "column" ]
         [ text "Fourth column"
         ]
       ]
@@ -469,136 +476,136 @@ cols =
 -----------------------------------------------------------------------------
 the404 :: Model -> View Model Action
 the404 = template $
-  div_
+  H.div_
   []
-  [ a_
-    [ href_ "https://github.com/dmjio/miso" ]
-    [ img_
-      [ width_ "100"
-      , class_ "animated bounceOutUp"
-      , src_ misoSrc
-      , alt_ "miso logo"
+  [ H.a_
+    [ P.href_ "https://github.com/dmjio/miso" ]
+    [ H.img_
+      [ P.width_ "100"
+      , P.class_ "animated bounceOutUp"
+      , P.src_ misoSrc
+      , P.alt_ "miso logo"
       ]
     ]
-  , h1_
-    [ class_ "title"
+  , H.h1_
+    [ P.class_ "title"
     , CSS.style_
       [ CSS.fontSize "82px"
       , CSS.fontWeight "100"
       ]
     ]
     [text "404"]
-  , h2_
-    [class_ "subtitle animated pulse"]
+  , H.h2_
+    [P.class_ "subtitle animated pulse"]
     [ text "No soup for you! "
-    , a_ [href_ "/", onPreventClick (ChangeURI uriHome)] [text " - Go Home"]
+    , H.a_ [P.href_ "/", onPreventClick (ChangeURI uriHome)] [text " - Go Home"]
     ]
   ]
 -----------------------------------------------------------------------------
 -- | Github stars
 starMiso :: View Model action
 starMiso =
-  a_
-  [ class_ "github-button"
-  , href_ "https://github.com/dmjio/miso"
-  , data_ "icon" "octicon-star"
-  , data_ "size" "large"
-  , data_ "show-count" "true"
-  , aria_ "label" "Star dmjio/miso on GitHub"
+  H.a_
+  [ P.class_ "github-button"
+  , P.href_ "https://github.com/dmjio/miso"
+  , P.data_ "icon" "octicon-star"
+  , P.data_ "size" "large"
+  , P.data_ "show-count" "true"
+  , P.aria_ "label" "Star dmjio/miso on GitHub"
   ]
   [ "Star"
   ]
 -----------------------------------------------------------------------------
 forkMiso :: View Model action
 forkMiso =
-  a_
-  [ class_ "github-button"
-  , href_ "https://github.com/dmjio/miso/fork"
-  , data_ "icon" "octicon-repo-forked"
-  , data_ "size" "large"
-  , data_ "show-count" "true"
-  , aria_ "label" "Fork dmjio/miso on GitHub"
+  H.a_
+  [ P.class_ "github-button"
+  , P.href_ "https://github.com/dmjio/miso/fork"
+  , P.data_ "icon" "octicon-repo-forked"
+  , P.data_ "size" "large"
+  , P.data_ "show-count" "true"
+  , P.aria_ "label" "Fork dmjio/miso on GitHub"
   ]
   [ "Fork" ]
 -----------------------------------------------------------------------------
 -- | Hero
 hero :: View Model Action -> URI -> Bool -> View Model Action
 hero content uri' navMenuOpen' =
-  section_
-  [ class_ "hero is-medium is-primary is-bold has-text-centered" ]
-  [ div_
-    [ class_ "hero-head"
+  H.section_
+  [ P.class_ "hero is-medium is-primary is-bold has-text-centered" ]
+  [ H.div_
+    [ P.class_ "hero-head"
     ]
-    [ header_
-      [ class_ "nav"
+    [ H.header_
+      [ P.class_ "nav"
       ]
-      [ div_
-        [ class_ "container"
+      [ H.div_
+        [ P.class_ "container"
         ]
-        [ div_
-          [ class_ "nav-left" ]
-          [ a_ [class_ "nav-item"] []
+        [ H.div_
+          [ P.class_ "nav-left" ]
+          [ H.a_ [P.class_ "nav-item"] []
           ]
-        , span_
-          [ class_ $ "nav-toggle " <> bool mempty "is-active" navMenuOpen'
-          , onClick ToggleNavMenu
+        , H.span_
+          [ P.class_ $ "nav-toggle " <> bool mempty "is-active" navMenuOpen'
+          , E.onClick ToggleNavMenu
           ]
-          [ span_ [] []
-          , span_ [] []
-          , span_ [] []
+          [ H.span_ [] []
+          , H.span_ [] []
+          , H.span_ [] []
           ]
-        , div_
-          [ class_ $ "nav-right nav-menu " <> bool mempty "is-active" navMenuOpen' ]
-          [ div_
-            [ classList_
+        , H.div_
+          [ P.class_ $ "nav-right nav-menu " <> bool mempty "is-active" navMenuOpen' ]
+          [ H.div_
+            [ P.classList_
               [ ("nav-item", True)
               ]
             ]
-            [ a_
-              [ href_ $ ms (uriPath uriHome)
+            [ H.a_
+              [ P.href_ $ ms (uriPath uriHome)
               , onPreventClick (ChangeURI uriHome)
-              , classList_
+              , P.classList_
                 [ ("is-active", uriPath uri' == "")
                 ]
               ]
               [ "Home"
               ]
             ]
-          , div_
-            [ classList_
+          , H.div_
+            [ P.classList_
               [ ("nav-item", True)
               ]
             ]
-            [ a_
-              [ href_ $ ms (uriPath uriExamples)
+            [ H.a_
+              [ P.href_ $ ms (uriPath uriExamples)
               , onPreventClick (ChangeURI uriExamples)
-              , classList_ [("is-active", uriPath uri' == uriPath uriExamples)]
+              , P.classList_ [("is-active", uriPath uri' == uriPath uriExamples)]
               ]
               [ "Examples" ]
             ]
-          , div_
-            [ classList_
+          , H.div_
+            [ P.classList_
               [ ("nav-item", True)
               ]
             ]
-            [ a_
-              [ href_ $ ms (uriPath uriDocs)
+            [ H.a_
+              [ P.href_ $ ms (uriPath uriDocs)
               , onPreventClick (ChangeURI uriDocs)
-              , classList_
+              , P.classList_
                 [ ("is-active", uriPath uri' == uriPath uriDocs)
                 ]
               ]
               [ "Docs" ]
             ]
-          , div_
-            [ classList_
+          , H.div_
+            [ P.classList_
               [ ("nav-item", True)
               ]
             ]
-            [ a_
-              [ href_ $ ms (uriPath uriCommunity)
+            [ H.a_
+              [ P.href_ $ ms (uriPath uriCommunity)
               , onPreventClick (ChangeURI uriCommunity)
-              , classList_
+              , P.classList_
                 [ ("is-active", uriPath uri' == uriPath uriCommunity)
                 ]
               ]
@@ -608,10 +615,10 @@ hero content uri' navMenuOpen' =
         ]
       ]
     ]
-  , div_
-    [ class_ "hero-body" ]
-    [ div_
-      [ class_ "container" ]
+  , H.div_
+    [ P.class_ "hero-body" ]
+    [ H.div_
+      [ P.class_ "container" ]
       [ content
       ]
     ]
@@ -628,58 +635,58 @@ onPreventClick action =
 -- | Footer
 footer :: View Model action
 footer =
-  footer_
-  [ class_ "footer" ]
-  [ div_
-    [ class_ "container" ]
-    [ div_
-      [ class_ "content has-text-centered" ]
-      [ p_
+  H.footer_
+  [ P.class_ "footer" ]
+  [ H.div_
+    [ P.class_ "container" ]
+    [ H.div_
+      [ P.class_ "content has-text-centered" ]
+      [ H.p_
         []
-        [ strong_ []
+        [ H.strong_ []
           [ "Miso"
           ]
         , " by "
-        , a_
-          [ href_ "https://github.com/dmjio/miso"
+        , H.a_
+          [ P.href_ "https://github.com/dmjio/miso"
           , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
           ]
           [ "dmjio" ]
         , text ". BSD3"
-        , a_
-          [ href_ "https://opensource.org/licenses/BSD-3-Clause"
+        , H.a_
+          [ P.href_ "https://opensource.org/licenses/BSD-3-Clause"
           , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
           ]
           [ " licensed."]
         ]
-      , p_
+      , H.p_
         []
         [ text "The source code for this website is located "
-        , a_
-          [ href_ "https://github.com/dmjio/miso/tree/master/haskell-miso.org"
+        , H.a_
+          [ P.href_ "https://github.com/dmjio/miso/tree/master/haskell-miso.org"
           , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
           ]
           [" here."]
         ]
-      , p_
+      , H.p_
         []
-        [ a_
-          [href_ "https://bulma.io"]
-          [ img_
-            [ src_ "https://bulma.io/assets/images/made-with-bulma.png"
-            , alt_ "Made with Bulma"
-            , width_ "128"
-            , height_ "24"
+        [ H.a_
+          [ P.href_ "https://bulma.io"]
+          [ H.img_
+            [ P.src_ "https://bulma.io/assets/images/made-with-bulma.png"
+            , P.alt_ "Made with Bulma"
+            , P.width_ "128"
+            , P.height_ "24"
             ]
           ]
         ]
-      , p_
+      , H.p_
         []
-        [ a_
-          [href_ "https://github.com/dmjio/miso"]
-          [ span_
-            [class_ "icon is-large"]
-            [ i_ [class_ "fa fa-github"] []
+        [ H.a_
+          [ P.href_ "https://github.com/dmjio/miso" ]
+          [ H.span_
+            [P.class_ "icon is-large"]
+            [ H.i_ [P.class_ "fa fa-github"] []
             ]
           ]
         ]
@@ -689,135 +696,135 @@ footer =
 -----------------------------------------------------------------------------
 newNav :: Bool -> View Model Action
 newNav navMenuOpen' =
-  div_
-  [ class_ "container" ]
-  [ nav_
-    [ class_ "navbar is-transparent" ]
-    [ div_
-      [ class_ "navbar-brand" ]
-      [ a_
-        [ class_ "navbar-item"
-        , href_ "https://haskell-miso.org"
+  H.div_
+  [ P.class_ "container" ]
+  [ H.nav_
+    [ P.class_ "navbar is-transparent" ]
+    [ H.div_
+      [ P.class_ "navbar-brand" ]
+      [ H.a_
+        [ P.class_ "navbar-item"
+        , P.href_ "https://haskell-miso.org"
         ]
         [ "miso"
-        , a_
-          [ class_ "navbar-item is-hidden-desktop"
-          , href_ "https://github.com/dmjio/miso"
-          , target_ "_blank"
-          , rel_ "noopener"
-          , name_ "miso"
+        , H.a_
+          [ P.class_ "navbar-item is-hidden-desktop"
+          , P.href_ "https://github.com/dmjio/miso"
+          , P.target_ "_blank"
+          , P.rel_ "noopener"
+          , P.name_ "miso"
           ]
-          [ span_
-            [ class_ "icon"
-            , name_ "github"
+          [ H.span_
+            [ P.class_ "icon"
+            , P.name_ "github"
             , CSS.style_ [ CSS.color (CSS.hex 0x333) ]
             ]
-            [ i_
-              [ class_ "fa fa-github" ]
+            [ H.i_
+              [ P.class_ "fa fa-github" ]
               []
             ]
           ]
-        , a_
-          [ class_ "navbar-item is-hidden-desktop"
-          , href_ "https://twitter.com/dmjio"
-          , rel_ "noopener"
-          , target_ "_blank"
+        , H.a_
+          [ P.class_ "navbar-item is-hidden-desktop"
+          , P.href_ "https://twitter.com/dmjio"
+          , P.rel_ "noopener"
+          , P.target_ "_blank"
           ]
-          [ span_
-            [ class_ "icon"
-            , name_ "twitter"
+          [ H.span_
+            [ P.class_ "icon"
+            , P.name_ "twitter"
             , CSS.style_ [ CSS.color (CSS.hex 0x55acee) ]
             ]
-            [ i_
-              [ class_ "fa fa-twitter" ]
+            [ H.i_
+              [ P.class_ "fa fa-twitter" ]
               []
             ]
           ]
-        , div_
-          [ class_ ("navbar-burger burger " <> bool mempty "is-active" navMenuOpen')
-          , data_ "target" "navMenuIndex"
-          , onClick ToggleNavMenu
+        , H.div_
+          [ P.class_ ("navbar-burger burger " <> bool mempty "is-active" navMenuOpen')
+          , P.data_ "target" "navMenuIndex"
+          , E.onClick ToggleNavMenu
           ]
-          [ span_ [] []
-          , span_ [] []
-          , span_ [] []
+          [ H.span_ [] []
+          , H.span_ [] []
+          , H.span_ [] []
           ]
         ]
-      , div_
-        [ id_ "navMenuIndex"
-        , class_ $ "navbar-menu " <> bool mempty "is-active" navMenuOpen'
+      , H.div_
+        [ P.id_ "navMenuIndex"
+        , P.class_ $ "navbar-menu " <> bool mempty "is-active" navMenuOpen'
         ]
-        [ div_
-          [ class_ "navbar-start" ]
-          [ a_
-            [ class_ "navbar-item is-active"
-            , href_ "https://haskell-miso.org"
+        [ H.div_
+          [ P.class_ "navbar-start" ]
+          [ H.a_
+            [ P.class_ "navbar-item is-active"
+            , P.href_ "https://haskell-miso.org"
             ]
             [ "Home"
             ]
-          , div_
-            [ class_ "navbar-item has-dropdown is-hoverable" ]
-            [ a_
-              [ class_ "navbar-link"
-              , href_ "/documentation/overview/start/"
+          , H.div_
+            [ P.class_ "navbar-item has-dropdown is-hoverable" ]
+            [ H.a_
+              [ P.class_ "navbar-link"
+              , P.href_ "/documentation/overview/start/"
               ]
               [ "Docs"
               ]
-            , div_
-              [ class_ "navbar-dropdown is-boxed" ]
-              [ a_
-                [ class_ "navbar-item "
-                , href_ "/documentation/overview/start/"
+            , H.div_
+              [ P.class_ "navbar-dropdown is-boxed" ]
+              [ H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "/documentation/overview/start/"
                 ]
                 [ text "Overview"
                 ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/modifiers/syntax/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/modifiers/syntax/"
                 ]
                 [ "Modifiers"
                 ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/grid/columns/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/grid/columns/"
                 ]
                 [ "Grid"
                 ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/form/general/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/form/general/"
                 ]
                 [ text "Form"
                 ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/elements/box/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/elements/box/"
                 ]
                 [ text "Elements"
                 ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/components/breadcrumb/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/components/breadcrumb/"
                 ]
                 [ "Components" ]
-              , a_
-                [ class_ "navbar-item "
-                , href_ "http://bulma.io/documentation/layout/container/"
+              , H.a_
+                [ P.class_ "navbar-item "
+                , P.href_ "http://bulma.io/documentation/layout/container/"
                 ]
                 [ "Layout" ]
-              , hr_ [class_ "navbar-divider"]
-              , div_
-                [ class_ "navbar-item" ]
-                [ div_
+              , H.hr_ [P.class_ "navbar-divider"]
+              , H.div_
+                [ P.class_ "navbar-item" ]
+                [ H.div_
                   []
-                  [ p_
-                    [class_ "has-text-info is-size-6-desktop"]
-                    [ strong_ [] [text "0.4.4"]
+                  [ H.p_
+                    [P.class_ "has-text-info is-size-6-desktop"]
+                    [ H.strong_ [] [text "0.4.4"]
                     ]
-                  , small_
+                  , H.small_
                     []
-                    [ a_
-                      [class_ "view-all-versions", href_ "/versions"]
+                    [ H.a_
+                      [P.class_ "view-all-versions", P.href_ "/versions"]
                       [ "View all versions"
                       ]
                     ]
@@ -825,110 +832,110 @@ newNav navMenuOpen' =
                 ]
               ]
             ]
-          , div_
-            [ class_ "navbar-item has-dropdown is-hoverable" ]
-            [ a_
-              [ class_ "navbar-link"
-              , href_ "http://bulma.io/blog/"
+          , H.div_
+            [ P.class_ "navbar-item has-dropdown is-hoverable" ]
+            [ H.a_
+              [ P.class_ "navbar-link"
+              , P.href_ "http://bulma.io/blog/"
               ]
               [ "Blog"
               ]
-            , div_
-              [ id_ "blogDropdown"
-              , class_ "navbar-dropdown is-boxed"
-              , data_ "style_" "width: 18rem;"
+            , H.div_
+              [ P.id_ "blogDropdown"
+              , P.class_ "navbar-dropdown is-boxed"
+              , P.data_ "style_" "width: 18rem;"
               ]
-              [ a_
-                [ class_ "navbar-item"
-                , href_ "/2017/07/24/access-previous-bulma-versions/"
+              [ H.a_
+                [ P.class_ "navbar-item"
+                , P.href_ "/2017/07/24/access-previous-bulma-versions/"
                 ]
-                [ div_
-                  [ class_ "navbar-content" ]
-                  [ p_
+                [ H.div_
+                  [ P.class_ "navbar-content" ]
+                  [ H.p_
                     []
-                    [ small_
-                      [ class_ "has-text-info" ]
+                    [ H.small_
+                      [ P.class_ "has-text-info" ]
                       [ text "24 Jul 2017"
                       ]
                     ]
-                  , p_ [] [ "Access previous Bulma versions" ]
+                  , H.p_ [] [ "Access previous Bulma versions" ]
                   ]
                 ]
-              , a_
-                [ class_ "navbar-item"
-                , href_ "/2017/03/10/new-field-element/"
+              , H.a_
+                [ P.class_ "navbar-item"
+                , P.href_ "/2017/03/10/new-field-element/"
                 ]
-                [ div_
-                  [ class_ "navbar-content" ]
-                  [ p_
+                [ H.div_
+                  [ P.class_ "navbar-content" ]
+                  [ H.p_
                     []
-                    [ small_
-                      [ class_ "has-text-info" ]
+                    [ H.small_
+                      [ P.class_ "has-text-info" ]
                       [ "10 Mar 2017"
                       ]
                     ]
-                  , p_
+                  , H.p_
                     []
                     [ "New field element (for better controls)"
                     ]
                   ]
                 ]
-              , a_
-                [ class_ "navbar-item"
-                , href_ "/2016/04/11/metro-ui-css-grid-with-bulma-tiles/"
+              , H.a_
+                [ P.class_ "navbar-item"
+                , P.href_ "/2016/04/11/metro-ui-css-grid-with-bulma-tiles/"
                 ]
-                [ div_
-                  [ class_ "navbar-content" ]
-                  [ p_
+                [ H.div_
+                  [ P.class_ "navbar-content" ]
+                  [ H.p_
                     []
-                    [ small_
-                      [ class_ "has-text-info" ]
+                    [ H.small_
+                      [ P.class_ "has-text-info" ]
                       [ "11 Apr 2016"
                       ]
                     ]
-                  , p_
+                  , H.p_
                     []
                     [ "Metro UI CSS grid with Bulma tiles"
                     ]
                   ]
                 ]
-              , a_
-                [ class_ "navbar-item"
-                , href_ "http://bulma.io/blog/"
+              , H.a_
+                [ P.class_ "navbar-item"
+                , P.href_ "http://bulma.io/blog/"
                 ]
                 [ "More posts"
                 ]
-              , hr_ [ class_ "navbar-divider" ]
-              , div_
-                [ class_ "navbar-item" ]
-                [ div_
-                  [ class_ "navbar-content" ]
-                  [ div_
-                    [ class_ "level is-mobile" ]
-                    [ div_
-                      [ class_ "level-left" ]
-                      [ div_
-                        [ class_ "level-item" ]
-                        [ strong_ []
+              , H.hr_ [ P.class_ "navbar-divider" ]
+              , H.div_
+                [ P.class_ "navbar-item" ]
+                [ H.div_
+                  [ P.class_ "navbar-content" ]
+                  [ H.div_
+                    [ P.class_ "level is-mobile" ]
+                    [ H.div_
+                      [ P.class_ "level-left" ]
+                      [ H.div_
+                        [ P.class_ "level-item" ]
+                        [ H.strong_ []
                           [ text "Stay up to date!" ]
                         ]
                       ]
-                    , div_
-                      [ class_ "level-right" ]
-                      [ div_
-                        [ class_ "level-item" ]
-                        [ a_
-                          [ class_ "button is-rss is-small"
-                          , href_ "http://bulma.io/atom.xml"
+                    , H.div_
+                      [ P.class_ "level-right" ]
+                      [ H.div_
+                        [ P.class_ "level-item" ]
+                        [ H.a_
+                          [ P.class_ "button is-rss is-small"
+                          , P.href_ "http://bulma.io/atom.xml"
                           ]
-                          [ span_
-                            [ class_ "icon is-small" ]
-                            [ i_
-                              [ class_ "fa fa-rss"
+                          [ H.span_
+                            [ P.class_ "icon is-small" ]
+                            [ H.i_
+                              [ P.class_ "fa fa-rss"
                               ]
                               []
                             ]
-                          , span_
+                          , H.span_
                             []
                             [ "Subscribe"
                             ]
@@ -940,47 +947,47 @@ newNav navMenuOpen' =
                 ]
               ]
             ]
-          , div_
-            [ class_ "navbar-item has-dropdown is-hoverable" ]
-            [ div_
-              [ class_ "navbar-link" ]
+          , H.div_
+            [ P.class_ "navbar-item has-dropdown is-hoverable" ]
+            [ H.div_
+              [ P.class_ "navbar-link" ]
               [ text "More"
               ]
-            , div_
-              [ id_ "moreDropdown"
-              , class_ "navbar-dropdown is-boxed"
+            , H.div_
+              [ P.id_ "moreDropdown"
+              , P.class_ "navbar-dropdown is-boxed"
               ]
-              [ a_
-                [ class_ "navbar-item"
-                , href_ "http://bulma.io/extensions/"
+              [ H.a_
+                [ P.class_ "navbar-item"
+                , P.href_ "http://bulma.io/extensions/"
                 ]
-                [ div_
-                  [ class_ "level is-mobile" ]
-                  [ div_
-                    [ class_ "level-left" ]
-                    [ div_
-                      [ class_ "level-item" ]
-                      [ p_
+                [ H.div_
+                  [ P.class_ "level is-mobile" ]
+                  [ H.div_
+                    [ P.class_ "level-left" ]
+                    [ H.div_
+                      [ P.class_ "level-item" ]
+                      [ H.p_
                         []
-                        [ strong_
+                        [ H.strong_
                           []
                           [ "Extensions"
                           ]
-                        , br_ []
-                        , small_
+                        , H.br_ []
+                        , H.small_
                           []
                           [ "Side projects to enhance Bulma"
                           ]
                         ]
                       ]
                     ]
-                  , div_
-                    [class_ "level-right"]
-                    [ div_
-                      [class_ "level-item"]
-                      [ span_
-                        [class_ "icon has-text-info"]
-                        [ i_ [class_ "fa fa-plug"] []
+                  , H.div_
+                    [P.class_ "level-right"]
+                    [ H.div_
+                      [P.class_ "level-item"]
+                      [ H.span_
+                        [P.class_ "icon has-text-info"]
+                        [ H.i_ [P.class_ "fa fa-plug"] []
                         ]
                       ]
                     ]
@@ -989,46 +996,46 @@ newNav navMenuOpen' =
               ]
             ]
           ]
-        , div_
-          [class_ "navbar-end"]
-          [ a_
-            [ class_ "navbar-item"
-            , href_ "https://github.com/dmjio/miso"
-            , target_ "_blank"
+        , H.div_
+          [P.class_ "navbar-end"]
+          [ H.a_
+            [ P.class_ "navbar-item"
+            , P.href_ "https://github.com/dmjio/miso"
+            , P.target_ "_blank"
             ]
             [ text "Github"
             ]
-          , a_
-            [ class_ "navbar-item"
-            , href_ "https://twitter.com/dmjio"
-            , target_ "_blank"
+          , H.a_
+            [ P.class_ "navbar-item"
+            , P.href_ "https://twitter.com/dmjio"
+            , P.target_ "_blank"
             ]
             [ text "Twitter"
             ]
-          , div_
-            [ class_ "navbar-item" ]
-            [ div_
-              [ class_ "field is-grouped" ]
-              [ p_
-                [ class_ "control" ]
-                [ a_
-                  [ id_ "twitter"
-                  , class_ "button"
-                  , data_ "social-network_" "Twitter"
-                  , data_ "social-action_" "tweet"
-                  , data_ "social-target" "http://bulma.io"
-                  , target_ "_blank"
-                  , href_ "https://twitter.com/intent/tweet?text=Miso: a tasty Haskell front-end web and mobile framework&url=https://haskell-miso.org&via=dmjio"
+          , H.div_
+            [ P.class_ "navbar-item" ]
+            [ H.div_
+              [ P.class_ "field is-grouped" ]
+              [ H.p_
+                [ P.class_ "control" ]
+                [ H.a_
+                  [ P.id_ "twitter"
+                  , P.class_ "button"
+                  , P.data_ "social-network_" "Twitter"
+                  , P.data_ "social-action_" "tweet"
+                  , P.data_ "social-target" "http://bulma.io"
+                  , P.target_ "_blank"
+                  , P.href_ "https://twitter.com/intent/tweet?text=Miso: a tasty Haskell front-end web and mobile framework&url=https://haskell-miso.org&via=dmjio"
                   ]
-                  [ span_
-                    [class_ "icon"]
-                    [ i_ [class_ "fa fa-twitter"] []
+                  [ H.span_
+                    [P.class_ "icon"]
+                    [ H.i_ [P.class_ "fa fa-twitter"] []
                     ]
-                  , span_ [] [text "Tweet"]
+                  , H.span_ [] [text "Tweet"]
                   ]
                 ]
-              , p_
-                [class_ "control"]
+              , H.p_
+                [P.class_ "control"]
                 [ starMiso
                 ]
               ]
