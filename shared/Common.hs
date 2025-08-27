@@ -106,7 +106,7 @@ haskellMiso currentUri = component emptyModel updateModel viewModel
 -----------------------------------------------------------------------------
 updateModel :: Action -> Transition Model Action
 updateModel = \case
-  HandleURI u ->
+  HandleURI u -> do
     uri .= u
   ChangeURI u -> do
     navMenuOpen .= False
@@ -560,10 +560,10 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (R.uriPath uriHome)
+              [ P.href_ (ms uriHome)
               , onPreventClick (ChangeURI uriHome)
               , P.classList_
-                [ ("is-active", R.uriPath uri' == "")
+                [ ("is-active", R.uriPath uri' == R.uriPath uriHome)
                 ]
               ]
               [ "Home"
@@ -575,7 +575,7 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (R.uriPath uriExamples)
+              [ P.href_ (ms uriExamples)
               , onPreventClick (ChangeURI uriExamples)
               , P.classList_ [("is-active", R.uriPath uri' == R.uriPath uriExamples)]
               ]
@@ -587,7 +587,7 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (R.uriPath uriDocs)
+              [ P.href_ (ms uriDocs)
               , onPreventClick (ChangeURI uriDocs)
               , P.classList_
                 [ ("is-active", R.uriPath uri' == R.uriPath uriDocs)
@@ -601,7 +601,7 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (R.uriPath uriCommunity)
+              [ P.href_ (ms uriCommunity)
               , onPreventClick (ChangeURI uriCommunity)
               , P.classList_
                 [ ("is-active", R.uriPath uri' == R.uriPath uriCommunity)
