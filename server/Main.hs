@@ -26,14 +26,15 @@ import Common
 import           Control.Monad (forM_)
 import           Data.Aeson (ToJSON, encodeFile)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import           Data.Text (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as T
 import           GHC.Generics (Generic)
-import           Servant.API
 -----------------------------------------------------------------------------
 import           Miso hiding (run)
-import           Miso.String
-import qualified Miso.Html.Element as Html
+import           Miso.Html
+import qualified Miso.Html.Element as H
+import qualified Miso.Html.Property as P
 -----------------------------------------------------------------------------
 #ifdef WASM
 foreign export javascript "hs_start" main :: IO ()
@@ -91,45 +92,45 @@ instance ToHtml Page where
   toHtml (Page x) =
     toHtml
     [ doctype_
-    , html_
-      [ lang_ "en"
+    , H.html_
+      [ P.lang_ "en"
       ]
-      [ head_
+      [ H.head_
         []
-        [ Html.title_ [] [ "Miso: A tasty Haskell web and mobile framework"]
-        , link_
-          [ rel_ "stylesheet"
-          , href_ "https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css"
+        [ H.title_ [] [ "Miso: A tasty Haskell web and mobile framework"]
+        , H.link_
+          [ P.rel_ "stylesheet"
+          , P.href_ "https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css"
           ]
-        , link_
-          [ rel_ "manifest"
-          , href_ "/manifest.json"
+        , H.link_
+          [ P.rel_ "manifest"
+          , P.href_ "/manifest.json"
           ]
-        , link_
-          [ rel_ "icon"
-          , href_ "/favicon.ico"
-          , type_ "image/x-icon"
+        , H.link_
+          [ P.rel_ "icon"
+          , P.href_ "/favicon.ico"
+          , P.type_ "image/x-icon"
           ]
-        , meta_
-          [ charset_ "utf-8"
+        , H.meta_
+          [ P.charset_ "utf-8"
           ]
-        , meta_
-          [ name_ "theme-color"
-          , content_ "#00d1b2"
+        , H.meta_
+          [ P.name_ "theme-color"
+          , P.content_ "#00d1b2"
           ]
-        , meta_
-          [ httpEquiv_ "X-UA-Compatible"
-          , content_ "IE=edge"
+        , H.meta_
+          [ P.httpEquiv_ "X-UA-Compatible"
+          , P.content_ "IE=edge"
           ]
-        , meta_
-          [ name_ "viewport"
-          , content_ "width=device-width, initial-scale=1"
+        , H.meta_
+          [ P.name_ "viewport"
+          , P.content_ "width=device-width, initial-scale=1"
           ]
-        , meta_
-          [ name_ "description"
-          , content_ "Miso is a Haskell web and mobile framework"
+        , H.meta_
+          [ P.name_ "description"
+          , P.content_ "Miso is a Haskell web and mobile framework"
           ]
-        , style_ [] ".github-fork-ribbon:before { background-color: \"#e59751\" !important; } "
+        , H.style_ [] ".github-fork-ribbon:before { background-color: \"#e59751\" !important; } "
         , cssRef animateRef
         , cssRef bulmaRef
         , cssRef fontAwesomeRef
@@ -143,16 +144,16 @@ instance ToHtml Page where
     where
       jsRef href =
         script_
-        [ src_ href
-        , async_ "true"
-        , defer_ "true"
-        , type_ "module"
+        [ P.src_ href
+        , P.async_ "true"
+        , P.defer_ "true"
+        , P.type_ "module"
         ] mempty
       cssRef href =
         link_
-        [ rel_ "stylesheet"
-        , type_ "text/css"
-        , href_ href
+        [ P.rel_ "stylesheet"
+        , P.type_ "text/css"
+        , P.href_ href
         ]
 -----------------------------------------------------------------------------
 fontAwesomeRef :: MisoString

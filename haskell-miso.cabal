@@ -61,6 +61,7 @@ executable prerender
     aeson,
     base < 5,
     bytestring,
+    servant-miso-router,
     miso,
     mtl,
     servant,
@@ -87,6 +88,7 @@ executable app
     base < 5,
     containers,
     miso,
+    servant-miso-router,
     mtl,
     servant,
   default-language:

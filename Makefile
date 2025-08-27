@@ -14,7 +14,7 @@ build:
 	cp -v $(my_wasm) public/
 
 prerender:
-	nix develop --command bash -c "cabal run prerender"
+	nix develop --command bash -c "cabal update && cabal run prerender"
 
 optim:
 	wasm-opt -all -O2 public/app.wasm -o public/app.wasm
