@@ -1,5 +1,6 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedLabels    #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE DataKinds           #-}
@@ -623,12 +624,7 @@ hero content uri' navMenuOpen' =
   ]
 -----------------------------------------------------------------------------
 onPreventClick :: Action -> Attribute Action
-onPreventClick action =
-  onWithOptions
-      defaultOptions{preventDefault = True}
-      "click"
-      emptyDecoder
-      (\() -> const action)
+onPreventClick = E.onClickWithOptions preventDefault
 -----------------------------------------------------------------------------
 -- | Footer
 footer :: View Model action
@@ -647,13 +643,13 @@ footer =
         , " by "
         , H.a_
           [ P.href_ "https://github.com/dmjio/miso"
-          , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
+          , CSS.style_ [ CSS.color (CSS.hex #363636) ]
           ]
           [ "dmjio" ]
         , text ". BSD3"
         , H.a_
           [ P.href_ "https://opensource.org/licenses/BSD-3-Clause"
-          , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
+          , CSS.style_ [ CSS.color (CSS.hex #363636) ]
           ]
           [ " licensed."]
         ]
@@ -662,7 +658,7 @@ footer =
         [ text "The source code for this website is located "
         , H.a_
           [ P.href_ "https://github.com/dmjio/miso/tree/master/haskell-miso.org"
-          , CSS.style_ [ CSS.color (CSS.hex 0x363636) ]
+          , CSS.style_ [ CSS.color (CSS.hex #363636) ]
           ]
           [" here."]
         ]
@@ -715,7 +711,7 @@ newNav navMenuOpen' =
           [ H.span_
             [ P.class_ "icon"
             , P.name_ "github"
-            , CSS.style_ [ CSS.color (CSS.hex 0x333) ]
+            , CSS.style_ [ CSS.color (CSS.hex #333) ]
             ]
             [ H.i_
               [ P.class_ "fa fa-github" ]
@@ -731,7 +727,7 @@ newNav navMenuOpen' =
           [ H.span_
             [ P.class_ "icon"
             , P.name_ "twitter"
-            , CSS.style_ [ CSS.color (CSS.hex 0x55acee) ]
+            , CSS.style_ [ CSS.color (CSS.hex #55acee) ]
             ]
             [ H.i_
               [ P.class_ "fa fa-twitter" ]
