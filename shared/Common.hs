@@ -556,9 +556,7 @@ hero content uri' navMenuOpen' =
         , H.div_
           [ P.class_ $ "nav-right nav-menu " <> bool mempty "is-active" navMenuOpen' ]
           [ H.div_
-            [ P.classList_
-              [ ("nav-item", True)
-              ]
+            [ P.className "nav-item"
             ]
             [ H.a_
               [ P.href_ (ms uriHome)
@@ -571,9 +569,7 @@ hero content uri' navMenuOpen' =
               ]
             ]
           , H.div_
-            [ P.classList_
-              [ ("nav-item", True)
-              ]
+            [ P.className "nav-item"
             ]
             [ H.a_
               [ P.href_ (ms uriExamples)
@@ -583,9 +579,7 @@ hero content uri' navMenuOpen' =
               [ "Examples" ]
             ]
           , H.div_
-            [ P.classList_
-              [ ("nav-item", True)
-              ]
+            [ P.className "nav-item"
             ]
             [ H.a_
               [ P.href_ (ms uriDocs)
@@ -597,9 +591,7 @@ hero content uri' navMenuOpen' =
               [ "Docs" ]
             ]
           , H.div_
-            [ P.classList_
-              [ ("nav-item", True)
-              ]
+            [ P.className "nav-item"
             ]
             [ H.a_
               [ P.href_ (ms uriCommunity)
