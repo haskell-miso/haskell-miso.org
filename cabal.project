@@ -14,11 +14,6 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/haskell-miso/servant-miso-router
-  tag: 6942440145daf2c2d2fbbf2eb0e4fe519a7368bf
-
-source-repository-package
-  type: git
-  location: https://github.com/haskell-miso/servant-miso-html
-  tag: 7fe3339ce17fc463e1467647ee1da0d87cb5eb55
+  tag: de7afbaf14511e0fdaca7f6da832a11d8c13118d
 
 flags: +template-haskell
