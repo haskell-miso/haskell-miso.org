@@ -13,16 +13,14 @@ module Common where
 -----------------------------------------------------------------------------
 import           Data.Bool
 import           Data.Proxy
-import           Servant.API
-import           Servant.Links
+import           Servant.API hiding (URI(..))
+import           Servant.Links hiding (URI(..))
 -----------------------------------------------------------------------------
 import           Miso hiding (URI(..))
-import           Miso.String
 import           Miso.Lens
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
-import           Miso.Lens hiding (view)
 import qualified Miso.Router as R
 import qualified Miso.CSS as CSS
 -----------------------------------------------------------------------------
@@ -36,19 +34,19 @@ import           Servant.Miso.Router
 -----------------------------------------------------------------------------
 data Model
   = Model
-  { _uri :: URI
+  { _uri :: R.URI
   , _navMenuOpen :: Bool
   } deriving (Show, Eq)
 -----------------------------------------------------------------------------
-uri :: Lens Model URI
+uri :: Lens Model R.URI
 uri = lens _uri $ \record field -> record { _uri = field }
 -----------------------------------------------------------------------------
 navMenuOpen :: Lens Model Bool
 navMenuOpen = lens _navMenuOpen $ \record field -> record { _navMenuOpen = field }
 -----------------------------------------------------------------------------
 data Action
-  = ChangeURI URI
-  | HandleURI URI
+  = ChangeURI R.URI
+  | HandleURI R.URI
   | ToggleNavMenu
   deriving (Show, Eq)
 -----------------------------------------------------------------------------
@@ -70,9 +68,9 @@ type ClientRoutes = Routes (View Model Action)
 -----------------------------------------------------------------------------
 type HaskellMisoComponent = App Model Action
 -----------------------------------------------------------------------------
-uriHome, uriExamples, uriDocs, uriCommunity, uri404 :: URI
+uriHome, uriExamples, uriDocs, uriCommunity, uri404 :: R.URI
 uriExamples :<|> uriDocs :<|> uriCommunity :<|> uriHome :<|> uri404 =
-  allLinks' linkURI (Proxy @ClientRoutes)
+  allLinks' toMisoURI (Proxy @ClientRoutes)
 -----------------------------------------------------------------------------
 newtype Page = Page HaskellMisoComponent
 -----------------------------------------------------------------------------
@@ -92,17 +90,17 @@ clientHandlers =
 secs :: Int -> Int
 secs = (*1000000)
 -----------------------------------------------------------------------------
-haskellMisoComponent :: URI -> HaskellMisoComponent
+haskellMisoComponent :: R.URI -> HaskellMisoComponent
 haskellMisoComponent uri_ = (haskellMiso uri_)
   { subs = [ uriSub HandleURI ]
   }
 -----------------------------------------------------------------------------  
-haskellMiso :: URI -> App Model Action
+haskellMiso :: R.URI -> App Model Action
 haskellMiso currentUri = component emptyModel updateModel viewModel
   where
     emptyModel = Model currentUri False
     viewModel m =
-      case route (Proxy :: Proxy ClientRoutes) clientHandlers undefined m of
+      case route (Proxy :: Proxy ClientRoutes) clientHandlers _uri m of
         Left _ -> the404 m
         Right view_ -> view_
 -----------------------------------------------------------------------------
@@ -529,7 +527,7 @@ forkMiso =
   [ "Fork" ]
 -----------------------------------------------------------------------------
 -- | Hero
-hero :: View Model Action -> URI -> Bool -> View Model Action
+hero :: View Model Action -> R.URI -> Bool -> View Model Action
 hero content uri' navMenuOpen' =
   H.section_
   [ P.class_ "hero is-medium is-primary is-bold has-text-centered" ]
@@ -562,10 +560,10 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (uriPath uriHome)
+              [ P.href_ $ ms (R.uriPath uriHome)
               , onPreventClick (ChangeURI uriHome)
               , P.classList_
-                [ ("is-active", uriPath uri' == "")
+                [ ("is-active", R.uriPath uri' == "")
                 ]
               ]
               [ "Home"
@@ -577,9 +575,9 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (uriPath uriExamples)
+              [ P.href_ $ ms (R.uriPath uriExamples)
               , onPreventClick (ChangeURI uriExamples)
-              , P.classList_ [("is-active", uriPath uri' == uriPath uriExamples)]
+              , P.classList_ [("is-active", R.uriPath uri' == R.uriPath uriExamples)]
               ]
               [ "Examples" ]
             ]
@@ -589,10 +587,10 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (uriPath uriDocs)
+              [ P.href_ $ ms (R.uriPath uriDocs)
               , onPreventClick (ChangeURI uriDocs)
               , P.classList_
-                [ ("is-active", uriPath uri' == uriPath uriDocs)
+                [ ("is-active", R.uriPath uri' == R.uriPath uriDocs)
                 ]
               ]
               [ "Docs" ]
@@ -603,10 +601,10 @@ hero content uri' navMenuOpen' =
               ]
             ]
             [ H.a_
-              [ P.href_ $ ms (uriPath uriCommunity)
+              [ P.href_ $ ms (R.uriPath uriCommunity)
               , onPreventClick (ChangeURI uriCommunity)
               , P.classList_
-                [ ("is-active", uriPath uri' == uriPath uriCommunity)
+                [ ("is-active", R.uriPath uri' == R.uriPath uriCommunity)
                 ]
               ]
               [ "Community" ]

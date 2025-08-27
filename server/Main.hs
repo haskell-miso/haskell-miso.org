@@ -26,6 +26,7 @@ import Common
 import           Control.Monad (forM_)
 import           Data.Aeson (ToJSON, encodeFile)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import           Data.Text (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as T
 import           GHC.Generics (Generic)
@@ -143,16 +144,16 @@ instance ToHtml Page where
     where
       jsRef href =
         script_
-        [ src_ href
-        , async_ "true"
-        , defer_ "true"
-        , type_ "module"
+        [ P.src_ href
+        , P.async_ "true"
+        , P.defer_ "true"
+        , P.type_ "module"
         ] mempty
       cssRef href =
         link_
-        [ rel_ "stylesheet"
-        , type_ "text/css"
-        , href_ href
+        [ P.rel_ "stylesheet"
+        , P.type_ "text/css"
+        , P.href_ href
         ]
 -----------------------------------------------------------------------------
 fontAwesomeRef :: MisoString
