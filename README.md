@@ -20,13 +20,13 @@ Once in the shell, you can call `cabal run` to start the development server and 
 This will also build the prerendered HTML.
 
 ```bash
-$ nix develop .#wasm --command bash -c "make" --experimental-features 'nix-command flakes'
+$ nix develop .#wasm --command bash -c "make"
 ```
 
 ### Build (JavaScript)
 
 ```bash
-$ nix develop .#ghcjs --command bash -c "build" --experimental-features 'nix-command flakes'
+$ nix develop .#ghcjs --command bash -c "build"
 ```
 
 ### Serve
@@ -34,7 +34,7 @@ $ nix develop .#ghcjs --command bash -c "build" --experimental-features 'nix-com
 To host the built application you can call `serve`
 
 ```bash
-$ nix develop .#wasm --command bash -c "serve" --experimental-features 'nix-command flakes'
+$ nix develop .#wasm --command bash -c "serve"
 ```
 
 ### Clean
