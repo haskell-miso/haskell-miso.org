@@ -423,7 +423,7 @@ middle =
             ]
           , H.p_
             [ P.class_ "subtitle" ]
-            [ text "iOS, Android"
+            [ text "iOS, Android, HarmonyOS"
             ]
           ]
         ]
@@ -649,7 +649,7 @@ footer =
         []
         [ text "The source code for this website is located "
         , H.a_
-          [ P.href_ "https://github.com/dmjio/miso/tree/master/haskell-miso.org"
+          [ P.href_ "https://github.com/haskell-miso/haskell-miso.org"
           , CSS.style_ [ CSS.color (CSS.hex #363636) ]
           ]
           [" here."]
@@ -1011,7 +1011,7 @@ newNav navMenuOpen' =
                   , P.data_ "social-action_" "tweet"
                   , P.data_ "social-target" "http://bulma.io"
                   , P.target_ "_blank"
-                  , P.href_ "https://twitter.com/intent/tweet?text=Miso: a tasty Haskell front-end web and mobile framework&url=https://haskell-miso.org&via=dmjio"
+                  , P.href_ "https://bulma.io"
                   ]
                   [ H.span_
                     [P.class_ "icon"]
