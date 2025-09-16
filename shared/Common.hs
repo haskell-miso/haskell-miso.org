@@ -232,7 +232,7 @@ examples = template $
       ]
     ]
     [ "examples" ]
-  , H.a_
+  , H.div_
     [ P.class_ "subtitle animated pulse"
     ]
     [ H.a_
