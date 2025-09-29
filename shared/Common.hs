@@ -304,19 +304,23 @@ home = template $
     ]
   ]
 -----------------------------------------------------------------------------
+githubStar :: View model action
+githubStar = iframe_
+    [ title_ "GitHub"
+    , height_ "30"
+    , width_ "170"
+    , textProp "scrolling" "0"
+    , textProp "frameborder" "0"
+    , src_
+      "https://ghbtns.com/github-btn.html?user=haskell-miso&repo=miso-websocket&type=star&count=true&size=large"
+    ]
+    []
+-----------------------------------------------------------------------------
 template :: View Model Action -> Model -> View Model Action
 template content m =
   H.div_
   []
-  [ H.a_
-    [ P.class_ "github-fork-ribbon left-top fixed"
-    , P.href_ "http://github.com/dmjio/miso"
-    , P.data_ "ribbon" "Fork me on GitHub"
-    , P.target_ "blank"
-    , P.rel_ "noopener"
-    , P.title_ "Fork me on GitHub"
-    ]
-    [ "Fork me on GitHub" ]
+  [ githubStar
   , hero content (m ^. uri) (m ^. navMenuOpen)
   , middle
   , footer
