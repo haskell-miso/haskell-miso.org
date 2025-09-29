@@ -305,14 +305,13 @@ home = template $
   ]
 -----------------------------------------------------------------------------
 githubStar :: View model action
-githubStar = iframe_
-    [ title_ "GitHub"
-    , height_ "30"
-    , width_ "170"
-    , textProp "scrolling" "0"
-    , textProp "frameborder" "0"
-    , src_
-      "https://ghbtns.com/github-btn.html?user=haskell-miso&repo=miso-websocket&type=star&count=true&size=large"
+githubStar = H.iframe_
+    [ P.title_ "GitHub"
+    , P.height_ "30"
+    , P.width_ "170"
+    , P.scrolling_ "0"
+    , P.frameborder_ "0"
+    , P.src_ "https://ghbtns.com/github-btn.html?user=haskell-miso&repo=miso-websocket&type=star&count=true&size=large"
     ]
     []
 -----------------------------------------------------------------------------
