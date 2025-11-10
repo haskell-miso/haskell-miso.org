@@ -14,7 +14,6 @@ module Main (main) where
 -----------------------------------------------------------------------------
 import Common
   ( Page (..)
-  , Model
   , haskellMisoComponent
   , uri404
   , uriCommunity
