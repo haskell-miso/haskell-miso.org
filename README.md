@@ -1,11 +1,11 @@
+<img width="1089" height="226" alt="Screenshot 2025-11-14 at 5 38 08 AM" src="https://github.com/user-attachments/assets/8f37c313-f9fe-4ad9-a42f-fbb64d94b4bc" />
+
 :ramen: haskell-miso.org
 ====================
 
 The official [haskell-miso.org](https://haskell-miso.org) website.
 
-See [live](https://haskell-miso.org)
-
-### Development
+## Development
 
 Call `nix develop` to enter a shell with [GHC 9.12.2](https://haskell.org/ghc)
 
@@ -15,7 +15,7 @@ $ nix develop --experimental-features nix-command --extra-experimental-features 
 
 Once in the shell, you can call `cabal run` to start the development server and view the application at http://localhost:8080
 
-### Build (Web Assembly)
+## Build (Web Assembly)
 
 This will also build the prerendered HTML.
 
@@ -23,13 +23,13 @@ This will also build the prerendered HTML.
 $ nix develop .#wasm --command bash -c "make"
 ```
 
-### Build (JavaScript)
+## Build (JavaScript)
 
 ```bash
 $ nix develop .#ghcjs --command bash -c "build"
 ```
 
-### Serve
+## Serve
 
 To host the built application you can call `serve`
 
@@ -37,7 +37,7 @@ To host the built application you can call `serve`
 $ nix develop .#wasm --command bash -c "serve"
 ```
 
-### Clean
+## Clean
 
 ```bash
 $ nix develop .#wasm --command bash -c "make clean"
