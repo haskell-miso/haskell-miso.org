@@ -1,0 +1,49 @@
+LLMS.txt for haskell-miso.org
+
+PROJECT: Miso - A tastsy Haskell web and mobile framework
+WEBSITE: https://haskell-miso.org
+REPO: https://github.com/dmjio/miso
+
+DESCRIPTION:
+Miso is a small, production-ready, component-oriented, reactive, isomorphic Haskell front-end framework for quickly building highly interactive single-page web and mobile applications. It features a virtual-dom, recursive diffing / patching algorithm, attribute and property normalization, event delegation, event batching, SVG, 2D/3D Canvas (WebGL), Server-sent events (SSE), Websockets, type-safe servant-style routing and an extensible Subscription-based subsystem. Inspired by Elm and React. Miso is pure by default, but side effects can be introduced into the system via the Effect data type.
+
+KEY FEATURES:
+- Virtual DOM
+- Isomorphic (server-side rendering capable)
+- Type-safe and purely functional
+- Small bundle size
+- Event delegation
+- Support for HTML5, SVG, and Web Components
+
+CORE CONCEPTS:
+- Model-View-Update (MVU) architecture
+- Virtual DOM representation
+- Event handling and delegation
+- Client-server communication via Fetch, WebSocket and Server Sent Events
+- Server-side rendering support
+
+PRIMARY USE CASES:
+- Single-page applications (SPAs)
+- Interactive web applications
+- Native mobile applications
+- Type-safe front-end development
+- Full-stack Haskell applications
+
+TECHNICAL STACK:
+- Language: Haskell, TypeScript, Nix, JavaScript
+- Build: GHC, Stack, Cabal
+- Package Manager: Cabal, Stack
+- Key Dependencies: 
+
+LEARNING RESOURCES:
+- GitHub repository with examples
+- Sample applications
+- Haddock documentation
+
+COMMUNITY:
+- GitHub Issues and Discussions
+- Haskell community channels
+- Miso Gitter channel
+
+LICENSE: BSD-3-Clause
+MAINTAINER: David M. Johnson (@dmjio)
