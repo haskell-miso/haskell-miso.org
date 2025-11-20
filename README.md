@@ -1,9 +1,13 @@
-<img width="1089" height="226" alt="Screenshot 2025-11-14 at 5 38 08 AM" src="https://github.com/user-attachments/assets/8f37c313-f9fe-4ad9-a42f-fbb64d94b4bc" />
-
-:ramen: haskell-miso.org
+:ramen: `haskell-miso.org`
 ====================
 
-The official [haskell-miso.org](https://haskell-miso.org) website.
+<a href="https://haskell-miso.org">
+  <img width="1089" height="226" alt="Screenshot 2025-11-14 at 5 38 08 AM" src="https://github.com/user-attachments/assets/8f37c313-f9fe-4ad9-a42f-fbb64d94b4bc" />
+</a>
+
+## Website
+
+[See live](https://haskell-miso.org)
 
 ## Development
 
