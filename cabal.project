@@ -21,4 +21,4 @@ source-repository-package
   location: https://github.com/haskell-miso/servant-miso-html
   tag: 00781d1920795b67e0476b67ed6840c388f29810
 
-flags: +template-haskell
+flags: +template-haskell +ssr
