@@ -567,6 +567,14 @@ hero content uri' navMenuOpen' =
               ]
               [ "Home"
               ]
+            ]           
+          , H.div_
+            [ P.className "nav-item"
+            ]
+            [ H.a_
+              [ P.href_ "https://miso-ui.haskell-miso.org"
+              ]
+              [ "UI" ]
             ]
           , H.div_
             [ P.className "nav-item"
