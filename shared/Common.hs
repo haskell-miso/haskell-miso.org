@@ -543,8 +543,7 @@ hero content uri' navMenuOpen' =
         ]
         [ H.div_
           [ P.class_ "nav-left" ]
-          [ H.a_ [P.class_ "nav-item"] []
-          ]
+          []
         , H.span_
           [ P.class_ $ "nav-toggle " <> bool mempty "is-active" navMenuOpen'
           , E.onClick ToggleNavMenu
