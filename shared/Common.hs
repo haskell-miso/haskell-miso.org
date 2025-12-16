@@ -94,6 +94,7 @@ secs = (*1000000)
 haskellMisoComponent :: R.URI -> HaskellMisoComponent
 haskellMisoComponent uri_ = (haskellMiso uri_)
   { subs = [ uriSub HandleURI ]
+  , logLevel = DebugHydrate
   }
 -----------------------------------------------------------------------------  
 haskellMiso :: R.URI -> App Model Action
