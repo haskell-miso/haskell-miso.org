@@ -639,7 +639,7 @@ footer =
       [ H.p_
         []
         [ H.strong_ []
-          [ "Miso"
+          [ "miso"
           ]
         , " by "
         , H.a_
