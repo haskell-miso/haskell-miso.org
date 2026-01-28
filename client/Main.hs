@@ -12,5 +12,5 @@ foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
 main :: IO ()
-main = run (miso haskellMisoComponent)
+main = run (miso defaultEvents haskellMisoComponent)
 -----------------------------------------------------------------------------
