@@ -136,7 +136,7 @@ instance ToHtml Page where
         , jsRef "https://buttons.github.io/buttons.js"
         , script_ [] analytics
         , jsRef "index.js"
-        , body_ [] [ mount x ]
+        , body_ [] [ mount_ x ]
         ]
       ]
     ]
