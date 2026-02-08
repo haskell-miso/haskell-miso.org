@@ -67,7 +67,7 @@ type Routes a =
 -----------------------------------------------------------------------------
 type ClientRoutes = Routes (View Model Action)
 -----------------------------------------------------------------------------
-type HaskellMisoComponent = Effect ROOT Model Action
+type HaskellMisoComponent = Component ROOT Model Action
 -----------------------------------------------------------------------------
 uriHome, uriExamples, uriDocs, uriCommunity, uri404 :: R.URI
 uriExamples :<|> uriDocs :<|> uriCommunity :<|> uriHome :<|> uri404 =
