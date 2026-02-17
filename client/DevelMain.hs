@@ -14,5 +14,5 @@ update :: IO ()
 update =
   rapid 0 $ \r ->
     restart r ("miso-client" :: MisoString) $
-      run (startComponent (haskellMisoComponent uriHome))
+      startApp defaultEvents (haskellMisoComponent uriHome)
 -----------------------------------------------------------------------------
