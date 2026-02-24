@@ -30,7 +30,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as T
 import           GHC.Generics (Generic)
 -----------------------------------------------------------------------------
-import           Miso hiding (run)
+import           Miso
 import           Miso.Html
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Property as P
@@ -40,11 +40,11 @@ foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
 main :: IO ()
-main = prerender
+main = generate
 -----------------------------------------------------------------------------
 -- | Render out, pages, manifest, robots.txt, llms.txt?
-prerender :: IO ()
-prerender = do
+generate :: IO ()
+generate = do
   putStrLn "Generating server assets..."
   putStrLn "Writing robots.txt..."
   T.writeFile "public/robots.txt" robotsTxt
@@ -144,8 +144,8 @@ instance ToHtml Page where
       jsRef href =
         script_
         [ P.src_ href
-        , P.async_ "true"
-        , P.defer_ "true"
+        , P.async_ True
+        , P.defer_ True
         , P.type_ "module"
         ] mempty
       cssRef href =
