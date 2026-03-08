@@ -196,7 +196,7 @@ docs = template $
   , H.h2_
     [ P.class_ "subtitle animated pulse" ]
     [ H.a_
-      [ P.href_ "http://haddocks.haskell-miso.org/"
+      [ P.href_ "https://haddocks.haskell-miso.org/miso/Miso.html"
       , P.target_ "_blank"
       ]
       [ "Haddocks" ]
