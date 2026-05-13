@@ -306,9 +306,7 @@ home = template $
   ]
 -----------------------------------------------------------------------------
 template :: View Model Action -> Model -> View Model Action
-template content m =
-  H.div_
-  []
+template content m = vfrag
   [ H.a_
     [ P.class_ "github-fork-ribbon left-top fixed"
     , P.href_ "http://github.com/dmjio/miso"
@@ -475,9 +473,7 @@ cols =
   ]
 -----------------------------------------------------------------------------
 the404 :: Model -> View Model Action
-the404 = template $
-  H.div_
-  []
+the404 = template $ vfrag
   [ H.a_
     [ P.href_ "https://github.com/dmjio/miso" ]
     [ H.img_
