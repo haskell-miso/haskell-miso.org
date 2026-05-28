@@ -238,9 +238,9 @@ examples = template $
     ]
     [ H.a_
       [ P.target_ "_blank"
-      , P.href_ "https://threejs.haskell-miso.org"
+      , P.href_ "https://solitaire.haskell-miso.org"
       ]
-      [ "three.js"
+      [ "Solitaire"
       ]
     , text " / "
     , H.a_
