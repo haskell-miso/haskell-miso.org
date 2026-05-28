@@ -67,7 +67,7 @@ type Routes a =
 -----------------------------------------------------------------------------
 type ClientRoutes = Routes (View Model Action)
 -----------------------------------------------------------------------------
-type HaskellMisoComponent = Component ROOT Model Action
+type HaskellMisoComponent = Component ROOT () Model Action
 -----------------------------------------------------------------------------
 uriHome, uriExamples, uriDocs, uriCommunity, uri404 :: R.URI
 uriExamples :<|> uriDocs :<|> uriCommunity :<|> uriHome :<|> uri404 =
@@ -101,12 +101,12 @@ haskellMiso :: R.URI -> App Model Action
 haskellMiso currentUri = component emptyModel updateModel viewModel
   where
     emptyModel = Model currentUri False
-    viewModel m =
+    viewModel _ m =
       case route (Proxy :: Proxy ClientRoutes) clientHandlers _uri m of
         Left _ -> the404 m
         Right view_ -> view_
 -----------------------------------------------------------------------------
-updateModel :: Action -> Effect ROOT Model Action
+updateModel :: Action -> Effect ROOT props Model Action
 updateModel = \case
   HandleURI u -> do
     uri .= u
