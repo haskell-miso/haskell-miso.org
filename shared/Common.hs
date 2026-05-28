@@ -252,9 +252,9 @@ examples = template $
     , text " / "
     , H.a_
       [ P.target_ "_blank"
-      , P.href_ "https://mario.haskell-miso.org/"
+      , P.href_ "https://chess.haskell-miso.org/"
       ]
-      [ "Mario" ]
+      [ "Chess" ]
     , text " / "
     , H.a_
       [ P.target_ "_blank"
