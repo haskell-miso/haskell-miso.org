@@ -258,9 +258,9 @@ examples = template $
     , text " / "
     , H.a_
       [ P.target_ "_blank"
-      , P.href_ "https://flatris.haskell-miso.org/"
+      , P.href_ "https://tetris.haskell-miso.org/"
       ]
-      [ "Flatris" ]
+      [ "Tetris" ]
     , text " / "
     , H.a_
       [ P.target_ "_blank"
