@@ -267,6 +267,12 @@ examples = template $
       , P.href_ "https://2048.haskell-miso.org/"
       ]
       [ "2048" ]
+    , text " / "
+    , H.a_
+      [ P.target_ "_blank"
+      , P.href_ "https://try.haskell-miso.org/"
+      ]
+      [ "Try miso" ]
     ]
   ]
 -----------------------------------------------------------------------------
