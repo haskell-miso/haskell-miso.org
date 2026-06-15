@@ -61,31 +61,31 @@ siteImage = "https://haskell-miso.org/miso.png"
 -----------------------------------------------------------------------------
 homeMeta, docsMeta, examplesMeta, communityMeta, the404Meta :: PageMeta
 homeMeta = PageMeta
-  { metaTitle       = "Miso: A tasty Haskell web and mobile framework"
-  , metaDescription = "Miso is a fast, isomorphic Haskell framework for building web and mobile apps using WebAssembly and a virtual DOM. Write full-stack applications entirely in Haskell."
+  { metaTitle       = "miso: A tasty Haskell web and mobile framework"
+  , metaDescription = "miso is a fast, isomorphic Haskell framework for building web and mobile apps using WebAssembly and a virtual DOM. Write full-stack applications entirely in Haskell."
   , metaCanonical   = siteUrl <> "/"
   , metaKeywords    = "Haskell, web framework, WebAssembly, WASM, virtual DOM, isomorphic, miso, functional programming"
   }
 docsMeta = PageMeta
-  { metaTitle       = "Docs | Miso Haskell Web Framework"
+  { metaTitle       = "Docs | miso"
   , metaDescription = "Official documentation for Miso: Haddock API reference and README guide for building isomorphic Haskell web applications with WebAssembly."
   , metaCanonical   = siteUrl <> "/docs"
   , metaKeywords    = "Miso documentation, Haskell web framework docs, Haddock, API reference, WebAssembly"
   }
 examplesMeta = PageMeta
-  { metaTitle       = "Examples | Miso Haskell Web Framework"
+  { metaTitle       = "Examples | miso"
   , metaDescription = "Live demo applications built with Miso: Solitaire, TodoMVC, Chess, Tetris, and 2048 — all written in Haskell and compiled to WebAssembly."
   , metaCanonical   = siteUrl <> "/examples"
   , metaKeywords    = "Miso examples, Haskell WebAssembly demos, TodoMVC Haskell, Haskell games, WASM demos"
   }
 communityMeta = PageMeta
-  { metaTitle       = "Community | Miso Haskell Web Framework"
+  { metaTitle       = "Community | miso"
   , metaDescription = "Join the Miso Haskell community on GitHub, Matrix, IRC, and Discord. Contribute to the open-source Haskell web framework."
   , metaCanonical   = siteUrl <> "/community"
   , metaKeywords    = "Miso community, Haskell web framework community, GitHub, Discord, IRC, Matrix"
   }
 the404Meta = PageMeta
-  { metaTitle       = "404 Not Found | Miso"
+  { metaTitle       = "404 Not Found | miso"
   , metaDescription = "Page not found. Return to the Miso Haskell web framework homepage."
   , metaCanonical   = siteUrl <> "/404"
   , metaKeywords    = ""
@@ -144,7 +144,7 @@ instance ToJSON Manifest
 misoManifest :: Manifest
 misoManifest =
   Manifest
-  { name        = "Haskell Miso"
+  { name        = "Haskell miso"
   , display     = "standalone"
   , start_url   = "."
   , short_name  = "Miso"
@@ -170,7 +170,7 @@ instance ToHtml SitePage where
         , H.link_ [P.rel_ "canonical", P.href_ metaCanonical]
         -- Open Graph
         , ogMeta "og:type" "website"
-        , ogMeta "og:site_name" "Miso"
+        , ogMeta "og:site_name" "miso"
         , ogMeta "og:title" metaTitle
         , ogMeta "og:description" metaDescription
         , ogMeta "og:url" metaCanonical
