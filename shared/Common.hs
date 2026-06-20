@@ -157,13 +157,6 @@ community = template $
       ]
     , text " / "
     , H.a_
-      [ P.href_ "https://www.irccloud.com/invite?channel=%23haskell-miso&hostname=irc.libera.chat&port=6697&ssl=1"
-      , P.target_ "_blank"
-      ]
-      [ "#haskell-miso"
-      ]
-    , text " / "
-    , H.a_
       [ P.href_ "https://discord.gg/QVDtfYNSxq"
       , P.target_ "_blank"
       ]
@@ -267,12 +260,6 @@ examples = template $
       , P.href_ "https://2048.haskell-miso.org/"
       ]
       [ "2048" ]
-    , text " / "
-    , H.a_
-      [ P.target_ "_blank"
-      , P.href_ "https://try.haskell-miso.org/"
-      ]
-      [ "Try miso" ]
     ]
   ]
 -----------------------------------------------------------------------------
@@ -569,7 +556,16 @@ hero content uri' navMenuOpen' =
               ]
               [ "Home"
               ]
-            ]           
+            ]
+          , H.div_
+            [ P.className "nav-item"
+            ]
+            [ H.a_
+              [ P.href_ "https://try.haskell-miso.org"
+              , P.target_ "_blank"
+              ]
+              [ "Try" ]
+            ]            
           , H.div_
             [ P.className "nav-item"
             ]
