@@ -286,15 +286,7 @@ home = template $
     [ "miso" ]
   , H.h2_
     [ P.class_ "subtitle animated pulse" ]
-    [ text "A tasty "
-    , H.a_
-      [ P.href_ "https://www.haskell.org/"
-      , P.rel_ "noopener"
-      , P.target_ "_blank"
-      ]
-      [ H.strong_ [] [text "Haskell"]
-      ]
-    , text " web and mobile framework"
+    [ text "A tasty web and mobile framework"
     ]
   ]
 -----------------------------------------------------------------------------
