@@ -286,7 +286,7 @@ home = template $
     [ "miso" ]
   , H.h2_
     [ P.class_ "subtitle animated pulse" ]
-    [ text "A tasty web and mobile framework"
+    [ text "A tasty Haskell web and mobile framework"
     ]
   ]
 -----------------------------------------------------------------------------
