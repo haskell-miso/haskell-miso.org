@@ -1,0 +1,106 @@
+cabal-version:       2.2
+name:                haskell-miso-website
+version:             2.0.0.0
+synopsis:            https://haskell-miso.org
+description:         The haskell-miso.org website, written in miso.
+homepage:            https://haskell-miso.org
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              David Johnson
+maintainer:          code@dmj.io
+copyright:           David Johnson (c) 2016-2026
+category:            Web
+build-type:          Simple
+
+-- Only builds with vanilla GHC (used to prerender the static HTML).
+common server-only
+  if impl(ghcjs) || arch(javascript) || arch(wasm32)
+    buildable: False
+
+-- Only builds with the WASM / JavaScript backends.
+common client-only
+  if impl(ghcjs) || arch(javascript) || arch(wasm32)
+    buildable: True
+  else
+    buildable: False
+
+common common-options
+  if arch(wasm32)
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+    cpp-options:
+      -DWASM
+  if arch(javascript)
+    ld-options:
+      -sEXPORTED_RUNTIME_METHODS=HEAP8
+    if os(darwin) || os(osx)
+      ld-options:
+        -sWASM=0
+  ghc-options:
+    -Wall -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively
+  default-language:
+    Haskell2010
+  default-extensions:
+    OverloadedStrings
+    LambdaCase
+    RecordWildCards
+    DataKinds
+    DeriveGeneric
+    DeriveAnyClass
+    DerivingStrategies
+    ScopedTypeVariables
+    FlexibleContexts
+    MultilineStrings
+  build-depends:
+    base < 5,
+    containers,
+    miso
+
+common shared-modules
+  hs-source-dirs:
+    shared
+  other-modules:
+    Site
+    Site.Anatomy
+    Site.Blog
+    Site.Demos
+    Site.Docs
+    Site.Docs.Content
+    Site.Docs.Native
+    Site.Docs.Thinking
+    Site.Docs.Types
+    Site.Docs.Web
+    Site.Examples
+    Site.Home
+    Site.I18n
+    Site.Icons
+    Site.Logo
+    Site.Prose
+    Site.Route
+    Site.Search
+    Site.SeqDiagram
+    Site.Styles
+    Site.Syntax
+    Site.Types
+
+-- Generates public/**/index.html, sitemap.xml, robots.txt, manifest.json
+executable prerender
+  import:
+    server-only, common-options, shared-modules
+  main-is:
+    Main.hs
+  hs-source-dirs:
+    server
+  build-depends:
+    directory
+  ghc-options:
+    -threaded -rtsopts
+
+-- The client application (WASM / JS)
+executable app
+  import:
+    client-only, common-options, shared-modules
+  main-is:
+    Main.hs
+  hs-source-dirs:
+    client

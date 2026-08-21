@@ -1,0 +1,621 @@
+
+./client/Main.hs,39
+module Main Main6,7
+main main18,19
+
+./shared/Site.hs,782
+module SiteSite4,5
+data ModelModel34,35
+  = ModelModel35,36
+  { _uri _uri36,37
+  , _menuOpen _menuOpen37,38
+  , _langOpen _langOpen38,39
+uri uri41,42
+menuOpen menuOpen44,45
+langOpen langOpen47,48
+initialModel initialModel50,51
+data ActionAction53,54
+  = InitInit54,55
+  | Prefs Prefs55,56
+  | HandleURI HandleURI56,57
+  | Go Go57,58
+  | ToggleMenuToggleMenu58,59
+  | ToggleLangToggleLang59,60
+  | CloseMenusCloseMenus60,61
+  | SetLang SetLang61,62
+  | ToggleThemeToggleTheme62,63
+site site65,66
+updateSite updateSite73,74
+applyLang applyLang119,120
+applyTheme applyTheme124,125
+scrollTop scrollTop129,130
+viewSite viewSite132,133
+dispatch dispatch142,143
+notFound notFound159,160
+topbar topbar169,170
+footer footer280,281
+
+./shared/Site/Home.hs,821
+module Site.HomeSite.Home4,5
+homePage homePage25,26
+hero hero37,38
+data LogoModelLogoModel77,78
+  = LogoModelLogoModel78,79
+  { _pointer _pointer79,80
+  , _viewport _viewport80,81
+  , _moved _moved81,82
+pointer pointer84,85
+viewport viewport87,88
+moved moved90,91
+data LogoActionLogoAction93,94
+  = MeasureMeasure94,95
+  | Measured Measured95,96
+  | PointerAt PointerAt96,97
+heroLogo heroLogo99,100
+pillars pillars144,145
+codeSection codeSection171,172
+counterSource counterSource193,194
+data CounterAction CounterAction219,220
+data CounterAction = Add Add219,220
+data CounterAction = Add | Subtract Subtract219,220
+data CounterAction = Add | Subtract | ResetCounterResetCounter219,220
+counterDemo counterDemo222,223
+features features240,241
+ecosystem ecosystem269,270
+
+./shared/Site/Types.hs,731
+module Site.TypesSite.Types7,8
+type Catalog Catalog34,35
+data CtxCtx40,41
+  = CtxCtx41,42
+  { ctxLang ctxLang42,43
+  , ctxCatalog ctxCatalog44,45
+  , ctxTheme ctxTheme46,47
+mkCtx mkCtx50,51
+data LangLang54,55
+  = ENEN55,56
+  | ZHZH56,57
+  | ESES57,58
+  | FRFR58,59
+  | DEDE59,60
+  | PTPT60,61
+  | JAJA61,62
+  | RURU62,63
+allLangs allLangs65,66
+langCode langCode69,70
+langName langName81,82
+langFromCode langFromCode92,93
+data ThemeTheme95,96
+  = LightLight96,97
+  | DarkDark97,98
+themeCode themeCode100,101
+themeFromCode themeFromCode104,105
+langStorageKey, themeStorageKey themeStorageKey109,110
+langStorageKey,langStorageKey109,110
+themeStorageKey themeStorageKey111,112
+
+./shared/Site/Logo.hs,223
+module Site.LogoSite.Logo7,8
+logoMark logoMark21,22
+logoMarkGradient logoMarkGradient34,35
+wordmark wordmark54,55
+strokePoints, legPoints legPoints61,62
+strokePoints,strokePoints61,62
+legPoints legPoints63,64
+
+./shared/Site/Docs/Web.hs,889
+module Site.Docs.WebSite.Docs.Web3,4
+startPages startPages16,17
+conceptPages conceptPages24,25
+platformPages platformPages40,41
+introduction introduction55,56
+installation installation111,112
+firstComponent firstComponent182,183
+mvu mvu272,273
+components components308,309
+viewDsl viewDsl397,398
+textAndFragments textAndFragments472,473
+keys keys537,538
+events events571,572
+attributes attributes639,640
+effects effects690,691
+context context740,741
+props props811,812
+communication communication894,895
+subscriptions subscriptions957,958
+stateAndLenses stateAndLenses1020,1021
+routing routing1092,1093
+htmlAndSsr htmlAndSsr1160,1161
+javascriptEdsl javascriptEdsl1225,1226
+canvas canvas1281,1282
+misoString misoString1330,1331
+json json1375,1376
+styles styles1448,1449
+development development1491,1492
+internals internals1534,1535
+
+./shared/Site/Docs/Types.hs,464
+module Site.Docs.TypesSite.Docs.Types4,5
+data GroupGroup16,17
+  = StartStart17,18
+  | ConceptsConcepts18,19
+  | PlatformPlatform19,20
+  | NativeNative20,21
+  | ThinkingThinking21,22
+data DocPageDocPage24,25
+  = DocPageDocPage25,26
+  { pageSlug pageSlug26,27
+  , pageGroup pageGroup28,29
+  , pageTitle pageTitle29,30
+  , pageBlurb pageBlurb30,31
+  , pageKeywords pageKeywords32,33
+  , pageBody pageBody34,35
+pageRoute pageRoute38,39
+
+./shared/Site/Docs/Thinking.hs,241
+module Site.Docs.ThinkingSite.Docs.Thinking3,4
+thinkingPages thinkingPages11,12
+overview overview20,21
+modelPage modelPage73,74
+componentsPage componentsPage138,139
+updatePage updatePage206,207
+dataFlowPage dataFlowPage271,272
+
+./shared/Site/Docs/Native.hs,376
+module Site.Docs.NativeSite.Docs.Native3,4
+nativePages nativePages11,12
+overview overview23,24
+dualThread dualThread59,60
+staticMounting staticMounting101,102
+effectsAndThreads effectsAndThreads139,140
+mainThreadEvents mainThreadEvents172,173
+mainThreadState mainThreadState221,222
+platformApis platformApis253,254
+minimalComponent minimalComponent284,285
+
+./shared/Site/Docs/Content.hs,234
+module Site.Docs.ContentSite.Docs.Content3,4
+allPages allPages23,24
+groups groups26,27
+groupPages groupPages29,30
+groupKey groupKey38,39
+lookupRoute lookupRoute47,48
+firstPage firstPage63,64
+neighbours neighbours70,71
+
+./shared/Site/Blog.hs,364
+module Site.BlogSite.Blog3,4
+data PostPost22,23
+  = PostPost23,24
+  { postSlug postSlug24,25
+  , postTitle postTitle25,26
+  , postDate postDate26,27
+  , postBlurb postBlurb28,29
+  , postBody postBody29,30
+allPosts allPosts32,33
+lookupPost lookupPost37,38
+blogIndex blogIndex43,44
+blogPostPage blogPostPage70,71
+aFreshHome aFreshHome83,84
+
+./shared/Site/Icons.hs,476
+module Site.IconsSite.Icons2,3
+svg svg25,26
+path path28,29
+filled filled31,32
+iconGlobe iconGlobe34,35
+iconPhone iconPhone40,41
+iconMonitor iconMonitor46,47
+iconGitHub iconGitHub52,53
+iconDiscord iconDiscord56,57
+iconX iconX60,61
+iconSun iconSun64,65
+iconMoon iconMoon70,71
+iconChevron iconChevron73,74
+iconLanguage iconLanguage76,77
+iconSearch iconSearch80,81
+iconMenu iconMenu86,87
+iconClose iconClose89,90
+iconExternal iconExternal92,93
+
+./shared/Site/Syntax.hs,587
+module Site.SyntaxSite.Syntax6,7
+data TokTok20,21
+  = TKeywordTKeyword21,22
+  | TPragmaTPragma22,23
+  | TCommentTComment23,24
+  | TStringTString24,25
+  | TNumberTNumber25,26
+  | TTypeTType26,27
+  | TOperatorTOperator27,28
+  | TIdentTIdent28,29
+  | TSpaceTSpace29,30
+  | TPunctTPunct30,31
+haskell haskell34,35
+shell shell40,41
+plain plain53,54
+trimEnd trimEnd57,58
+render render60,61
+keywords keywords76,77
+tokenize tokenize85,86
+stripDashes stripDashes132,133
+pragma pragma141,142
+blockComment blockComment149,150
+stringLit stringLit157,158
+
+./shared/Site/Prose.hs,590
+module Site.ProseSite.Prose4,5
+newtype Nav Nav48,49
+newtype Nav = Go Go48,49
+navigate navigate53,54
+type Doc Doc56,57
+lead lead59,60
+para para62,63
+h2 h266,67
+h3 h369,70
+hash hash72,73
+hs hs76,77
+sh sh80,81
+pre pre84,85
+ul ul87,88
+ol ol90,91
+callout callout93,94
+note, tip, warn warn100,101
+note, tip,tip100,101
+note,note100,101
+tip tip102,103
+warn warn103,104
+table table107,108
+api api117,118
+figure figure125,126
+demo demo135,136
+c c149,150
+b b152,153
+em em155,156
+a a159,160
+goto goto164,165
+br br168,169
+slug slug172,173
+
+./shared/Site/I18n.hs,6040
+module Site.I18nSite.I18n11,12
+data KeyKey24,25
+  = NavDocs NavDocs26,27
+  = NavDocs | NavBlog NavBlog26,27
+  = NavDocs | NavBlog | NavExamples NavExamples26,27
+  = NavDocs | NavBlog | NavExamples | NavTry NavTry26,27
+  = NavDocs | NavBlog | NavExamples | NavTry | NavSearch NavSearch26,27
+  = NavDocs | NavBlog | NavExamples | NavTry | NavSearch | NavLanguage NavLanguage26,27
+  = NavDocs | NavBlog | NavExamples | NavTry | NavSearch | NavLanguage | NavTheme NavTheme26,27
+  = NavDocs | NavBlog | NavExamples | NavTry | NavSearch | NavLanguage | NavTheme | NavGitHub NavGitHub26,27
+  = NavDocs | NavBlog | NavExamples | NavTry | NavSearch | NavLanguage | NavTheme | NavGitHub | NavMenuNavMenu26,27
+  | HeroEyebrow HeroEyebrow28,29
+  | HeroEyebrow | HeroTitle HeroTitle28,29
+  | HeroEyebrow | HeroTitle | HeroSubtitle HeroSubtitle28,29
+  | HeroEyebrow | HeroTitle | HeroSubtitle | HeroGetStarted HeroGetStarted28,29
+  | HeroEyebrow | HeroTitle | HeroSubtitle | HeroGetStarted | HeroGitHub HeroGitHub28,29
+  | HeroEyebrow | HeroTitle | HeroSubtitle | HeroGetStarted | HeroGitHub | HeroDragHeroDrag28,29
+  | PillarWeb PillarWeb30,31
+  | PillarWeb | PillarWebDesc PillarWebDesc30,31
+  | PillarWeb | PillarWebDesc | PillarMobile PillarMobile30,31
+  | PillarWeb | PillarWebDesc | PillarMobile | PillarMobileDesc PillarMobileDesc30,31
+  | PillarWeb | PillarWebDesc | PillarMobile | PillarMobileDesc | PillarDesktop PillarDesktop30,31
+  | PillarWeb | PillarWebDesc | PillarMobile | PillarMobileDesc | PillarDesktop | PillarDesktopDesc PillarDesktopDesc30,31
+  | PillarWeb | PillarWebDesc | PillarMobile | PillarMobileDesc | PillarDesktop | PillarDesktopDesc | PillarComingSoonPillarComingSoon30,31
+  | CodeTitle CodeTitle32,33
+  | CodeTitle | CodeSubtitle CodeSubtitle32,33
+  | CodeTitle | CodeSubtitle | CodeLiveCodeLive32,33
+  | FeaturesTitle FeaturesTitle34,35
+  | FeaturesTitle | FeaturesSubtitleFeaturesSubtitle34,35
+  | FeatVdom FeatVdom35,36
+  | FeatVdom | FeatVdomDesc FeatVdomDesc35,36
+  | FeatVdom | FeatVdomDesc | FeatComponents FeatComponents35,36
+  | FeatVdom | FeatVdomDesc | FeatComponents | FeatComponentsDesc FeatComponentsDesc35,36
+  | FeatVdom | FeatVdomDesc | FeatComponents | FeatComponentsDesc | FeatEvents FeatEvents35,36
+  | FeatVdom | FeatVdomDesc | FeatComponents | FeatComponentsDesc | FeatEvents | FeatEventsDescFeatEventsDesc35,36
+  | FeatSsr FeatSsr36,37
+  | FeatSsr | FeatSsrDesc FeatSsrDesc36,37
+  | FeatSsr | FeatSsrDesc | FeatRouter FeatRouter36,37
+  | FeatSsr | FeatSsrDesc | FeatRouter | FeatRouterDesc FeatRouterDesc36,37
+  | FeatSsr | FeatSsrDesc | FeatRouter | FeatRouterDesc | FeatEffects FeatEffects36,37
+  | FeatSsr | FeatSsrDesc | FeatRouter | FeatRouterDesc | FeatEffects | FeatEffectsDescFeatEffectsDesc36,37
+  | FeatFfi FeatFfi37,38
+  | FeatFfi | FeatFfiDesc FeatFfiDesc37,38
+  | FeatFfi | FeatFfiDesc | FeatNative FeatNative37,38
+  | FeatFfi | FeatFfiDesc | FeatNative | FeatNativeDescFeatNativeDesc37,38
+  | EcoTitle EcoTitle39,40
+  | EcoTitle | EcoSubtitle EcoSubtitle39,40
+  | EcoTitle | EcoSubtitle | EcoAllEcoAll39,40
+  | FooterTagline FooterTagline41,42
+  | FooterTagline | FooterDocs FooterDocs41,42
+  | FooterTagline | FooterDocs | FooterCommunity FooterCommunity41,42
+  | FooterTagline | FooterDocs | FooterCommunity | FooterMore FooterMore41,42
+  | FooterTagline | FooterDocs | FooterCommunity | FooterMore | FooterLicenseFooterLicense41,42
+  | DocsTitle DocsTitle43,44
+  | DocsTitle | DocsIntro DocsIntro43,44
+  | DocsTitle | DocsIntro | DocsGroupStart DocsGroupStart43,44
+  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupConcepts DocsGroupConcepts43,44
+  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupConcepts | DocsGroupPlatform DocsGroupPlatform43,44
+  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupConcepts | DocsGroupPlatform | DocsGroupNative DocsGroupNative43,44
+  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupConcepts | DocsGroupPlatform | DocsGroupNative | DocsGroupThinkingDocsGroupThinking43,44
+  | DocsPrev DocsPrev44,45
+  | DocsPrev | DocsNext DocsNext44,45
+  | DocsPrev | DocsNext | DocsEnglishOnly DocsEnglishOnly44,45
+  | DocsPrev | DocsNext | DocsEnglishOnly | DocsSidebarToggle DocsSidebarToggle44,45
+  | DocsPrev | DocsNext | DocsEnglishOnly | DocsSidebarToggle | DocsHaddocksDocsHaddocks44,45
+  | ExTitle ExTitle46,47
+  | ExTitle | ExSubtitle ExSubtitle46,47
+  | ExTitle | ExSubtitle | ExLive ExLive46,47
+  | ExTitle | ExSubtitle | ExLive | ExSource ExSource46,47
+  | ExTitle | ExSubtitle | ExLive | ExSource | ExStarsExStars46,47
+  | ExCatGames ExCatGames47,48
+  | ExCatGames | ExCatBrowser ExCatBrowser47,48
+  | ExCatGames | ExCatBrowser | ExCatIntegrations ExCatIntegrations47,48
+  | ExCatGames | ExCatBrowser | ExCatIntegrations | ExCatPatterns ExCatPatterns47,48
+  | ExCatGames | ExCatBrowser | ExCatIntegrations | ExCatPatterns | ExCatLibraries ExCatLibraries47,48
+  | ExCatGames | ExCatBrowser | ExCatIntegrations | ExCatPatterns | ExCatLibraries | ExCatNativeExCatNative47,48
+  | BlogTitle BlogTitle49,50
+  | BlogTitle | BlogSubtitle BlogSubtitle49,50
+  | BlogTitle | BlogSubtitle | BlogArchive BlogArchive49,50
+  | BlogTitle | BlogSubtitle | BlogArchive | BlogRead BlogRead49,50
+  | BlogTitle | BlogSubtitle | BlogArchive | BlogRead | BlogBackBlogBack49,50
+  | SearchPlaceholder SearchPlaceholder51,52
+  | SearchPlaceholder | SearchNoResults SearchNoResults51,52
+  | SearchPlaceholder | SearchNoResults | SearchHint SearchHint51,52
+  | SearchPlaceholder | SearchNoResults | SearchHint | SearchTitleSearchTitle51,52
+  | NotFoundTitle NotFoundTitle53,54
+  | NotFoundTitle | NotFoundBody NotFoundBody53,54
+  | NotFoundTitle | NotFoundBody | NotFoundHomeNotFoundHome53,54
+catalog catalog58,59
+t t66,67
+translate translate71,72
+tr tr83,84
+en en93,94
+es es182,183
+fr fr271,272
+de de360,361
+pt pt449,450
+ja ja538,539
+zh zh627,628
+ru ru717,718
+
+./shared/Site/Styles.hs,256
+module Site.StylesSite.Styles10,11
+easeOut easeOut22,23
+fast, medium, slow slow25,26
+fast, medium,medium25,26
+fast,fast25,26
+medium medium27,28
+slow slow28,29
+logoTilt logoTilt32,33
+motionCss motionCss47,48
+motionSheet motionSheet50,51
+
+./shared/Site/Docs.hs,424
+module Site.DocsSite.Docs5,6
+newtype DocsProps DocsProps27,28
+newtype DocsModel DocsModel30,31
+newtype DocsModel = DocsModel { _sidebarOpen _sidebarOpen30,31
+sidebarOpen sidebarOpen33,34
+data DocsActionDocsAction36,37
+  = ToggleSidebarToggleSidebar37,38
+  | CloseSidebarCloseSidebar38,39
+  | DocsGo DocsGo39,40
+docsShell docsShell42,43
+pageKey pageKey102,103
+docPageComponent docPageComponent106,107
+
+./shared/Site/Search.hs,744
+module Site.SearchSite.Search4,5
+data ModelModel25,26
+  = ModelModel26,27
+  { _open _open27,28
+  , _query _query28,29
+  , _cursor _cursor29,30
+open open32,33
+query query35,36
+cursor cursor38,39
+data ActionAction41,42
+  = OpenOpen42,43
+  | CloseClose43,44
+  | SetQuery SetQuery44,45
+  | Move Move45,46
+  | ChooseChoose46,47
+  | HotKey HotKey47,48
+  | Pick Pick48,49
+  | NoOpNoOp49,50
+data HitHit53,54
+  = HitHit54,55
+  { hitTitle hitTitle55,56
+  , hitGroup hitGroup56,57
+  , hitBlurb hitBlurb57,58
+  , hitRoute hitRoute58,59
+  , hitScore hitScore59,60
+searchPalette searchPalette62,63
+updateSearch updateSearch68,69
+viewSearch viewSearch105,106
+index index169,170
+search search187,188
+
+./shared/Site/Demos.hs,4836
+module Site.DemosSite.Demos15,16
+data CounterAction CounterAction49,50
+data CounterAction = Add Add49,50
+data CounterAction = Add | SubtractSubtract49,50
+counter counter52,53
+counterDemo counterDemo68,69
+counterSource counterSource71,72
+data ParentModel ParentModel98,99
+data ParentModel = ParentModel ParentModel98,99
+data ParentModel = ParentModel { _mounted _mounted98,99
+data ParentModel = ParentModel { _mounted :: Bool, _events _events98,99
+data ParentActionParentAction101,102
+  = ToggleChildToggleChild102,103
+  | ChildSaid ChildSaid103,104
+  | BadMail BadMail104,105
+parent parent106,107
+data ClockAction ClockAction125,126
+data ClockAction = Tick Tick125,126
+data ClockAction = Tick | Mounted Mounted125,126
+data ClockAction = Tick | Mounted | UnmountedUnmounted125,126
+clock clock127,128
+lifecycleDemo lifecycleDemo143,144
+lifecycleSource lifecycleSource146,147
+newtype Greeting Greeting200,201
+data NamerAction NamerAction204,205
+data NamerAction = NameChanged NameChanged204,205
+namer namer206,207
+data GreeterAction GreeterAction218,219
+data GreeterAction = LogProps LogProps218,219
+data GreeterAction = LogProps | PropsChanged PropsChanged218,219
+greeter greeter220,221
+propsDemo propsDemo237,238
+propsSource propsSource240,241
+data ThemeAction ThemeAction287,288
+data ThemeAction = FlipThemeFlipTheme287,288
+themeSwitch themeSwitch289,290
+frozen frozen308,309
+contextDemo contextDemo316,317
+contextSource contextSource319,320
+data EventsModel EventsModel357,358
+data EventsModel = EventsModelEventsModel357,358
+  { _typed _typed358,359
+  { _typed :: MisoString, _lastKey _lastKey358,359
+  { _typed :: MisoString, _lastKey :: Maybe Int, _clickAt _clickAt358,359
+data EventsActionEventsAction361,362
+  = Typed Typed362,363
+  | Pressed Pressed363,364
+  | ClickedAt ClickedAt364,365
+offsetDecoder offsetDecoder367,368
+events events375,376
+eventsDemo eventsDemo398,399
+eventsSource eventsSource401,402
+data DiceModel DiceModel448,449
+data DiceModel = DiceModel DiceModel448,449
+data DiceModel = DiceModel { _rolls _rolls448,449
+data DiceModel = DiceModel { _rolls :: [Int], _busy _busy448,449
+data DiceAction DiceAction451,452
+data DiceAction = Roll Roll451,452
+data DiceAction = Roll | Rolled Rolled451,452
+data DiceAction = Roll | Rolled Int | ClearClear451,452
+dice dice453,454
+effectsDemo effectsDemo478,479
+effectsSource effectsSource481,482
+data TimerModel TimerModel517,518
+data TimerModel = TimerModel TimerModel517,518
+data TimerModel = TimerModel { _ticks _ticks517,518
+data TimerModel = TimerModel { _ticks :: Int, _running _running517,518
+data TimerAction TimerAction520,521
+data TimerAction = Start Start520,521
+data TimerAction = Start | Stop Stop520,521
+data TimerAction = Start | Stop | TickedTicked520,521
+timer timer522,523
+subsDemo subsDemo544,545
+subsSource subsSource547,548
+data Note Note582,583
+data Note = Note Note582,583
+notes notes585,586
+data ChatAction ChatAction588,589
+data ChatAction = Relayed Relayed588,589
+data ChatAction = Relayed Note | MailErr MailErr588,589
+chat chat590,591
+data PubAction PubAction604,605
+data PubAction = Send Send604,605
+data PubAction = Send | Draft Draft604,605
+publisher publisher606,607
+data SubAction SubAction622,623
+data SubAction = Subscribe Subscribe622,623
+data SubAction = Subscribe | Got Got622,623
+data SubAction = Subscribe | Got Note | Oops Oops622,623
+subscriber subscriber624,625
+mailDemo mailDemo637,638
+mailSource mailSource640,641
+data Person Person703,704
+data Person = Person Person703,704
+data Person = Person { _name _name703,704
+data Person = Person { _name :: MisoString, _age _age703,704
+name name707,708
+age age710,711
+data PersonAction PersonAction713,714
+data PersonAction = Rename Rename713,714
+data PersonAction = Rename MisoString | Birthday Birthday713,714
+data PersonAction = Rename MisoString | Birthday | YoungerYounger713,714
+person person715,716
+lensDemo lensDemo731,732
+lensSource lensSource734,735
+data BoxModel BoxModel768,769
+data BoxModel = BoxModel BoxModel768,769
+data BoxModel = BoxModel { _on _on768,769
+data BoxModel = BoxModel { _on :: Bool, _hue _hue768,769
+data BoxAction BoxAction771,772
+data BoxAction = ToggleOn ToggleOn771,772
+data BoxAction = ToggleOn | Hue Hue771,772
+box box773,774
+attrsDemo attrsDemo798,799
+attrsSource attrsSource801,802
+data User User837,838
+data User = User User837,838
+data User = User { userName userName837,838
+data User = User { userName :: MisoString, userAge userAge837,838
+data JsonAction JsonAction840,841
+data JsonAction = Edit Edit840,841
+jsonRoundTrip jsonRoundTrip842,843
+jsonDemo jsonDemo855,856
+jsonSource jsonSource858,859
+
+./shared/Site/Examples.hs,273
+module Site.ExamplesSite.Examples3,4
+data ExampleExample17,18
+  = ExampleExample18,19
+  { exName exName19,20
+  , exEmoji exEmoji20,21
+  , exBlurb exBlurb21,22
+  , exLive exLive22,23
+repo repo25,26
+examplesPage examplesPage28,29
+catalogue catalogue65,66
+
+./shared/Site/Route.hs,485
+module Site.RouteSite.Route7,8
+data RouteRoute23,24
+  = DocsNative DocsNative24,25
+  | DocsThinking DocsThinking26,27
+  | DocsPage DocsPage28,29
+  | DocsDocs30,31
+  | BlogPost BlogPost32,33
+  | BlogBlog34,35
+  | ExamplesExamples36,37
+  | IndexIndex38,39
+routeFromURI routeFromURI45,46
+docsPage docsPage51,52
+nativePage nativePage54,55
+thinkingPage thinkingPage57,58
+blogPost blogPost60,61
+routeHref routeHref64,65
+allStaticRoutes allStaticRoutes69,70
+
+./server/Main.hs,649
+module Main Main7,8
+main main30,31
+pages pages51,52
+data Meta Meta62,63
+data Meta = MetaMeta62,63
+  { metaTitle metaTitle63,64
+  , metaDescription metaDescription64,65
+  , metaKeywords metaKeywords65,66
+  , metaPublished metaPublished66,67
+website website69,70
+baseKeywords baseKeywords72,73
+notFoundMeta notFoundMeta75,76
+outputPath outputPath79,80
+siteUrl siteUrl86,87
+render render89,90
+jsonLd jsonLd166,167
+rss rss193,194
+fontsHref fontsHref219,220
+themeScript themeScript222,223
+sitemap sitemap232,233
+robots robots248,249
+manifest manifest257,258
+writeUtf8 writeUtf8274,275
+mkdirs mkdirs282,283

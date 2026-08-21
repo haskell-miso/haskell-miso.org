@@ -1,0 +1,15 @@
+-- Local development project file: builds against the sibling ../miso checkout.
+-- Use:  cabal --project-file=cabal.project.dev build
+packages:
+  .
+  ../miso
+
+allow-newer:
+  all:base
+
+if arch(wasm32)
+  shared: True
+
+if !arch(wasm32) && !arch(javascript)
+  package miso
+    flags: +ssr

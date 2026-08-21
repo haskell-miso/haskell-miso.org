@@ -1,0 +1,7 @@
+dist-newstyle/
+public/
+result
+*.wasm
+all.js
+.direnv/
+*~
