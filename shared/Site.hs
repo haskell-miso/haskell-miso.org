@@ -1,4 +1,6 @@
 -----------------------------------------------------------------------------
+{-# LANGUAGE QuasiQuotes #-}
+-----------------------------------------------------------------------------
 -- | The root component: top bar (persistent across pages), router dispatch
 -- and footer. Pages are keyed child components, so navigating swaps them
 -- with a proper unmount / mount.
@@ -15,6 +17,7 @@ import qualified Data.Map.Strict as M
 -----------------------------------------------------------------------------
 import           Miso
 import qualified Miso.CSS as CSS
+import           Miso.FFI.QQ (js)
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
@@ -144,8 +147,11 @@ applyTheme theme = do
   html <- jsg "document" ! "documentElement"
   void $ html # "setAttribute" $ ("data-theme" :: MisoString, themeCode theme)
 -----------------------------------------------------------------------------
+-- | @behavior: instant@ bypasses the @scroll-behavior: smooth@ on <html>:
+-- a smooth reset is cancelled when the route swap mutates the DOM
+-- mid-animation, leaving the page scrolled partway down.
 scrollTop :: IO ()
-scrollTop = void $ jsg "window" # "scrollTo" $ (0 :: Int, 0 :: Int)
+scrollTop = [js| window.scrollTo({ top: 0, left: 0, behavior: "instant" }); |]
 -----------------------------------------------------------------------------
 -- | Report a client-side navigation to GoatCounter. @__misoTrack@ is
 -- defined in the prerendered \<head\> and no-ops when the counter script

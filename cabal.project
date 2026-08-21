@@ -24,6 +24,10 @@ source-repository-package
 if arch(wasm32)
   shared: True
 
+-- Miso.FFI.QQ (the js quasi-quoter) lives behind miso's template-haskell flag
+package miso
+  flags: +template-haskell
+
 -- The prerenderer (vanilla GHC) needs miso's server-side rendering flag so
 -- that `text` HTML-encodes and `hydrateModel` is honoured.
 if !arch(wasm32) && !arch(javascript)
