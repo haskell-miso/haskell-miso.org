@@ -156,9 +156,9 @@ trackPage u = void (jsg1 "__misoTrack" (prettyURI u))
 viewSite :: Ctx -> () -> Model -> View Ctx Model Action
 viewSite ctx () m =
   H.div_
-    [ P.classList_ [ ("site", True), ("menu-open", m ^. menuOpen) ] ]
+    [ P.classList_ [ ("site", True), ("menu-open", m ^. menuOpen) ], E.onClick CloseMenus ]
     [ topbar ctx m
-    , H.main_ [ P.class_ "page-root", E.onClick CloseMenus ] [ dispatch ctx (routeFromURI (m ^. uri)) ]
+    , H.main_ [ P.class_ "page-root" ] [ dispatch ctx (routeFromURI (m ^. uri)) ]
     , footer ctx
     ]
 -----------------------------------------------------------------------------
@@ -232,7 +232,8 @@ topbar ctx m =
                 , P.target_ "_blank", P.rel_ "noopener", P.aria_ "label" "X", P.title_ "X" ]
                 [ iconX ]
             , H.button_
-                [ P.classes_ [ "tool-btn", "menu-toggle" ], P.type_ "button", E.onClick ToggleMenu
+                [ P.classes_ [ "tool-btn", "menu-toggle" ], P.type_ "button"
+                , E.onClickWithOptions stopPropagation ToggleMenu
                 , P.aria_ "label" (translate ctx NavMenu), P.aria_ "expanded" (if m ^. menuOpen then "true" else "false") ]
                 [ if m ^. menuOpen then iconClose else iconMenu ]
             ]

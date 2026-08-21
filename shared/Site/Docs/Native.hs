@@ -88,9 +88,9 @@ overview = DocPage
       , a "https://github.com/haskell-miso/miso-lynx-gallery" "miso-lynx-gallery", " repository builds a gallery of these components in miso." ]
     , H.figure_ [ P.class_ "lynx-gallery" ]
         [ H.div_ [ P.class_ "lynx-gallery-grid" ]
-            [ H.img_ [ P.src_ "/assets/lynx/hello-world-ios.png", P.alt_ "Hello world Lynx app running on iOS", P.loading_ "lazy" ]
-            , H.img_ [ P.src_ "/assets/lynx/lynx-case-gallery.webp", P.alt_ "A two-column waterfall gallery built on Lynx", P.loading_ "lazy" ]
-            , H.img_ [ P.src_ "/assets/lynx/lynx-case-carousel.webp", P.alt_ "A product page with a carousel built on Lynx", P.loading_ "lazy" ]
+            [ H.img_ [ P.src_ "/assets/lynx/lynx-demo-card.webp", P.alt_ "An image card with a like button, built on Lynx", P.loading_ "lazy" ]
+            , H.img_ [ P.src_ "/assets/lynx/lynx-demo-gallery.webp", P.alt_ "A two-column waterfall gallery built on Lynx, scrolling", P.loading_ "lazy" ]
+            , H.img_ [ P.src_ "/assets/lynx/lynx-demo-swiper.webp", P.alt_ "A swiper carousel with a page indicator, built on Lynx", P.loading_ "lazy" ]
             ]
         , H.figcaption_ []
             [ "Screens from the ", a "https://lynxjs.org" "Lynx", " examples (CC BY 4.0) — see "
