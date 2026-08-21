@@ -1,10 +1,10 @@
-<center> 
-  <a><img width="15%" height="512" alt="Image" src="https://github.com/user-attachments/assets/384a1898-0aed-4662-9a03-8dbe5641228f" /></a>
-</center>
+<p align="center"> 
+  <a href="https://haskell-miso.org"><img width="15%" height="512" alt="Image" src="https://github.com/user-attachments/assets/384a1898-0aed-4662-9a03-8dbe5641228f" /></a>
+  <br />
+  The <a href="https://haskell-miso.org">miso</a> 🍜 website.
+</p>
 
-The [miso](https://github.com/dmjio/miso) :ramen: website.
-
-<hr />
+## Features
 
 - **Fully static.** A `prerender` executable (vanilla GHC + miso's `ssr` flag)
   renders every route to `public/<path>/index.html`. The same code compiles to
