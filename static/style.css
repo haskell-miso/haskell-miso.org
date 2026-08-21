@@ -192,6 +192,8 @@ html[data-theme="dark"] .theme-sun { display: block; }
 
 /* language dropdown */
 .lang-menu { position: relative; }
+.lang-scrim { display: none; position: fixed; inset: 0; z-index: 55; }
+.lang-menu.open .lang-scrim { display: block; }
 .lang-btn .lang-code { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.02em; }
 .lang-btn .icon:last-child { width: 14px; height: 14px; }
 .lang-list {

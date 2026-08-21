@@ -268,6 +268,9 @@ topbar ctx m =
             , H.span_ [ P.class_ "lang-code" ] [ text (shortCode (ctxLang ctx)) ]
             , iconChevron
             ]
+          -- full-viewport click-catcher: page clicks land in child
+          -- components, whose events never reach this component's handlers
+        , H.div_ [ P.class_ "lang-scrim", E.onClick CloseMenus ] []
         , H.ul_
             [ P.class_ "lang-list", P.role_ "listbox"
               -- open / close with a typed transform + transition from Miso.CSS
