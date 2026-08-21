@@ -96,7 +96,10 @@ iconClose = svg [ path "M6 6l12 12M18 6L6 18" ]
 -- | A slim phone with the miso lambda on its screen — the "native" icon.
 iconNative :: View context model action
 iconNative = svg
-  [ path "M10.2 1.8h3.6a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2h-3.6a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2z"
+  [ S.path_
+      [ SP.d_ "M10.2 1.8h3.6a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2h-3.6a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2z"
+      , SP.strokeWidth_ "1"
+      ]
   , S.g_ [ SP.transform_ "translate(8.75 8.2) scale(0.27)" ]
       [ S.polygon_ [ SP.points_ "1.6,22 5.2,22 12.4,12.2 10.6,9.75", SP.fill_ "currentColor", SP.stroke_ "none" ]
       , S.polygon_ [ SP.points_ "1.5,2 7.8,2 22.5,22 16.2,22", SP.fill_ "currentColor", SP.stroke_ "none" ]

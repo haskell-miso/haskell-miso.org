@@ -3,7 +3,7 @@
 # Everything runs through the flake, so a plain `make` works from a clean
 # checkout with only nix installed.
 #
-#   make            update + build (WASM) + prerender + optimise  →  public/
+#   make            update + build (WASM) + optimise + prerender  →  public/
 #   make serve      serve public/ on http://localhost:8080
 #   make js         build with the GHC JavaScript backend instead of WASM
 #   make watch      hot reload via the WASM browser GHCi (ghciwatch)
@@ -22,7 +22,9 @@ GHCJS_SHELL = nix develop .\#ghcjs --command
 
 .PHONY: all update build prerender assets optim serve clean js watch repl
 
-all: update build prerender optim
+# optim runs before prerender: the prerender hashes the final app.wasm
+# into the ?v= cache-busting stamp baked into every page.
+all: update build optim prerender
 
 update:
 	$(WASM_SHELL) wasm32-wasi-cabal $(CABAL_FLAGS) update

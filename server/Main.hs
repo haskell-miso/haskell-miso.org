@@ -8,8 +8,12 @@
 module Main (main) where
 -----------------------------------------------------------------------------
 import           Control.Monad (forM_)
-import           System.Directory (createDirectoryIfMissing)
+import           Data.Bits (xor)
+import qualified Data.ByteString.Lazy as BL
+import           Data.Word (Word64)
+import           System.Directory (createDirectoryIfMissing, doesFileExist)
 import           System.IO (hSetEncoding, utf8, withFile, IOMode (..), hPutStr)
+import           Text.Printf (printf)
 -----------------------------------------------------------------------------
 import           Miso
 import           Miso.Html.Render (toHtml)
@@ -33,12 +37,13 @@ main = do
   -- Views read the app-global context (language table, theme), so seed it
   -- before rendering anything.
   setContext (mkCtx catalog)
-  putStrLn "Prerendering haskell-miso.org into public/ ..."
+  ver <- buildVersion
+  putStrLn ("Prerendering haskell-miso.org into public/ (v=" <> fromMisoString ver <> ") ...")
   forM_ pages $ \(route, meta) -> do
     let file = "public/" <> outputPath route
     putStrLn ("  " <> file)
-    writeUtf8 file (render (toURI route) (routeHref route) meta)
-  writeUtf8 "public/404.html" (render emptyURI { uriPath = "404" } "/404" notFoundMeta)
+    writeUtf8 file (render ver (toURI route) (routeHref route) meta)
+  writeUtf8 "public/404.html" (render ver emptyURI { uriPath = "404" } "/404" notFoundMeta)
   writeUtf8 "public/sitemap.xml" sitemap
   writeUtf8 "public/robots.txt" robots
   writeUtf8 "public/manifest.json" manifest
@@ -52,7 +57,7 @@ main = do
 pages :: [(Route, Meta)]
 pages =
   [ (Index,    website "miso — a tasty Haskell UI framework for web, mobile and desktop"
-                       "miso is a small, fast Haskell framework for web, mobile and desktop UIs: Elm's model-view-update, React-style Components, compiled to WebAssembly or JavaScript." [ "functional programming", "UI framework" ])
+                       "miso is a small, fast Haskell library for building web and native user interfaces: Elm's model-view-update, React-style Components, compiled to WebAssembly or JavaScript." [ "functional programming", "UI framework" ])
   , (Docs,     website "Documentation — miso" "The miso documentation: from your first Component to the native dual-thread runtime, with live examples." [ "documentation", "guide" ])
   , (Examples, website "Examples — miso" "Real applications built with miso: games, browser API demos, integrations and libraries from the haskell-miso organisation." [ "examples", "demos", "games" ])
   , (Blog,     website "Blog — miso" "Notes from the miso maintainers." [ "blog" ])
@@ -87,8 +92,29 @@ outputPath route =
 siteUrl :: MisoString
 siteUrl = "https://haskell-miso.org"
 -----------------------------------------------------------------------------
-render :: URI -> MisoString -> Meta -> String
-render uri path Meta {..} = fromMisoString . ms . toHtml $
+-- | Cache-busting stamp appended as @?v=…@ to the payload URLs below.
+-- A content hash of @app.wasm@ (or @index.js@ on the JS backend), so the
+-- HTML, loader, FFI glue and wasm of one deploy always load together
+-- instead of mixing cached and fresh versions. Run @make optim@ before
+-- @make prerender@ so the final (optimised) wasm is what gets hashed.
+buildVersion :: IO MisoString
+buildVersion = go [ "public/app.wasm", "public/index.js" ]
+  where
+    go [] = pure "dev"
+    go (f:fs) = do
+      exists <- doesFileExist f
+      if exists
+        then ms . hex . fnv1a <$> BL.readFile f
+        else go fs
+    hex w = printf "%016x" w :: String
+    -- FNV-1a: tiny, dependency-free; only needs to change between builds.
+    fnv1a :: BL.ByteString -> Word64
+    fnv1a = BL.foldl' step 0xcbf29ce484222325
+      where
+        step h b = (h `xor` fromIntegral b) * 0x100000001b3
+-----------------------------------------------------------------------------
+render :: MisoString -> URI -> MisoString -> Meta -> String
+render ver uri path Meta {..} = fromMisoString . ms . toHtml $
   [ H.doctype_
   , H.html_ [ P.lang_ "en", P.data_ "theme" "light" ]
     [ H.head_ []
@@ -118,11 +144,6 @@ render uri path Meta {..} = fromMisoString . ms . toHtml $
         , og "og:image:width" "1200"
         , og "og:image:height" "630"
         , og "og:image:alt" "The miso logo — a lambda — with the words: miso, a tasty Haskell UI framework for web, mobile and desktop"
-        , og "og:image" ogSquare
-        , og "og:image:type" "image/png"
-        , og "og:image:width" "1200"
-        , og "og:image:height" "1200"
-        , og "og:image:alt" "The miso lambda logo"
         , case metaPublished of
             Just d  -> og "article:published_time" d
             Nothing -> vfrag []
@@ -147,8 +168,8 @@ render uri path Meta {..} = fromMisoString . ms . toHtml $
         , H.link_ [ P.rel_ "preconnect", P.href_ "https://fonts.googleapis.com" ]
         , H.link_ [ P.rel_ "preconnect", P.href_ "https://fonts.gstatic.com", textProp "crossorigin" "" ]
         , H.link_ [ P.rel_ "stylesheet", P.href_ fontsHref ]
-        , H.link_ [ P.rel_ "stylesheet", P.href_ "/style.css" ]
-        , H.link_ [ P.rel_ "stylesheet", P.href_ "/motion.css" ]
+        , H.link_ [ P.rel_ "stylesheet", P.href_ ("/style.css?v=" <> ver) ]
+        , H.link_ [ P.rel_ "stylesheet", P.href_ ("/motion.css?v=" <> ver) ]
         -- Apply the saved theme / language before first paint (no flash).
         , H.script_ [] themeScript
           -- GoatCounter (privacy-friendly, no cookies). count.js counts the
@@ -160,7 +181,10 @@ render uri path Meta {..} = fromMisoString . ms . toHtml $
             , P.async_ True
             , P.src_ "https://gc.zgo.at/count.js"
             ] ""
-        , H.script_ [ P.src_ "/index.js", P.type_ "module", P.defer_ True ] ""
+          -- Privacy-friendly analytics by Plausible
+        , H.script_ [ P.async_ True, P.src_ "https://plausible.io/js/pa-MUE6ESoctLsi2-a6Qm7Ve.js" ] ""
+        , H.script_ [] plausibleScript
+        , H.script_ [ P.src_ ("/index.js?v=" <> ver), P.type_ "module", P.defer_ True ] ""
         ]
     , H.body_ [] [ mount_ (site uri) ]
     ]
@@ -168,7 +192,6 @@ render uri path Meta {..} = fromMisoString . ms . toHtml $
   where
     canonical = siteUrl <> path
     ogImage = siteUrl <> "/assets/logo/og-image.png"
-    ogSquare = siteUrl <> "/assets/logo/og-square.png"
     og k v = H.meta_ [ textProp "property" k, P.content_ v ]
 -----------------------------------------------------------------------------
 -- | schema.org structured data: the site (with a search action) plus the
@@ -244,6 +267,12 @@ trackScript = ms . unlines $
   [ "window.__misoTrack=function(p){"
   , "if(window.goatcounter&&window.goatcounter.count){window.goatcounter.count({path:p});}"
   , "};"
+  ]
+-----------------------------------------------------------------------------
+plausibleScript :: MisoString
+plausibleScript = ms . unlines $
+  [ "window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};"
+  , "plausible.init()"
   ]
 -----------------------------------------------------------------------------
 sitemap :: String

@@ -37,6 +37,9 @@ overview = DocPage
   , pageKeywords = [ "native", "mobile", "lynx", "ios", "android", "Miso.Native", "-fnative", "miso-lynx" ]
   , pageBody =
     [ lead
+      [ b "Your program runs in two JS interpreters, at the same time.", " One interpreter — the ", em "main thread", " (MTS) — has access to the drawing facilities; the other — the ", em "background thread", " (BTS) — has access to the ", a "https://lynxjs.org/guide/use-native-modules.html" "native modules", ". "
+      , "miso runs on both and keeps them in sync; see ", goto (nativePage "dual-thread") [ "the dual-thread architecture" ], "." ]
+    , para
       [ c "Miso.Native", " targets ", b "native mobile devices", " by driving the ", a "https://lynxjs.org" "Lynx", " runtime instead of the browser DOM. "
       , "The same MVU programming model, ", c "Component", " API, event delegation and virtual-DOM diffing you use on the web carry over unchanged — only the element vocabulary differs (", c "view_", ", ", c "text_", ", … instead of ", c "div_", " / ", c "span_", ") "
       , "and rendering is performed by Lynx's ", a "https://lynxjs.org/api/engine/element-api" "element PAPI", " rather than by mutating a browser DOM." ]
@@ -48,8 +51,9 @@ overview = DocPage
       , "Web / WASM builds are unaffected — all cross-thread machinery lives behind the ", c "NATIVE", " CPP guard." ]
     , sh """
       $ nix develop github:dmjio/miso#native
-      $ cabal build --with-compiler=javascript-unknown-ghcjs-ghc \\
-                    --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg -f native
+      $ cabal build -f native \\
+          --with-compiler=javascript-unknown-ghcjs-ghc \\
+          --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg
       """
     , para [ "The JavaScript output is bundled for Lynx with ", a "https://lynxjs.org/rspeedy" "rspeedy", " and loaded by the Lynx Explorer app or your own iOS / Android shell. The ", a "https://github.com/haskell-miso/miso-lynx" "miso-lynx", " repository has the tooling and a gallery." ]
     , h2 "Building a bundle with Nix"
@@ -60,14 +64,16 @@ overview = DocPage
         inputs.miso.url = "github:dmjio/miso";
 
         outputs = { miso, ... }:
-          let system = "aarch64-darwin";                  # or x86_64-linux, …
+          let system = "x86_64-linux";
+              # or aarch64-darwin, …
               lib = miso.lib.${system};
           in {
             packages.${system}.bundle = lib.mkLynxBundle {
-              name    = "my-app-bundle";
-              jsDrv   = lib.ghcNative.callCabal2nix "my-app" ./. { };
+              name = "my-app-bundle";
+              jsDrv =
+                lib.ghcNative.callCabal2nix "my-app" ./. { };
               exeName = "my-app";
-              styles  = ./styles.css;
+              styles = ./styles.css;
             };
           };
       }
@@ -191,7 +197,9 @@ staticMounting = DocPage
       """
     , para [ "Child components are embedded in a ", c "view", " the same way, with ", c "vcomp", ":" ]
     , hs """
-      view _ _ _ = view_ [] [ vcomp () (static (mountStatic_ childComponent)) ]
+      view _ _ _ =
+        view_ []
+          [ vcomp () (static (mountStatic_ child)) ]
       """
     , warn
       [ b "Static-pointer limitation. ", "A ", c "static", " form may only close over ", em "top-level, closed", " bindings — it cannot capture local variables. This is why component constructors and main-thread handlers are supplied as references to top-level definitions, with any runtime data (props, decoded event payloads) shipped separately as serialised values rather than captured in a closure." ]
@@ -270,8 +278,16 @@ mainThreadEvents = DocPage
       ]
     , hs """
       -- same `tap` event, one handler per thread:
-      view_ [ on "tap" emptyDecoder (\\_ _ _ -> Grow) ] children                      -- BTS
-      view_ [ event (static (onMain "tap" emptyDecoder onTapMain)) ] children          -- MTS
+
+      -- on the BTS
+      view_
+        [ on "tap" emptyDecoder (\\_ _ _ -> Grow) ]
+        children
+
+      -- on the MTS
+      view_
+        [ event (static (onMain "tap" emptyDecoder onTapMain)) ]
+        children
       """
     , para [ "The ", c "Attribute", "-versus-", c "EventHandler", "+", c "static", " split ", em "is", " the mechanism: only the main-thread handler has to cross to the MTS by ", c "StaticKey", ", which is why ", c "onMain", " (and every ", c "*Main", " helper) needs ", c "StaticPointers", " while ", c "on", " does not. ", c "onMainWithOptions", " exposes ", c "Phase", " / ", c "Options", " for the MTS variant, mirroring ", c "onWithOptions", "." ]
     , h2 "Reaching the model (and why it is passed, not captured)"
@@ -314,8 +330,10 @@ mainThreadState = DocPage
       followSub :: Sub Action
       followSub _ = when mts $ eachFrame $ do
         offset <- readMainThreadRef dragRef
-        setStylePropertyTransform card ("translateX(" <> ms offset <> "px)")
-        readMainThreadRef dragging   -- keep looping while a drag is active
+        setStylePropertyTransform card
+          ("translateX(" <> ms offset <> "px)")
+        readMainThreadRef dragging
+        -- keep looping while a drag is active
       """
     ]
   }
@@ -332,7 +350,7 @@ platformApis = DocPage
       [ "Mirroring Lynx (\"not all APIs exist on both threads\"), miso's native APIs are split by thread, and calling one from the wrong thread fails at runtime — the type system does not catch it, so guard with ", c "mts", " / ", c "bts", " when code may run on either thread. Neither module is re-exported from ", c "Miso.Native", "; import it directly." ]
     , h2 "Native modules (BTS-only)"
     , para
-      [ c "Miso.Native.Module", " wraps Lynx's global ", c "NativeModules", " (platform capabilities: storage, clipboard, device info, …). ", c "callNativeModule", " invokes a void-returning method and ", c "callNativeModuleWith", " a callback method whose result is decoded via ", c "FromJSON", ". ", c "NativeModules", " exists ", b "only on the BTS", ":" ]
+      [ c "Miso.Native.Module", " wraps Lynx's global ", a "https://lynxjs.org/guide/use-native-modules.html" "NativeModules", " (platform capabilities: storage, clipboard, device info, …). ", c "callNativeModule", " invokes a void-returning method and ", c "callNativeModuleWith", " a callback method whose result is decoded via ", c "FromJSON", ". ", c "NativeModules", " exists ", b "only on the BTS", ":" ]
     , hs """
       callNativeModule "NativeLocalStorageModule" "setStorageItem"
         [ String "key", String "value" ]
@@ -372,12 +390,18 @@ minimalComponent = DocPage
       app :: Component () () Int Action
       app = component 0 update view
 
-      update :: Action -> Effect () () Int Action
+      update
+        :: Action
+        -> Effect () () Int Action
       update = \\case
         Increment -> this += 1
         Decrement -> this -= 1
 
-      view :: () -> () -> Int -> View () Int Action
+      view
+        :: ()
+        -> ()
+        -> Int
+        -> View () Int Action
       view _ _ m =
         vfrag
           [ view_ [ onTap Increment ] [ text_ [] [ "+" ] ]
