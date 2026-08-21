@@ -64,7 +64,7 @@ english p =
 -----------------------------------------------------------------------------
 allPosts :: [Post]
 allPosts =
-  [ aFreshHome
+  [ longLiveHaskell
   ]
 -----------------------------------------------------------------------------
 lookupPost :: MisoString -> Maybe Post
@@ -116,9 +116,9 @@ blogPostPage p = (component () navigate view) { useContext = True }
 -----------------------------------------------------------------------------
 -- Haskell is dead, long live Haskell ----------------------------------------
 -----------------------------------------------------------------------------
-aFreshHome :: Post
-aFreshHome = Post
-  { postSlug = "a-fresh-home-for-miso"
+longLiveHaskell :: Post
+longLiveHaskell = Post
+  { postSlug = "haskell-is-dead-long-live-haskell"
   , postDate = "2026-08-18"
   , postVersions =
     [ (EN, postEn), (ZH, postZh), (ES, postEs), (FR, postFr)
