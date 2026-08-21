@@ -274,31 +274,43 @@ namer = component "World" update view
         ]
 
 -- The child reads its props in view and in update.
+data GreeterModel = GreeterModel
+  { _changes :: Int
+  , _shown   :: MisoString
+  } deriving (Show, Eq)
+
+changes :: Lens GreeterModel Int
+changes = lens _changes $ \m x -> m { _changes = x }
+
+shown :: Lens GreeterModel MisoString
+shown = lens _shown $ \m x -> m { _shown = x }
+
 data GreeterAction
-  = LogProps
+  = ShowProps
   | PropsChanged Greeting Greeting
 
 greeter
-  :: Component ctx Greeting Int GreeterAction
-greeter = (component 0 update view)
+  :: Component ctx Greeting GreeterModel GreeterAction
+greeter = (component (GreeterModel 0 "") update view)
   { onPropsChanged = Just PropsChanged
     -- react when the parent changes props
   }
   where
     update = \case
-      PropsChanged _old _new -> this += 1
-      LogProps -> do
+      PropsChanged _old _new -> changes += 1
+      ShowProps -> do
         Greeting g <- getProps
         -- props are readable in Effect
-        io_ (consoleLog ("props are: " <> g))
+        shown .= "props are: " <> g
 
-    view _ (Greeting g) changes =
+    view _ (Greeting g) m =
       H.div_ []
         [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
         , H.p_ [ HP.class_ "muted" ]
-            [ "props changed ", text (ms changes), " times" ]
-        , H.button_ [ HE.onClick LogProps ]
-            [ "log props to console" ]
+            [ "props changed ", text (ms (m ^. changes)), " times" ]
+        , H.button_ [ HE.onClick ShowProps ]
+            [ "show props" ]
+        , H.p_ [] [ text (m ^. shown) ]
         ]
 -- <<< props
 propsDemo :: Component Ctx () MisoString NamerAction
@@ -332,31 +344,43 @@ propsSource = """
           ]
 
   -- The child reads its props in view and in update.
+  data GreeterModel = GreeterModel
+    { _changes :: Int
+    , _shown   :: MisoString
+    } deriving (Show, Eq)
+
+  changes :: Lens GreeterModel Int
+  changes = lens _changes $ \\m x -> m { _changes = x }
+
+  shown :: Lens GreeterModel MisoString
+  shown = lens _shown $ \\m x -> m { _shown = x }
+
   data GreeterAction
-    = LogProps
+    = ShowProps
     | PropsChanged Greeting Greeting
 
   greeter
-    :: Component ctx Greeting Int GreeterAction
-  greeter = (component 0 update view)
+    :: Component ctx Greeting GreeterModel GreeterAction
+  greeter = (component (GreeterModel 0 "") update view)
     { onPropsChanged = Just PropsChanged
       -- react when the parent changes props
     }
     where
       update = \\case
-        PropsChanged _old _new -> this += 1
-        LogProps -> do
+        PropsChanged _old _new -> changes += 1
+        ShowProps -> do
           Greeting g <- getProps
           -- props are readable in Effect
-          io_ (consoleLog ("props are: " <> g))
+          shown .= "props are: " <> g
 
-      view _ (Greeting g) changes =
+      view _ (Greeting g) m =
         H.div_ []
           [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
           , H.p_ [ HP.class_ "muted" ]
-              [ "props changed ", text (ms changes), " times" ]
-          , H.button_ [ HE.onClick LogProps ]
-              [ "log props to console" ]
+              [ "props changed ", text (ms (m ^. changes)), " times" ]
+          , H.button_ [ HE.onClick ShowProps ]
+              [ "show props" ]
+          , H.p_ [] [ text (m ^. shown) ]
           ]
   """
 -----------------------------------------------------------------------------
