@@ -126,8 +126,10 @@ installation = DocPage
     , h2 "1. Build and serve the sampler"
     , para [ "With ", a "https://nixos.org" "nix", " installed (flakes enabled), clone the ", a "https://github.com/haskell-miso/miso-sampler" "sampler", " and run it — the flake provides the whole WASM toolchain (", c "wasm32-wasi-cabal", ", ", c "wasm32-wasi-ghc", ", ", c "http-server", ", ", c "ghciwatch", "):" ]
     , sh """
-      $ git clone https://github.com/haskell-miso/miso-sampler && cd miso-sampler
-      $ nix develop .#wasm --command bash -c 'make all && make serve'
+      $ git clone https://github.com/haskell-miso/miso-sampler
+      $ cd miso-sampler
+      $ nix develop .#wasm \\
+          --command bash -c 'make all && make serve'
       """
     , para
       [ "Then open ", a "http://localhost:8080" "http://localhost:8080", ". ", c "make all", " runs ", c "wasm32-wasi-cabal build", ", copies ", c "static/", " to ", c "public/", ", generates the JS FFI glue with ", c "post-link.mjs", " and shrinks the ", c ".wasm", " with ", c "wasm-opt", ". "
@@ -193,28 +195,37 @@ firstComponent = DocPage
       import qualified Miso.Html.Event    as HE
       import qualified Miso.Html.Property as HP
 
-      --                    * - The type of the global context
-      --                    |  * - The props inherited from the parent Component
-      --                    |  |  * - The type of the current Component model
-      --                    |  |  |   * - The action that updates the model
-      --                    |  |  |   |
-      counter :: Component () () Int Action
+      -- The four Component type parameters:
+      --   context - the type of the global context
+      --   props   - the props inherited from the parent
+      --   Int     - the type of the Component model
+      --   Action  - the action that updates the model
+      counter
+        :: Component context props Int Action
       counter = vcomp m u v
         where
           -- | Initial model value
           m :: Int
           m = 0
 
-          u :: Action -> Effect () () Int Action
+          u :: Action
+            -> Effect context props Int Action
           u = \\case
             Add      -> this += 1
             Subtract -> this -= 1
 
-          v :: () -> () -> Int -> View () Int Action
+          v :: context
+            -> props
+            -> Int
+            -> View context Int Action
           v _context _props x = vfrag
-            [ H.button_ [ HE.onClick Add, HP.id_ "add" ] [ "+" ]
+            [ H.button_
+                [ HE.onClick Add, HP.id_ "add" ]
+                [ "+" ]
             , text (ms x)
-            , H.button_ [ HE.onClick Subtract, HP.id_ "subtract" ] [ "-" ]
+            , H.button_
+                [ HE.onClick Subtract, HP.id_ "subtract" ]
+                [ "-" ]
             ]
 
       main :: IO ()
@@ -231,9 +242,14 @@ firstComponent = DocPage
       , " passed by the parent, the component's own ", c "model", " and the ", c "action", " type its ", c "update", " consumes. "
       , "A top-level application fixes ", c "context", " and ", c "props", " to ", c "()", "; the ", c "App", " synonym spells that out:" ]
     , hs """
-      type App model action = Component () () model action
+      type App model action
+        = Component () () model action
 
-      startApp :: Eq model => Events -> App model action -> IO ()
+      startApp
+        :: Eq model
+        => Events
+        -> App model action
+        -> IO ()
       """
     , h2 "Running it"
     , para
@@ -242,7 +258,8 @@ firstComponent = DocPage
       , ": instead of drawing, ", c "miso", " hydrates. If the structures do not match it falls back to drawing from scratch." ]
     , hs """
       main :: IO ()
-      main = miso defaultEvents $ \\uri -> counter   -- hydrate a prerendered page
+      main = miso defaultEvents $ \\uri -> counter
+      -- hydrate a prerendered page
       """
     , h2 "Doing something on mount"
     , para [ "It is possible to execute an initial action when a ", c "Component", " is first mounted with the ", c "mount", " hook (and, similarly, ", c "unmount", "):" ]
@@ -250,9 +267,12 @@ firstComponent = DocPage
       data Action = Init | Add | Subtract
 
       main :: IO ()
-      main = startApp defaultEvents counter { mount = Just Init }
+      main = startApp defaultEvents
+        counter { mount = Just Init }
 
-      update :: Action -> Effect () () Int Action
+      update
+        :: Action
+        -> Effect context props Int Action
       update = \\case
         Init -> io_ (consoleLog "hello world!")
         ...
@@ -276,11 +296,14 @@ mvu = DocPage
       , "It is similar to a left fold over ", c "action", "s: the ", c "model", " is updated by ", c "update", " and rendered by ", c "view", "." ]
     , figure
       [ pre """
-        actions:   Add ─▶ Add ─▶ Subtract ─▶ ...
-                    │       │        │
-        update:   0 ──▶ 1 ──▶ 2 ──▶ 1 ──▶ ...
-                    │       │        │
-        view:     ▢       ▢        ▢          (virtual DOM, diffed & patched)
+        actions:  Add    Add  Subtract
+                   │      │      │
+                   ▼      ▼      ▼
+        update: 0 ───▶ 1 ───▶ 2 ───▶ 1 ───▶ ...
+                │      │      │      │
+                ▼      ▼      ▼      ▼
+        view:   ▢      ▢      ▢      ▢
+                (virtual DOM, diffed & patched)
         """ ]
       [ "Every action folds into the model; every model is rendered exactly once." ]
     , ul
@@ -316,21 +339,40 @@ components = DocPage
     , para [ "The ", c "component", " smart constructor fills in sane defaults; you override fields with record update syntax:" ]
     , hs """
       data Component context props model action = Component
-        { model           :: model                        -- initial model
-        , hydrateModel    :: Maybe (IO model)             -- optional model to hydrate from (SSR)
-        , update          :: action -> Effect context props model action
-        , view            :: context -> props -> model -> View context model action
-        , useContext      :: Bool                         -- re-render when the global context changes
-        , subs            :: [ Sub action ]               -- long-running subscriptions
-        , styles          :: [ CSS ]                      -- dev only: append <style>/<link> to <head>
-        , scripts         :: [ JS ]                       -- dev only: append <script> to <head>
-        , mountPoint      :: Maybe MountPoint             -- defaults to <body>
-        , logLevel        :: LogLevel                     -- Off | DebugHydrate | DebugEvents | DebugAll
-        , mailbox         :: Value -> Maybe action        -- receive mail from other components
-        , eventPropagation :: Bool                        -- let events bubble past this component
-        , mount           :: Maybe action                 -- action dispatched on mount
-        , unmount         :: Maybe action                 -- action dispatched on unmount
-        , onPropsChanged  :: Maybe (props -> props -> action)
+        { model :: model
+          -- initial model
+        , hydrateModel :: Maybe (IO model)
+          -- optional model to hydrate from (SSR)
+        , update
+            :: action
+            -> Effect context props model action
+        , view
+            :: context
+            -> props
+            -> model
+            -> View context model action
+        , useContext :: Bool
+          -- re-render when the global context changes
+        , subs :: [ Sub action ]
+          -- long-running subscriptions
+        , styles :: [ CSS ]
+          -- dev only: append <style>/<link> to <head>
+        , scripts :: [ JS ]
+          -- dev only: append <script> to <head>
+        , mountPoint :: Maybe MountPoint
+          -- defaults to <body>
+        , logLevel :: LogLevel
+          -- Off | DebugHydrate | DebugEvents | DebugAll
+        , mailbox :: Value -> Maybe action
+          -- receive mail from other components
+        , eventPropagation :: Bool
+          -- let events bubble past this component
+        , mount :: Maybe action
+          -- action dispatched on mount
+        , unmount :: Maybe action
+          -- action dispatched on unmount
+        , onPropsChanged
+            :: Maybe (props -> props -> action)
         }
       """
     , h2 "Composition"
@@ -347,9 +389,14 @@ components = DocPage
       """
     , para [ "Practically, using this combinator looks like:" ]
     , hs """
-      viewModel :: context -> props -> Int -> View context Int Action
+      viewModel
+        :: context
+        -> props
+        -> Int
+        -> View context Int Action
       viewModel _ _ _ =
-        H.div_ [ HP.id_ "container" ] [ "counter" +> counter ]
+        H.div_ [ HP.id_ "container" ]
+          [ "counter" +> counter ]
       """
     , para
       [ "The ", c "\"counter\"", " string is a unique ", c "Key", " that identifies the component at runtime. Keys matter when diffing two components: "
@@ -373,15 +420,26 @@ components = DocPage
     , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
     , hs """
       data View context model action
-        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
+        = VNode
+            Namespace
+            Tag
+            [Attribute model action]
+            [View context model action]
+            DirectEvents
         | VText (Maybe Key) MisoString
         | VComp (SomeComponent context)
-        | forall props . VCompStatic (StaticPtr (SomeStaticComponent props context)) props
+        | forall props . VCompStatic
+            (StaticPtr (SomeStaticComponent props context))
+            props
         | VFrag (Maybe Key) [View context model action]
 
       data SomeComponent context
-        = forall model action props . (Eq context, Eq model, Eq props)
-        => SomeComponent (Maybe Key) props (Component context props model action)
+        = forall model action props .
+          (Eq context, Eq model, Eq props)
+        => SomeComponent
+             (Maybe Key)
+             props
+             (Component context props model action)
       """
     , para
       [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
@@ -411,7 +469,8 @@ viewDsl = DocPage
       """
     , para [ "For elements not covered by ", c "Miso.Html.Element", ", use ", c "node", " (or its synonym ", c "vnode", ") directly:" ]
     , hs """
-      node HTML "details" [] [ node HTML "summary" [] [ "More info" ] ]
+      node HTML "details" []
+        [ node HTML "summary" [] [ "More info" ] ]
       """
     , para
       [ "SVG and MathML elements use the ", c "SVG", " and ", c "MATHML", " namespaces and are covered by ", c "Miso.Svg.Element", " and ", c "Miso.Mathml.Element", ". "
@@ -441,11 +500,18 @@ viewDsl = DocPage
 
       data Action = Highlight DOMRef
 
-      update :: Action -> Effect context props model Action
+      update
+        :: Action
+        -> Effect context props model Action
       update = \\case
-        Highlight domRef -> io_ [js| hljs.highlightElement(${domRef}) |]
+        Highlight domRef ->
+          io_ [js| hljs.highlightElement(${domRef}) |]
 
-      view :: context -> props -> model -> View context model Action
+      view
+        :: context
+        -> props
+        -> model
+        -> View context model Action
       view _ _ _ =
         H.code_ [ onCreatedWith Highlight ]
           [ \"\"\"
@@ -496,10 +562,15 @@ textAndFragments = DocPage
     , h3 "Concatenating and keying"
     , para [ c "text_", " accepts a list of strings and joins them with a single space. A ", c "VText", " may also carry a ", c "Key", " (", c "textKey", ", ", c "textKey_", "): keyed text nodes take part in the same reconciliation as keyed elements, so a stable key prevents unnecessary text-node replacement when sibling order changes." ]
     , hs """
-      H.div_ [] [ text_ [ "Hello", "world" ] ]          -- renders: Hello world
+      H.div_ [] [ text_ [ "Hello", "world" ] ]
+      -- renders: Hello world
 
-      renderItem :: Item -> View context model Action
-      renderItem item = H.li_ [] [ textKey (itemId item) (itemLabel item) ]
+      renderItem
+        :: Item
+        -> View context model Action
+      renderItem item =
+        H.li_ []
+          [ textKey (itemId item) (itemLabel item) ]
       """
     , api
       [ ("text",     [ "single string, HTML-encoded on the server" ])
@@ -512,11 +583,19 @@ textAndFragments = DocPage
     , h2 "Fragments"
     , para [ c "VFrag", " groups sibling nodes without a wrapper element in the DOM, analogous to the React Fragment API and the browser's ", c "DocumentFragment", ":" ]
     , hs """
-      -- Renders two <li> elements as direct siblings, no enclosing element
-      fragment [ H.li_ [] [ "Item A" ], H.li_ [] [ "Item B" ] ]
+      -- Renders two <li> elements as direct
+      -- siblings, no enclosing element
+      fragment
+        [ H.li_ [] [ "Item A" ]
+        , H.li_ [] [ "Item B" ]
+        ]
 
-      -- Keyed fragment — survives reordering without full teardown / remount
-      vfrag_ "my-key" [ H.li_ [] [ "Item A" ], H.li_ [] [ "Item B" ] ]
+      -- Keyed fragment — survives reordering
+      -- without full teardown / remount
+      vfrag_ "my-key"
+        [ H.li_ [] [ "Item A" ]
+        , H.li_ [] [ "Item B" ]
+        ]
       """
     , para
       [ "Fragments may be nested. The differ recurses into nested fragments and processes them as if they were a flat sequence of sibling DOM nodes, so nesting carries no runtime cost beyond the constructor allocation. "
@@ -579,7 +658,10 @@ events = DocPage
       , "Other groups are exposed as conveniences too (", c "keyboardEvents", ", ", c "mouseEvents", ", ", c "pointerEvents", ", ", c "touchEvents", ", …). "
       , "All events required by all your components must be combined when running the application:" ]
     , hs """
-      main = startApp (defaultEvents <> keyboardEvents <> touchEvents) app
+      main =
+        startApp
+          (defaultEvents <> keyboardEvents <> touchEvents)
+          app
 
       touchEvents :: Events
       touchEvents = M.fromList
@@ -595,7 +677,9 @@ events = DocPage
       [ "Define your own handlers with the ", c "on", " combinator. By default this defines an event in the ", c "BUBBLE", " phase; see ", c "onCapture", " for the ", c "CAPTURE", " phase and ", c "onWithOptions", " for ", c "preventDefault", " / ", c "stopPropagation", ". "
       , c "Miso.Html.Event", " has many predefined events." ]
     , hs """
-      onChangeWith :: (MisoString -> DOMRef -> action) -> Attribute model action
+      onChangeWith
+        :: (MisoString -> DOMRef -> action)
+        -> Attribute model action
       onChangeWith = on "change" valueDecoder
       """
     , para [ "The ", c "*With", " variant of an event (e.g. ", c "onChangeWith", ") provides the target ", c "DOMRef", " to the callback." ]
@@ -603,29 +687,38 @@ events = DocPage
     , para [ "After an event is raised, information is extracted from it with a ", c "Decoder", ". Many common decoders are available in ", c "Miso.Event.Decoder", "." ]
     , hs """
       data Decoder a = Decoder
-        { decoder  :: Value -> Parser a   -- Miso.JSON parser
-        , decodeAt :: DecodeTarget        -- path into the event object
+        { decoder :: Value -> Parser a
+          -- Miso.JSON parser
+        , decodeAt :: DecodeTarget
+          -- path into the event object
         }
 
-      -- | A custom Decoder for the `value` property of an event target.
+      -- | A custom Decoder for the `value`
+      -- property of an event target.
       valueDecoder :: Decoder MisoString
       valueDecoder = Decoder {..}
         where
           decodeAt = DecodeTarget ["target"]
-          decoder  = withObject "target" $ \\o -> o .: "value"
+          decoder =
+            withObject "target" $ \\o -> o .: "value"
       """
     , para [ "A decoder that reads several fields, used with ", c "on", ":" ]
     , hs """
       clickDecoder :: Decoder (Int, Int)
       clickDecoder = Decoder
         { decodeAt = DecodeTarget []
-        , decoder  = withObject "click" $ \\o -> do
+        , decoder = withObject "click" $ \\o -> do
             ox <- o .: "offsetX"
             oy <- o .: "offsetY"
             pure (floor ox, floor oy)
         }
 
-      view = H.canvas_ [ on "click" clickDecoder (\\(x, y) _ _ -> Clicked x y) ] []
+      view =
+        H.canvas_
+          [ on "click" clickDecoder $ \\(x, y) _ _ ->
+              Clicked x y
+          ]
+          []
       """
     , h2 "Try it"
     , demo "Built-in handlers and a custom decoder" eventsSource ("demo-events" +> eventsDemo)
@@ -643,30 +736,48 @@ attributes = DocPage
     [ lead [ "The ", c "Attribute", " type carries everything that can be attached to a DOM element:" ]
     , hs """
       data Attribute model action
-        = Property MisoString Value                          -- DOM property (key/value)
-        | ClassList [MisoString]                             -- CSS class list
-        | On (model -> Sink action -> ...)                   -- fully-applied event handler
-        | OnStatic (StaticPtr (EventHandler model action))   -- static handler, rebuilt on the main thread (dual-thread)
-        | Styles (Map MisoString MisoString)                 -- inline style map
+        = Property MisoString Value
+          -- DOM property (key/value)
+        | ClassList [MisoString]
+          -- CSS class list
+        | On (model -> Sink action -> ...)
+          -- fully-applied event handler
+        | OnStatic
+            (StaticPtr (EventHandler model action))
+          -- static handler, rebuilt on the
+          -- main thread (dual-thread)
+        | Styles (Map MisoString MisoString)
+          -- inline style map
       """
     , para [ "In practice you never construct these directly. Use the smart constructors from ", c "Miso.Html.Property", ", ", c "Miso.Html.Event", ", ", c "Miso.Property", " and ", c "Miso.CSS", ":" ]
     , hs """
       H.div_
-        [ HP.id_ "container"                    -- textProp "id"
-        , HP.className "card"                   -- ClassList
-        , HP.classList_ [ ("active", isActive) ] -- ClassList, conditional
-        , HP.disabled_                          -- boolProp "disabled" True
-        , HE.onClick MyAction                   -- On event handler
-        , CSS.style_ [ CSS.display "flex" ]     -- Styles map
+        [ HP.id_ "container"
+          -- textProp "id"
+        , HP.className "card"
+          -- ClassList
+        , HP.classList_ [ ("active", isActive) ]
+          -- ClassList, conditional
+        , HP.disabled_
+          -- boolProp "disabled" True
+        , HE.onClick MyAction
+          -- On event handler
+        , CSS.style_ [ CSS.display "flex" ]
+          -- Styles map
         ]
         []
       """
     , h2 "Custom properties"
     , para [ "Use ", c "prop", " (or the typed variants ", c "textProp", ", ", c "boolProp", ", ", c "intProp", ", ", c "doubleProp", ", ", c "objectProp", ") from ", c "Miso.Property", " to set arbitrary DOM properties:" ]
     , hs """
-      prop "data-index" (42 :: Int)      -- sets element.data-index = 42
-      textProp "placeholder" "Search…"   -- sets element.placeholder
-      boolProp "checked" True            -- sets element.checked = true
+      prop "data-index" (42 :: Int)
+      -- sets element.data-index = 42
+
+      textProp "placeholder" "Search…"
+      -- sets element.placeholder
+
+      boolProp "checked" True
+      -- sets element.checked = true
       """
     , para
       [ "Note that DOM ", em "properties", " and HTML ", em "attributes", " are distinct. miso tries to set properties on the DOM node object (e.g. ", c "node.checked", ") first, then falls back to setting the HTML attribute (", c "setAttribute(\"checked\", …)", "). "
@@ -697,7 +808,11 @@ effects = DocPage
     , para [ c "Effect", " is defined as an ", c "RWS", ":" ]
     , hs """
       type Effect context props model action
-        = RWS (ComponentInfo context props) [Schedule context action] model ()
+        = RWS
+            (ComponentInfo context props)
+            [Schedule context action]
+            model
+            ()
       """
     , ul
       [ [ "The ", b "Reader", " portion is ", c "ComponentInfo", ": ", c "ask", ", ", c "asks", " and ", c "Miso.Lens.view", " read its fields (the current ", c "ComponentId", ", the parent id, the ", c "DOMRef", " the component is mounted on, ", c "props", ", ", c "context", ")." ]
@@ -712,11 +827,18 @@ effects = DocPage
       , ("tell", [ "for maximum flexibility the ", c "MonadWriter", " instance schedules raw ", c "Schedule", "s." ])
       ]
     , hs """
-      update :: Action -> Effect ctx props Model Action
+      update
+        :: Action
+        -> Effect ctx props Model Action
       update = \\case
-        FetchUser uid -> io (GotUser <$> lookupUser uid)   -- async, result becomes an action
-        Log msg       -> io_ (consoleLog msg)               -- async, fire and forget
-        Tick          -> withSink $ \\sink -> forkTimer (sink Tock)
+        FetchUser uid ->
+          io (GotUser <$> lookupUser uid)
+          -- async, the result becomes an action
+        Log msg ->
+          io_ (consoleLog msg)
+          -- async, fire and forget
+        Tick ->
+          withSink $ \\sink -> forkTimer (sink Tock)
       """
     , h2 "Synchronous IO"
     , para [ c "sync", " forces the scheduler to evaluate IO synchronously (", c "sync_", " discards the result). It is recommended to use ", c "io", " by default — ", c "sync", " ", em "will", " block the scheduler. Reserve it for cheap reads such as ", c "localStorage", " or measuring a ", c "DOMRef", "." ]
@@ -762,7 +884,11 @@ context = DocPage
     , h2 "Reading"
     , para [ "The current context is the ", b "first argument", " of every component's ", c "view", ", so any component — however deeply nested — reads it synchronously during render:" ]
     , hs """
-      view :: context -> props -> model -> View context model action
+      view
+        :: context
+        -> props
+        -> model
+        -> View context model action
       view ctx _props _model = ...
       """
     , para [ "Inside ", c "update", " it is readable in the ", c "Effect", " monad, just like props — use ", c "getContext", " (or ", c "Miso.Lens.view", " with the ", c "context", " lens):" ]
@@ -774,7 +900,9 @@ context = DocPage
     , h2 "Updating"
     , para [ "Mutate the context with ", c "modifyContext", " (or ", c "putContext", " to replace it):" ]
     , hs """
-      update Toggle = modifyContext (\\theme -> if theme == Light then Dark else Light)
+      update Toggle =
+        modifyContext $ \\theme ->
+          if theme == Light then Dark else Light
       """
     , h2 "Re-rendering on change"
     , para
@@ -791,8 +919,11 @@ context = DocPage
     , h2 "Example: this website"
     , para [ "The site's context is a record with the active language, a translation table and the theme. The top bar's dropdown calls ", c "modifyContext", "; every page component has ", c "useContext = True", " and renders text nodes by looking keys up in the table:" ]
     , hs """
-      data Ctx = Ctx { ctxLang :: Lang, ctxCatalog :: Catalog, ctxTheme :: Theme }
-        deriving Eq
+      data Ctx = Ctx
+        { ctxLang    :: Lang
+        , ctxCatalog :: Catalog
+        , ctxTheme   :: Theme
+        } deriving Eq
 
       t :: Ctx -> Key -> View Ctx model action
       t ctx key = text (translate ctx key)
@@ -829,7 +960,11 @@ props = DocPage
     , h2 "Props in view and update"
     , para [ c "view", " always takes props as its second argument; top-level applications have no parent, so props are ", c "()", ":" ]
     , hs """
-      view :: context -> props -> model -> View context model action
+      view
+        :: context
+        -> props
+        -> model
+        -> View context model action
       """
     , para [ "Use ", c "getProps", " inside ", c "Effect", " (or ", c "Miso.Lens.view props", ") to read the current value:" ]
     , hs """
@@ -843,36 +978,56 @@ props = DocPage
     , hs """
       mountWithProps_
         :: (Eq context, Eq model, Eq props)
-        => MisoString -> props
+        => MisoString
+        -> props
         -> Component context props model action
         -> View context parentModel parentAction
       """
     , h2 "Example: child reading parent-supplied props"
     , hs """
-      -- The props type: what the parent shares with the child
-      newtype Greeting = Greeting MisoString deriving (Eq)
+      -- The props type: what the parent
+      -- shares with the child
+      newtype Greeting = Greeting MisoString
+        deriving (Eq)
 
-      --                  context props    model  action
-      child :: Component ()      Greeting ()     ChildAction
+      child
+        :: Component () Greeting () ChildAction
       child = vcomp () updateChild viewChild
         where
-          viewChild :: () -> Greeting -> () -> View () () ChildAction
-          viewChild _ (Greeting g) _ = H.div_ [] [ text ("Hello, " <> g <> "!") ]
+          viewChild
+            :: ()
+            -> Greeting
+            -> ()
+            -> View () () ChildAction
+          viewChild _ (Greeting g) _ =
+            H.div_ []
+              [ text ("Hello, " <> g <> "!") ]
 
-          updateChild :: ChildAction -> Effect () Greeting () ChildAction
+          updateChild
+            :: ChildAction
+            -> Effect () Greeting () ChildAction
           updateChild = \\case
             ReadGreeting -> do
               Greeting g <- getProps
               io_ (consoleLog g)
 
-      -- Parent component: owns the greeting, passes it to the child as props
+      -- Parent component: owns the greeting,
+      -- passes it to the child as props
       parentComp :: App ParentModel ParentAction
-      parentComp = vcomp (ParentModel "World") noop viewParent
+      parentComp =
+        vcomp (ParentModel "World") noop viewParent
         where
-          viewParent :: () -> () -> ParentModel -> View () ParentModel ParentAction
-          viewParent _ _ (ParentModel g) = mountWithProps_ "child" (Greeting g) child
+          viewParent
+            :: ()
+            -> ()
+            -> ParentModel
+            -> View () ParentModel ParentAction
+          viewParent _ _ (ParentModel g) =
+            mountWithProps_ "child" (Greeting g) child
 
-      newtype ParentModel = ParentModel MisoString deriving (Eq)
+      newtype ParentModel = ParentModel MisoString
+        deriving (Eq)
+
       data ChildAction = ReadGreeting
       data ParentAction
       """
@@ -920,13 +1075,16 @@ communication = DocPage
         = ReceivedMsg MyMsg
         | MailError   MisoString
 
-      myComp :: Component context props model Action
-      myComp = (vcomp m u v) { mailbox = checkMail ReceivedMsg MailError }
+      myComp
+        :: Component context props model Action
+      myComp = (vcomp m u v)
+        { mailbox = checkMail ReceivedMsg MailError }
       """
     , h3 "Looking up a ComponentId"
     , hs """
       update = \\case
-        SendMsg targetId -> io_ (mail targetId ("hello" :: MisoString))
+        SendMsg targetId ->
+          io_ (mail targetId ("hello" :: MisoString))
         GetMyId -> do
           info <- ask
           let myId = _componentInfoId info
@@ -935,14 +1093,19 @@ communication = DocPage
     , h2 "PubSub"
     , para [ c "Miso.PubSub", " provides topics: a component ", c "subscribe", "s to a topic (receiving messages as actions) and any component may ", c "publish", " to it. It is the right tool when the sender does not know who is listening." ]
     , hs """
-      notifications :: Topic Note          -- a typed topic; Note has ToJSON / FromJSON
+      -- a typed topic; Note has ToJSON / FromJSON
+      notifications :: Topic Note
       notifications = topic "notifications"
 
       update = \\case
-        Init         -> subscribe notifications Notified NotifyError
-        Notify n     -> io_ (publish notifications n)
-        Notified n   -> ...                -- n :: Note
-        NotifyError _ -> pure ()
+        Init ->
+          subscribe notifications Notified NotifyError
+        Notify n ->
+          io_ (publish notifications n)
+        Notified n -> ...
+          -- n :: Note
+        NotifyError _ ->
+          pure ()
       """
     , h2 "Try it"
     , demo "Mailbox and PubSub between siblings" mailSource ("demo-mail" +> mailDemo)
@@ -982,8 +1145,10 @@ subscriptions = DocPage
             windowRemoveEventListener "online"  cb1
             windowRemoveEventListener "offline" cb2
           acquire = do
-            cb1 <- windowAddEventListener "online"  (const $ sink (f True))
-            cb2 <- windowAddEventListener "offline" (const $ sink (f False))
+            cb1 <- windowAddEventListener "online"
+              (const $ sink (f True))
+            cb2 <- windowAddEventListener "offline"
+              (const $ sink (f False))
             pure (cb1, cb2)
       """
     , h2 "startSub / stopSub"
@@ -1062,16 +1227,22 @@ stateAndLenses = DocPage
     , h3 "Generics"
     , para [ c "Miso.Lens.Generic.field", " / ", c "HasLens", " derive lenses at compile time using ", c "GHC.Generics", " — no splice required. Needs ", c "TypeApplications", " and, optionally, ", c "OverloadedLabels", " for the ", c "#field", " shorthand:" ]
     , hs """
-      {-# LANGUAGE DataKinds, DeriveGeneric, OverloadedLabels, TypeApplications #-}
+      {-# LANGUAGE DataKinds, DeriveGeneric #-}
+      {-# LANGUAGE OverloadedLabels        #-}
+      {-# LANGUAGE TypeApplications        #-}
       import GHC.Generics (Generic)
       import Miso.Lens.Generic (field)
 
-      data Model = Model { count :: Int, name :: MisoString }
-        deriving (Eq, Generic)
+      data Model = Model
+        { count :: Int
+        , name  :: MisoString
+        } deriving (Eq, Generic)
 
       update = \\case
-        Increment -> field @"count" += 1   -- via TypeApplications
-        Rename n  -> #name .= n            -- via OverloadedLabels
+        Increment -> field @"count" += 1
+          -- via TypeApplications
+        Rename n  -> #name .= n
+          -- via OverloadedLabels
       """
     , h3 "Hand-written"
     , hs """
@@ -1104,9 +1275,14 @@ routing = DocPage
       import Miso.Router
 
       data Route
-        = Index                                                        -- "/"
-        | About                                                        -- "/about"
-        | Product (Capture "id" Int) (QueryParam "tab" MisoString)     -- "/product/42?tab=info"
+        = Index
+          -- "/"
+        | About
+          -- "/about"
+        | Product
+            (Capture "id" Int)
+            (QueryParam "tab" MisoString)
+          -- "/product/42?tab=info"
         deriving stock (Show, Eq, Generic)
         deriving anyclass Router
       """
@@ -1121,8 +1297,10 @@ routing = DocPage
       data Route = Product Int
 
       instance Router Route where
-        routeParser = routes [ Product <$> (path "product" *> capture) ]
-        fromRoute (Product n) = [ toPath "product", toCapture n ]
+        routeParser = routes
+          [ Product <$> (path "product" *> capture) ]
+        fromRoute (Product n) =
+          [ toPath "product", toCapture n ]
       """
     , h2 "Subscribing to URI changes"
     , para [ c "routerSub", " listens to ", c "popstate", " events and delivers the parsed route (or a ", c "RoutingError", ") to ", c "update", ":" ]
@@ -1146,8 +1324,12 @@ routing = DocPage
     , h2 "Type-safe links in view"
     , para [ c "href_", " (from ", c "Miso.Router", ") produces a type-safe ", c "href", " from any route. Pair it with ", c "onClickPrevent", " to navigate client-side while keeping a real link for the browser and crawlers:" ]
     , hs """
-      H.a_ [ href_ (Product (Capture 10) (QueryParam Nothing))
-           , onClickPrevent (Go (Product (Capture 10) (QueryParam Nothing))) ]
+      let product10 =
+            Product (Capture 10) (QueryParam Nothing)
+      in H.a_
+           [ href_ product10
+           , onClickPrevent (Go product10)
+           ]
            [ "Go to product 10" ]
       """
     ]
@@ -1168,15 +1350,22 @@ htmlAndSsr = DocPage
         toHtml :: a -> L.ByteString
 
       pageHtml :: L.ByteString
-      pageHtml = toHtml $ H.div_ [ HP.id_ "root" ] [ "Hello, world!" ]
+      pageHtml = toHtml $
+        H.div_ [ HP.id_ "root" ] [ "Hello, world!" ]
       """
     , para [ "Instances are provided for ", c "View", " and ", c "[View]", ". Servant users can serve them directly with ", a "https://github.com/haskell-miso/servant-miso-html" "servant-miso-html", ", which provides an ", c "HTML", " content type for ", c "View", " and ", c "Component", " values:" ]
     , hs """
       import Servant.Miso.Html (HTML)
 
-      type Home    = "home"    :> Get '[HTML] (Component context props model action)
-      type About   = "about"   :> Get '[HTML] (View context model action)
-      type Contact = "contact" :> Get '[HTML] [View context model action]
+      type Home = "home"
+        :> Get '[HTML]
+             (Component context props model action)
+
+      type About = "about"
+        :> Get '[HTML] (View context model action)
+
+      type Contact = "contact"
+        :> Get '[HTML] [View context model action]
       """
     , h2 "Prerendering"
     , para
@@ -1186,7 +1375,10 @@ htmlAndSsr = DocPage
     , hs """
       main :: IO ()
       main = prerender defaultEvents $
-        (component () noop $ \\_ _ () -> "hello world") { logLevel = DebugPrerender }
+        (component () noop view)
+          { logLevel = DebugPrerender }
+        where
+          view _ _ () = "hello world"
       """
     , para [ "With the payload and HTML delivered together, the console shows:" ]
     , pre "[DEBUG_HYDRATE] Successfully prerendered page"
@@ -1196,17 +1388,25 @@ htmlAndSsr = DocPage
       , "The ", c "hydrateModel", " field is ", c "Maybe (IO model)", ": when set, the action runs once at hydration time to produce the initial model; a typical pattern embeds the model as JSON in the response and reads it back through the JS DSL:" ]
     , hs """
       myComp :: App Model Action
-      myComp = (component defaultModel updateModel viewModel)
-        { hydrateModel = Just $ do
-            val <- jsg "window" ! "__initialModel__"
-            fromJSValUnchecked val
-        }
+      myComp =
+        (component defaultModel updateModel viewModel)
+          { hydrateModel = Just $ do
+              val <- jsg "window" ! "__initialModel__"
+              fromJSValUnchecked val
+          }
 
-      -- On the server, populate window.__initialModel__ alongside the rendered HTML:
-      serverView :: context -> props -> Model -> View context Model Action
+      -- On the server, populate
+      -- window.__initialModel__ alongside
+      -- the rendered HTML:
+      serverView
+        :: context
+        -> props
+        -> Model
+        -> View context Model Action
       serverView _ _ m =
         H.div_ []
-          [ H.script_ [] ("window.__initialModel__ = " <> encode m)
+          [ H.script_ []
+              ("window.__initialModel__ = " <> encode m)
           , appView m
           ]
       """
@@ -1237,7 +1437,8 @@ javascriptEdsl = DocPage
     , hs """
       -- Read document.body.children.length
       document <- jsg "document"
-      len :: Int <- fromJSValUnchecked =<< (document ! "body" ! "children" ! "length")
+      len :: Int <- fromJSValUnchecked =<<
+        (document ! "body" ! "children" ! "length")
 
       -- Call console.log("hello")
       console <- jsg "console"
@@ -1252,7 +1453,9 @@ javascriptEdsl = DocPage
       {-# LANGUAGE QuasiQuotes #-}
       import Miso.FFI.QQ (js)
 
-      update :: Action -> Effect context props model Action
+      update
+        :: Action
+        -> Effect context props model Action
       update = \\case
         Log msg -> io_ [js| console.log(${msg}) |]
 
@@ -1293,8 +1496,10 @@ canvas = DocPage
     , hs """
       canvas
         [ HP.width_ "800", HP.height_ "480" ]
-        (\\_ -> pure ())                -- init: called once on canvas initialisation
-        (\\() -> drawScene myModel)     -- draw: called on each diff
+        (\\_ -> pure ())
+        -- init: called once on canvas initialisation
+        (\\() -> drawScene myModel)
+        -- draw: called on each diff
       """
     , para [ c "canvas_", " is the variant that threads no init state at all." ]
     , h2 "Drawing commands"
@@ -1318,7 +1523,8 @@ canvas = DocPage
       data Action = Tick Double
 
       main :: IO ()
-      main = startApp defaultEvents comp { subs = [ rAFSub Tick ] }
+      main = startApp defaultEvents
+        comp { subs = [ rAFSub Tick ] }
       """
     , h2 "Try it"
     , demo "Orbits: rAFSub driving the Canvas monad" canvasSource ("demo-canvas" +> canvasDemo)
@@ -1393,8 +1599,12 @@ json = DocPage
       """
     , h2 "Encoding and decoding"
     , hs """
-      encode value        -- uses the JS runtime on the client, pure on the server
-      encodePure value    -- always the pure Haskell implementation
+      encode value
+      -- uses the JS runtime on the client,
+      -- pure on the server
+
+      encodePure value
+      -- always the pure Haskell implementation
 
       decode s            :: Maybe a
       eitherDecode s      :: Either MisoString a
@@ -1406,8 +1616,10 @@ json = DocPage
       import GHC.Generics
       import Miso.JSON
 
-      data User = User { name :: MisoString, age :: Int }
-        deriving (Generic)
+      data User = User
+        { name :: MisoString
+        , age  :: Int
+        } deriving (Generic)
 
       instance ToJSON User
       instance FromJSON User
@@ -1415,26 +1627,40 @@ json = DocPage
     , para [ "Use ", c "genericToJSON", " / ", c "genericParseJSON", " with ", c "Options", " to customise field and constructor names; ", c "camelTo2", " converts ", c "camelCase", " to ", c "snake_case", ":" ]
     , hs """
       instance ToJSON User where
-        toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+        toJSON = genericToJSON defaultOptions
+          { fieldLabelModifier = camelTo2 '_' }
       """
     , h2 "Building and parsing objects"
     , hs """
       -- Build
-      object [ "name" .= ms "Alice", "age" .= (30 :: Int) ]
+      object
+        [ "name" .= ms "Alice"
+        , "age" .= (30 :: Int)
+        ]
 
-      -- Parse (inside a withObject callback or event decoder)
+      -- Parse (inside a withObject
+      -- callback or event decoder)
       withObject "User" $ \\o -> User
-        <$> o .:  "name"     -- required field
+        <$> o .:  "name"
+            -- required field
         <*> o .:  "age"
 
-      o .:? "nickname"       -- optional field → Maybe a
-      o .:! "nickname"       -- optional field, explicit null → Maybe a
-      p .!= "anon"           -- default for a Maybe parser
+      o .:? "nickname"
+      -- optional field → Maybe a
+
+      o .:! "nickname"
+      -- optional field, explicit null → Maybe a
+
+      p .!= "anon"
+      -- default for a Maybe parser
       """
     , h2 "Pretty printing"
     , hs """
-      encodePretty  value          -- indented with defConfig (2-space indent)
-      encodePretty' config value   -- custom Config
+      encodePretty value
+      -- indented with defConfig (2-space indent)
+
+      encodePretty' config value
+      -- custom Config
       """
     , h2 "Try it"
     , demo "Round-tripping a record with generic instances" jsonSource ("demo-json" +> jsonDemo)
@@ -1506,8 +1732,16 @@ development = DocPage
        where
          app = counter
       #ifdef INTERACTIVE
-           { scripts = [ Src "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" (False :: CacheBust) ]
-           , styles  = [ Href "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" (False :: CacheBust) ]
+           { scripts =
+               [ Src
+                   "https://code.jquery.com/jquery.min.js"
+                   (False :: CacheBust)
+               ]
+           , styles =
+               [ Href
+                   "https://cdn.example.com/bootstrap.min.css"
+                   (False :: CacheBust)
+               ]
            }
       #endif
       """
@@ -1517,8 +1751,14 @@ development = DocPage
       , c "liveWithContext", " does the same for apps that seed a context; when a component's model can be recovered by key it is preserved across reloads." ]
     , sh """
       $ make watch
-      # ghciwatch --after-startup-ghci :main --after-reload-ghci :main --watch *.hs \\
-      #   --command 'wasm32-wasi-cabal repl app -finteractive --repl-options="-fghci-browser -fghci-browser-port=8080"'
+      # ghciwatch \\
+      #   --after-startup-ghci :main \\
+      #   --after-reload-ghci :main \\
+      #   --watch *.hs \\
+      #   --command 'wasm32-wasi-cabal repl app \\
+      #     -finteractive \\
+      #     --repl-options="-fghci-browser \\
+      #       -fghci-browser-port=8080"'
       """
     , h2 "Debugging"
     , para

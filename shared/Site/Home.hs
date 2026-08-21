@@ -250,27 +250,35 @@ codeSection ctx =
 -----------------------------------------------------------------------------
 counterSource :: MisoString
 counterSource = """
-  import Miso (Component, Effect, View, component, text, startApp, defaultEvents)
+  import Miso
+    ( Component, Effect, View, component
+    , vfrag, text, startApp, defaultEvents
+    )
   import Miso.Lens (this, (+=), (-=))
   import Miso.String (ms)
-  import Miso.Html.Element (div_, button_)
+  import Miso.Html.Element (button_)
   import Miso.Html.Event (onClick)
 
   data Action = Add | Subtract
 
-  counter :: Component context props Int Action
+  counter
+    :: Component context props Int Action
   counter = component m u v
     where
       m :: Int
       m = 0
 
-      u :: Action -> Effect context props Int Action
+      u :: Action
+        -> Effect context props Int Action
       u = \\case
         Add      -> this += 1
         Subtract -> this -= 1
 
-      v :: context -> props -> Int -> View context Int Action
-      v _ _ n = div_ []
+      v :: context
+        -> props
+        -> Int
+        -> View context Int Action
+      v _ _ n = vfrag
         [ button_ [ onClick Subtract ] [ "−" ]
         , text (ms n)
         , button_ [ onClick Add ] [ "+" ]
@@ -319,7 +327,7 @@ features ctx =
         , feature (text "∞") FeatEffects FeatEffectsDesc (docsPage "effects")
         , feature (text "⇅") FeatNet FeatNetDesc (docsPage "subscriptions")
         , feature (text "{}") FeatFfi FeatFfiDesc (docsPage "javascript-edsl")
-        , feature (text "↻") FeatReload FeatReloadDesc (docsPage "development")
+        , feature (text "0") FeatZeroDeps FeatZeroDepsDesc (docsPage "installation")
         , feature iconNative FeatNative FeatNativeDesc (nativePage "overview")
         ]
     ]

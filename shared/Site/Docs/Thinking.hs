@@ -19,6 +19,7 @@ thinkingPages =
   , componentsPage
   , updatePage
   , dataFlowPage
+  , reactPage
   ]
 -----------------------------------------------------------------------------
 overview :: DocPage
@@ -39,9 +40,21 @@ overview = DocPage
       [ "The mockup, live. Search, filter by tag, click a row for the detail pane — everything this guide builds, in ~60 lines." ]
     , para [ "and some data:" ]
     , pre """
-      [ { "id": 1, "title": "miso on GitHub",  "url": "https://github.com/dmjio/miso", "tags": ["haskell"] }
-      , { "id": 2, "title": "Lynx docs",       "url": "https://lynxjs.org",             "tags": ["mobile"]  }
-      , { "id": 3, "title": "Elm architecture", "url": "https://guide.elm-lang.org",    "tags": ["haskell"] }
+      [ { "id": 1
+        , "title": "miso on GitHub"
+        , "url": "https://github.com/dmjio/miso"
+        , "tags": ["haskell"]
+        }
+      , { "id": 2
+        , "title": "Lynx docs"
+        , "url": "https://lynxjs.org"
+        , "tags": ["mobile"]
+        }
+      , { "id": 3
+        , "title": "Elm architecture"
+        , "url": "https://guide.elm-lang.org"
+        , "tags": ["haskell"]
+        }
       ]
       """
     , h2 "The four steps"
@@ -57,7 +70,7 @@ overview = DocPage
       , [ b "The view is a function.", " ", c "view :: context -> props -> model -> View", " — no hidden state, no mutation, nothing to keep in sync." ]
       , [ b "Change is a fold.", " Every event is an ", c "action", "; ", c "update", " folds it into the model and ", em "schedules", " any IO. Results come back as more actions." ]
       ]
-    , para [ "If you have written Elm, this will feel like home. If you come from React, notice that there are no hooks to order, no dependency arrays and no stale closures — the model is the only state and it is always current." ]
+    , para [ "If you have written Elm, this will feel like home. If you come from React, notice that there are no hooks to order, no dependency arrays and no stale closures — the model is the only state and it is always current. For the hook-by-hook translation, see ", goto (thinkingPage "miso-vs-react") [ "miso vs. React" ], "." ]
     ]
   }
 -----------------------------------------------------------------------------
@@ -88,18 +101,28 @@ modelPage = DocPage
     , h2 "Write it down"
     , hs """
       data Model = Model
-        { _bookmarks :: Remote [Bookmark]   -- what the server said (or hasn't yet)
-        , _query     :: MisoString          -- search text
-        , _tagFilter :: Maybe Tag           -- Nothing = all
-        , _selected  :: Maybe BookmarkId    -- expanded row
+        { _bookmarks :: Remote [Bookmark]
+          -- what the server said (or hasn't yet)
+        , _query :: MisoString
+          -- search text
+        , _tagFilter :: Maybe Tag
+          -- Nothing = all
+        , _selected :: Maybe BookmarkId
+          -- expanded row
         } deriving (Eq, Generic)
 
-      data Remote a = Loading | Failed MisoString | Loaded a
+      data Remote a
+        = Loading
+        | Failed MisoString
+        | Loaded a
         deriving (Eq, Generic)
 
       data Bookmark = Bookmark
-        { bookmarkId :: BookmarkId, title :: MisoString, url :: MisoString, tags :: [Tag] }
-        deriving (Eq, Generic, FromJSON)
+        { bookmarkId :: BookmarkId
+        , title      :: MisoString
+        , url        :: MisoString
+        , tags       :: [Tag]
+        } deriving (Eq, Generic, FromJSON)
 
       makeLenses ''Model
       """
@@ -141,12 +164,14 @@ componentsPage = DocPage
     , figure
       [ pre """
         BookmarksApp  (Component — owns the Model)
-        ├── searchBar      (view function: query, onInput)
-        ├── tagSidebar     (view function: tag counts, selected tag)
+        ├── searchBar      (view: query, onInput)
+        ├── tagSidebar     (view: tag counts, tag)
         ├── bookmarkTable  (view function)
-        │   └── bookmarkRow (view function, keyed by id)
+        │   └── bookmarkRow (view, keyed by id)
         ├── detailPane     (view function)
-        └── "add" +> addBookmarkForm  (Component — owns its draft, validation, submit state)
+        └── "add" +> addBookmarkForm
+              (Component — owns its draft,
+               validation and submit state)
         """ ]
       [ "Boxes are functions. Only two of them are components." ]
     , h2 "When is something a Component?"
@@ -159,14 +184,23 @@ componentsPage = DocPage
       ]
     , para [ "Otherwise write a function. ", c "bookmarkRow :: Bookmark -> View ctx Model Action", " is simpler than a component, is trivially testable, and re-renders as part of its parent." ]
     , hs """
-      bookmarkRow :: Maybe BookmarkId -> Bookmark -> View ctx Model Action
+      bookmarkRow
+        :: Maybe BookmarkId
+        -> Bookmark
+        -> View ctx Model Action
       bookmarkRow selected b =
-        H.tr_ [ key_ (bookmarkId b)                             -- stable identity in the list
-              , HP.classList_ [ ("selected", selected == Just (bookmarkId b)) ]
-              , HE.onClick (Select (bookmarkId b)) ]
+        H.tr_
+          [ key_ (bookmarkId b)
+            -- stable identity in the list
+          , HP.classList_
+              [ ("selected", isSelected) ]
+          , HE.onClick (Select (bookmarkId b))
+          ]
           [ H.td_ [] [ text (title b) ]
           , H.td_ [] [ text (MS.intercalate ", " (tags b)) ]
           ]
+        where
+          isSelected = selected == Just (bookmarkId b)
       """
     , note [ "Give list items a ", c "key_", ". It keeps the DOM node (and any CSS transition on it) attached to the ", em "same", " bookmark when the list is filtered or reordered — see ", goto (docsPage "keys") [ "Keys" ], "." ]
     , h2 "Where does each piece of state live?"
@@ -178,16 +212,24 @@ componentsPage = DocPage
       ]
     , para [ "The rule of thumb: state lives in the ", b "closest common owner", " of everything that reads or writes it. Push it up only as far as it needs to go, and pass it down as props." ]
     , hs """
-      viewApp :: Ctx -> () -> Model -> View Ctx Model Action
+      viewApp
+        :: Ctx
+        -> ()
+        -> Model
+        -> View Ctx Model Action
       viewApp ctx _ m =
         H.main_ []
           [ searchBar (m ^. query)
           , H.div_ [ HP.class_ "columns" ]
-              [ tagSidebar (m ^. tagFilter) (tagCounts (loadedOr [] (m ^. bookmarks)))
+              [ tagSidebar
+                  (m ^. tagFilter)
+                  (tagCounts (loadedOr [] (m ^. bookmarks)))
               , bookmarkTable (m ^. selected) (visible m)
               , detailPane (selectedBookmark m)
               ]
-          , mountWithProps_ "add-form" (FormProps (m ^. tagFilter)) addBookmarkForm
+          , mountWithProps_ "add-form"
+              (FormProps (m ^. tagFilter))
+              addBookmarkForm
           ]
       """
     , para [ "Next: ", goto (thinkingPage "update") [ "name the actions and write update" ], "." ]
@@ -207,31 +249,38 @@ updatePage = DocPage
     , h2 "The vocabulary"
     , hs """
       data Action
-        = Init                              -- mounted: go fetch
+        = Init
+          -- mounted: go fetch
         | GotBookmarks (Either MisoString [Bookmark])
         | QueryChanged MisoString
         | TagPicked (Maybe Tag)
         | Select BookmarkId
-        | BookmarkAdded Bookmark            -- mailed up by the form
+        | BookmarkAdded Bookmark
+          -- mailed up by the form
         deriving (Eq, Show)
       """
     , para [ c "QueryChanged", " rather than ", c "SetQuery", ": the name leaves ", c "update", " free to also reset the selection, or later to debounce a request, without renaming anything." ]
     , h2 "update is a fold"
     , hs """
-      update :: Action -> Effect Ctx () Model Action
+      update
+        :: Action
+        -> Effect Ctx () Model Action
       update = \\case
         Init ->
-          getJSON "/api/bookmarks" [] (GotBookmarks . Right) (GotBookmarks . Left . ms)
+          getJSON "/api/bookmarks" []
+            (GotBookmarks . Right)
+            (GotBookmarks . Left . ms)
 
         GotBookmarks (Right bs) -> bookmarks .= Loaded bs
         GotBookmarks (Left err) -> bookmarks .= Failed err
 
         QueryChanged q -> do
           query    .= q
-          selected .= Nothing                    -- a new search deselects
+          selected .= Nothing
+          -- a new search deselects
 
-        TagPicked t   -> tagFilter .= t
-        Select bid    -> selected  %= toggle bid
+        TagPicked t -> tagFilter .= t
+        Select bid  -> selected  %= toggle bid
 
         BookmarkAdded b -> bookmarks %= fmap (b :)
       """
@@ -285,13 +334,15 @@ dataFlowPage = DocPage
         case validate draft of
           Left errs -> errors .= errs
           Right b   -> do
-            mailParent b               -- b has a ToJSON instance
+            mailParent b
+            -- b has a ToJSON instance
             form .= emptyDraft
 
       -- in the app
       app = (component m update viewApp)
         { mailbox = checkMail BookmarkAdded MailError
-        , mount   = Just Init }
+        , mount = Just Init
+        }
       """
     , para [ "The child stays reusable (it knows nothing about bookmarks lists) and the app stays in control of its own state." ]
     , h2 "Routing"
@@ -312,6 +363,94 @@ dataFlowPage = DocPage
       , [ "Props down, mail up, context around, PubSub sideways. Route, prerender, ship." ]
       ]
     , para [ "That is all of miso's architecture. The rest is the ", goto Docs [ "API" ], "." ]
+    ]
+  }
+-----------------------------------------------------------------------------
+reactPage :: DocPage
+reactPage = DocPage
+  { pageSlug = "miso-vs-react"
+  , pageGroup = Thinking
+  , pageTitle = "miso vs. React"
+  , pageBlurb = "A translation guide for React developers: which hooks map onto which miso constructs, and which names are false friends."
+  , pageKeywords = [ "react", "hooks", "useState", "useEffect", "useReducer", "useRef", "useContext", "comparison", "false friends", "migration" ]
+  , pageBody =
+    [ lead
+      [ "If you come from React, most of your instincts carry over: components, props, context, fragments, keys and a virtual DOM all work the way you expect. The ", em "hooks", " do not — their jobs exist in miso, but they are done by different constructs. "
+      , "Below, the ", b "false friends", " (same job, different shape) and the ", b "friends", " (same name, same idea)." ]
+    , h2 "False friends"
+    , para [ "Each of these hooks solves a problem miso solves elsewhere:" ]
+    , table [ "React", "miso", "The difference" ]
+      [ [ [ c "useState" ],   [ "the ", c "model", " + ", c "Miso.Lens" ],       [ "one model per component; lenses are the getters / setters; updates are pure" ] ]
+      , [ [ c "useEffect" ],  [ c "Effect" ],                                    [ "IO is ", em "scheduled", " from ", c "update", ", results return as actions; no dependency arrays" ] ]
+      , [ [ c "useReducer" ], [ c "update" ],                                    [ "not opt-in: every component ", em "is", " a reducer" ] ]
+      , [ [ c "useRef" ],     [ c "onCreated", " / ", c "onCreatedWith" ],       [ "lifecycle hooks hand you the ", c "DOMRef", " directly" ] ]
+      ]
+    , h3 "useState → the model and Miso.Lens"
+    , para
+      [ "There is no per-hook state cell. A component's state is its ", c "model", " — one plain Haskell value — and ", c "Miso.Lens", " generates the getter / setter pairs. "
+      , "Writes happen in exactly one place (", c "update", "), purely, with the lens operators:" ]
+    , hs """
+      data Model = Model { _count :: Int }
+        deriving (Show, Eq)
+
+      count :: Lens Model Int
+      count = lens _count $ \\m x -> m { _count = x }
+
+      update = \\case
+        Increment -> count += 1
+        Reset     -> count .= 0
+      """
+    , para
+      [ "Because the setter is not a function you thread through your render, there are no stale closures and no batching surprises — ", c "view", " always sees the current model." ]
+    , h3 "useEffect → Effect"
+    , para
+      [ c "update", " runs in the ", c "Effect", " monad. IO is never performed inline; it is ", em "scheduled", " with ", c "io", " / ", c "io_", " and its result comes back as another action, folded in like any other:" ]
+    , hs """
+      update = \\case
+        FetchUser uid ->
+          io (GotUser <$> lookupUser uid)
+        GotUser u ->
+          user .= u
+      """
+    , para
+      [ "No dependency arrays, no effect re-run rules, no cleanup functions to remember: long-running concerns are ", goto (docsPage "subscriptions") [ "subscriptions" ], ", which stop automatically when the component unmounts. See ", goto (docsPage "effects") [ "Effects" ], "." ]
+    , h3 "useReducer → update"
+    , para
+      [ "The closest cousin — except it is not an opt-in pattern. Every miso component is a reducer: the ", c "action", " type is your action union, ", c "update", " is the reducer and the ", c "model", " is the state. ", goto (thinkingPage "update") [ "Step 3" ], " of this guide is exactly the ", c "useReducer", " mindset, applied everywhere." ]
+    , h3 "useRef → lifecycle hooks and DOMRef"
+    , para
+      [ "Where React reaches for ", c "useRef", " to hold a DOM node, miso's element ", goto (docsPage "view-dsl") [ "lifecycle hooks" ], " hand the node to you: ", c "onCreatedWith", " dispatches an action carrying the ", c "DOMRef", " when the element is created (and ", c "onDestroyed", " when it goes away):" ]
+    , hs """
+      view _ _ _ =
+        H.canvas_ [ onCreatedWith SetupChart ] []
+
+      update = \\case
+        SetupChart ref ->
+          io_ (initChart ref)
+      """
+    , para
+      [ "The ref is an ordinary action payload — store it in the model if you need it later. There is no ", c ".current", " escape hatch to mutate around the render cycle." ]
+    , h2 "Friends"
+    , para [ "These mean the same thing on both sides of the border:" ]
+    , ul
+      [ [ b "Context", " — one global value shared by the whole tree, read without prop-drilling; write it with ", c "modifyContext", ". Where React components call the ", c "useContext", " hook to subscribe, in miso ", em "any", " component can subscribe to context changes by enabling the field of the same name — ", c "useContext = True", " — or by mounting with the ", c "mountUseContext", " shorthand. See ", goto (docsPage "context") [ "Context" ], "." ]
+      , [ b "Props", " — read-only data a parent passes to a child (", c "mountWithProps_", "); the child re-renders when they change and can react via ", c "onPropsChanged", ". See ", goto (docsPage "props") [ "Props" ], "." ]
+      , [ b "Fragment", " — ", c "vfrag", " is ", c "<></>", ": group siblings without a wrapper element, keyed variants included. See ", goto (docsPage "text-and-fragments") [ "Text & fragments" ], "." ]
+      , [ b "Keys, components, event delegation, virtual DOM", " — miso implements the same architecture internals as React, so ", goto (docsPage "keys") [ "keys" ], " drive reconciliation and events delegate through one root listener, exactly as you are used to." ]
+      ]
+    , hs """
+      -- subscribe to context changes, two ways:
+
+      child = (component m u v)
+        { useContext = True }
+
+      -- or at the mount site:
+      view ctx _ _ =
+        H.div_ []
+          [ mountUseContext themedBadge ]
+      """
+    , note
+      [ "There are no Rules of Hooks to obey: nothing depends on call order, state is never conditional on a code path, and there is nothing to lint. A component is a value; ", c "view", " and ", c "update", " are functions." ]
     ]
   }
 -----------------------------------------------------------------------------
