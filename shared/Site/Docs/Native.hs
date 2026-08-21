@@ -316,7 +316,7 @@ mainThreadState = DocPage
       [ "A main-thread handler is imperative and must not write the BTS-owned model: shared state changes belong on the background thread, so dispatch them with ", c "runOnBG", ". But gestures and scroll-linked animation often need mutable state that lives ", em "only", " on the MTS — the current drag offset, a fling velocity, whether a follow loop is active. "
       , "For that, use a ", c "MainThreadRef", ", a thin ", c "IORef", " wrapper for main-thread-only state (the analogue of ReactLynx's ", c "MainThreadRef", "):" ]
     , hs """
-      dragRef :: MainThreadRef Double
+      dragRef :: MainThreadRef Int
       dragRef = mainThreadRef 0
       {-# NOINLINE dragRef #-}
       """
@@ -328,10 +328,10 @@ mainThreadState = DocPage
       [ "It pairs with ", c "eachFrame", " for a vsync-coalesced animation loop: read the latest gesture state from the ref, imperatively paint at most once per frame (via ", c "setStyleProperty", " / ", c "setStylePropertyTransform", "), and stop by returning ", c "False", " when the gesture ends." ]
     , hs """
       followSub :: Sub Action
-      followSub _ = when mts $ eachFrame $ do
+      followSub _ = when mts $ eachFrame $ \\_ts -> do
         offset <- readMainThreadRef dragRef
         setStylePropertyTransform card
-          ("translateX(" <> ms offset <> "px)")
+          [ CSS.translateX (CSS.px offset) ]
         readMainThreadRef dragging
         -- keep looping while a drag is active
       """
