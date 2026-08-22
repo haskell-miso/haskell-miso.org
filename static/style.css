@@ -316,6 +316,36 @@ html[data-theme="dark"] .btn-primary { background: var(--accent); color: #1a1208
   background: var(--accent); box-shadow: 0 0 12px var(--accent);
 }
 .hero-logo-ring-b { inset: -30px; border-color: color-mix(in srgb, var(--accent-2) 40%, transparent); transform: rotateX(68deg) rotateZ(60deg); }
+/* GitHub star-count badge under the hero eyebrow; invisible until the count arrives */
+.hero-stars {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 2px 0 18px; padding: 7px 16px; border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-elev) 72%, transparent);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-2);
+  opacity: 0; pointer-events: none;
+  transition: color 180ms var(--ease), border-color 180ms var(--ease),
+              box-shadow 180ms var(--ease), transform 180ms var(--ease);
+}
+.hero-stars.show {
+  opacity: 1; pointer-events: auto;
+  animation: stars-pop 560ms var(--ease) backwards;
+}
+.hero-stars .icon {
+  width: 15px; height: 15px; color: #eac54f;
+  filter: drop-shadow(0 0 5px rgba(234, 197, 79, 0.5));
+}
+.hero-stars-count { font-weight: 700; color: var(--ink); }
+.hero-stars:hover {
+  color: var(--ink); transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+@keyframes stars-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
 /* small lights travelling along the grid lines, à la lynxjs.org */
 .hero-sparks { position: absolute; inset: 0; pointer-events: none; }
 .spark { position: absolute; display: block; border-radius: 2px; opacity: 0; }

@@ -7,8 +7,10 @@ module Site.Home
   ) where
 -----------------------------------------------------------------------------
 import           Miso
+import           Miso.JSON (FromJSON (..), withObject, (.:))
 import           Miso.Navigator (copyClipboard)
 import           Control.Concurrent (threadDelay)
+import           Data.Maybe (isJust)
 import qualified Miso.CSS as CSS
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
@@ -54,6 +56,7 @@ hero ctx =
     , H.div_ [ P.class_ "hero-inner" ]
         [ "hero-logo" +> heroLogo
         , H.p_ [ P.class_ "hero-eyebrow" ] [ "🍜 ", t ctx HeroEyebrow, " 🍜" ]
+        , "hero-stars" +> heroStars
         , H.h1_ [ P.class_ "hero-title" ] [ t ctx HeroTitle ]
         , H.p_ [ P.class_ "hero-subtitle" ] [ t ctx HeroSubtitle ]
         , H.div_ [ P.class_ "hero-actions" ]
@@ -117,6 +120,52 @@ heroTerminal = component False update view
             | cmd <- installCmds
             ]
         ]
+-----------------------------------------------------------------------------
+-- The GitHub star count, fetched client-side on mount ------------------------
+-----------------------------------------------------------------------------
+newtype Stars = Stars Int
+-----------------------------------------------------------------------------
+instance FromJSON Stars where
+  parseJSON = withObject "repo" $ \o -> Stars <$> o .: "stargazers_count"
+-----------------------------------------------------------------------------
+data StarsAction
+  = FetchStars
+  | GotStars Int
+  | StarsFailed
+-----------------------------------------------------------------------------
+heroStars :: Component Ctx () (Maybe Int) StarsAction
+heroStars = (component Nothing update view) { mount = Just FetchStars }
+  where
+    update = \case
+      FetchStars ->
+        getJSON "https://api.github.com/repos/dmjio/miso" []
+          (\r -> case body r of Stars n -> GotStars n)
+          (\(_ :: Response MisoString) -> StarsFailed)
+      GotStars n  -> this .= Just n
+      StarsFailed -> pure ()
+
+    -- rendered (invisibly) even before the count arrives, so the hero
+    -- doesn't reflow when the badge fades in
+    view _ () stars =
+      H.a_
+        [ P.classList_ [ ("hero-stars", True), ("show", isJust stars) ]
+        , P.href_ "https://github.com/dmjio/miso"
+        , P.target_ "_blank", P.rel_ "noopener"
+        , P.aria_ "label" "Star miso on GitHub"
+        ]
+        [ iconStar
+        , H.span_ [ P.class_ "hero-stars-count" ] [ text (maybe "" formatStars stars) ]
+        , H.span_ [ P.class_ "hero-stars-label" ] [ "stars" ]
+        ]
+
+    -- 5843 -> "5.8k"
+    formatStars :: Int -> MisoString
+    formatStars n
+      | n < 1000  = ms n
+      | tenths == 0 = ms (n `div` 1000) <> "k"
+      | otherwise   = ms (n `div` 1000) <> "." <> ms tenths <> "k"
+      where
+        tenths = (n `mod` 1000) `div` 100
 -----------------------------------------------------------------------------
 -- The interactive logo -------------------------------------------------------
 -----------------------------------------------------------------------------
