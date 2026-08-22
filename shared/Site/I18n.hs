@@ -105,7 +105,7 @@ en = \case
   NavMenu -> "Menu"
   HeroEyebrow -> "A tasty Haskell UI framework"
   HeroTitle -> "React meets Haskell."
-  HeroSubtitle -> "miso is a small, fast Haskell library for building web and native user interfaces. It pairs Elm's model–view–update with React-style Components, and compiles to WebAssembly or JavaScript."
+  HeroSubtitle -> "miso is a small, fast Haskell library for building web and native user interfaces. It pairs Elm's model–view–update with React-style Components. Compiles to WebAssembly or JavaScript."
   HeroGetStarted -> "Get started"
   HeroGitHub -> "View on GitHub"
   HeroDrag -> "Move your pointer"
