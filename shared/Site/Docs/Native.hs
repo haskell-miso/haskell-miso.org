@@ -37,12 +37,12 @@ overview = DocPage
   , pageKeywords = [ "native", "mobile", "lynx", "ios", "android", "Miso.Native", "-fnative", "miso-lynx" ]
   , pageBody =
     [ lead
-      [ b "Your program runs in two JS interpreters, at the same time.", " One interpreter — the ", em "main thread", " (MTS) — has access to the drawing facilities; the other — the ", em "background thread", " (BTS) — has access to the ", a "https://lynxjs.org/guide/use-native-modules.html" "native modules", ". "
-      , "miso runs on both and keeps them in sync; see ", goto (nativePage "dual-thread") [ "the dual-thread architecture" ], "." ]
+      [ "Your program runs in two JS interpreters at once: the ", em "main thread", " (MTS), which owns the drawing facilities, and the ", em "background thread", " (BTS), which owns the ", a "https://lynxjs.org/guide/use-native-modules.html" "native modules", ". "
+      , "miso runs on both and keeps them in sync. See ", goto (nativePage "dual-thread") [ "the dual-thread architecture" ], "." ]
     , para
-      [ c "Miso.Native", " targets ", b "native mobile devices", " by driving the ", a "https://lynxjs.org" "Lynx", " runtime instead of the browser DOM. "
-      , "The same MVU programming model, ", c "Component", " API, event delegation and virtual-DOM diffing you use on the web carry over unchanged — only the element vocabulary differs (", c "view_", ", ", c "text_", ", … instead of ", c "div_", " / ", c "span_", ") "
-      , "and rendering is performed by Lynx's ", a "https://lynxjs.org/api/engine/element-api" "element PAPI", " rather than by mutating a browser DOM." ]
+      [ "Miso.Native targets ", b "native mobile devices", " by driving the ", a "https://lynxjs.org" "Lynx", " runtime instead of the browser DOM. "
+      , "The same MVU programming model, Component API, event delegation, and virtual-DOM diffing carry over unchanged from the web; only the element vocabulary differs (view_ and text_ instead of div_ and span_), "
+      , "and rendering goes through Lynx's ", a "https://lynxjs.org/api/engine/element-api" "element PAPI", " instead of a browser DOM." ]
     , para [ "This module is the native analogue of the ", c "miso", " / ", c "startApp", " entry points: ", c "native", " (and ", c "nativeWithContext", ") boot a root component onto the Lynx runtime." ]
     , "anatomy" +> anatomyScene
     , h2 "Enabling native"
