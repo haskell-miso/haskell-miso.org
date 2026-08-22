@@ -155,7 +155,6 @@ heroStars = (component Nothing update view) { mount = Just FetchStars }
         ]
         [ iconStar
         , H.span_ [ P.class_ "hero-stars-count" ] [ text (maybe "" formatStars stars) ]
-        , H.span_ [ P.class_ "hero-stars-label" ] [ "stars" ]
         ]
 
     -- 5843 -> "5.8k"
