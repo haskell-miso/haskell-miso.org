@@ -12,7 +12,7 @@ module Site
   ) where
 -----------------------------------------------------------------------------
 import           Control.Applicative ((<|>))
-import           Control.Monad (void)
+import           Control.Monad (void, when)
 import qualified Data.Map.Strict as M
 import           Data.Maybe (isJust)
 -----------------------------------------------------------------------------
@@ -109,10 +109,14 @@ updateSite = \case
         setLocalStorage langStorageKey (langCode l)
         applyLang l
   HandleURI u -> do
+    old <- use uri
     uri .= u
     menuOpen .= False
     langOpen .= False
-    io_ scrollTop
+    -- Hash-only changes (in-page anchor links) keep the browser's own
+    -- jump to the target element; resetting to the top would undo it.
+    when (uriPath old /= uriPath u) $
+      io_ scrollTop
     io_ (trackPage u)
   Go route -> do
     menuOpen .= False
