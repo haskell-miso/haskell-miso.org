@@ -419,26 +419,15 @@ components = DocPage
     , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
     , hs """
       data View context model action
-        = VNode
-            Namespace
-            Tag
-            [Attribute model action]
-            [View context model action]
-            DirectEvents
+        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
         | VText (Maybe Key) MisoString
         | VComp (SomeComponent context)
-        | forall props . VCompStatic
-            (StaticPtr (SomeStaticComponent props context))
-            props
+        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
         | VFrag (Maybe Key) [View context model action]
 
       data SomeComponent context
-        = forall model action props .
-          (Eq context, Eq model, Eq props)
-        => SomeComponent
-             (Maybe Key)
-             props
-             (Component context props model action)
+        = forall model action props. (Eq context, Eq model, Eq props)
+        => SomeComponent (Maybe Key) props (Component context props model action)
       """
     , para
       [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
