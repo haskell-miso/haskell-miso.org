@@ -298,10 +298,7 @@ topbar ctx m =
             ]
         ]
 
-    shortCode = \case
-      ZH -> "中文"
-      JA -> "日本語"
-      l  -> ms (show l)
+    shortCode l = ms (show l)
 
     isDocs = \case
       Just Docs -> True

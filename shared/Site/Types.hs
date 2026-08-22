@@ -54,13 +54,6 @@ mkCtx catalog = Ctx EN catalog Light
 -- | Languages available from the top-bar dropdown.
 data Lang
   = EN
-  | ZH
-  | ES
-  | FR
-  | DE
-  | PT
-  | JA
-  | RU
   deriving (Show, Eq, Ord, Enum, Bounded)
 -----------------------------------------------------------------------------
 allLangs :: [Lang]
@@ -70,25 +63,11 @@ allLangs = [minBound .. maxBound]
 langCode :: Lang -> MisoString
 langCode = \case
   EN -> "en"
-  ZH -> "zh-Hans"
-  ES -> "es"
-  FR -> "fr"
-  DE -> "de"
-  PT -> "pt-BR"
-  JA -> "ja"
-  RU -> "ru"
 -----------------------------------------------------------------------------
 -- | Endonym shown in the dropdown.
 langName :: Lang -> MisoString
 langName = \case
   EN -> "English"
-  ZH -> "简体中文"
-  ES -> "Español"
-  FR -> "Français"
-  DE -> "Deutsch"
-  PT -> "Português"
-  JA -> "日本語"
-  RU -> "Русский"
 -----------------------------------------------------------------------------
 langFromCode :: MisoString -> Maybe Lang
 langFromCode code = lookup code [ (langCode l, l) | l <- allLangs ]
