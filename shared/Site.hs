@@ -14,10 +14,12 @@ module Site
 import           Control.Applicative ((<|>))
 import           Control.Monad (void)
 import qualified Data.Map.Strict as M
+import           Data.Maybe (isJust)
 -----------------------------------------------------------------------------
 import           Miso
 import qualified Miso.CSS as CSS
 import           Miso.FFI.QQ (js)
+import           Miso.JSON (FromJSON (..), withObject, (.:))
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
@@ -200,9 +202,12 @@ topbar :: Ctx -> Model -> View Ctx Model Action
 topbar ctx m =
   H.header_ [ P.class_ "topbar" ]
     [ H.div_ [ P.class_ "topbar-inner" ]
-        [ H.a_
-            [ P.class_ "brand", P.href_ "/", E.onClickPrevent (Go Index), P.aria_ "label" "miso home" ]
-            [ wordmark ]
+        [ H.div_ [ P.class_ "brand-cluster" ]
+            [ H.a_
+                [ P.class_ "brand", P.href_ "/", E.onClickPrevent (Go Index), P.aria_ "label" "miso home" ]
+                [ wordmark ]
+            , "topbar-version" +> topbarVersion
+            ]
         , H.nav_ [ P.class_ "topnav", P.aria_ "label" "Primary" ]
             [ navLink Docs NavDocs (isDocs current)
             , navLink Examples NavExamples (current == Just Examples)
@@ -311,6 +316,40 @@ topbar ctx m =
       Just Blog -> True
       Just BlogPost {} -> True
       _ -> False
+-----------------------------------------------------------------------------
+-- The latest miso release, fetched from GitHub on mount ----------------------
+-----------------------------------------------------------------------------
+newtype Release = Release MisoString
+-----------------------------------------------------------------------------
+instance FromJSON Release where
+  parseJSON = withObject "release" $ \o -> Release <$> o .: "tag_name"
+-----------------------------------------------------------------------------
+data VersionAction
+  = FetchVersion
+  | GotVersion MisoString
+  | VersionFailed
+-----------------------------------------------------------------------------
+topbarVersion :: Component Ctx () (Maybe MisoString) VersionAction
+topbarVersion = (component Nothing update view) { mount = Just FetchVersion }
+  where
+    update = \case
+      FetchVersion ->
+        getJSON "https://api.github.com/repos/dmjio/miso/releases/latest" []
+          (\r -> case body r of Release v -> GotVersion v)
+          (\(_ :: Response MisoString) -> VersionFailed)
+      GotVersion v  -> this .= Just v
+      VersionFailed -> pure ()
+
+    -- rendered (invisibly) even before the tag arrives; fades in next to
+    -- the wordmark and stays hidden if the request fails
+    view _ () version =
+      H.a_
+        [ P.classList_ [ ("topbar-version", True), ("show", isJust version) ]
+        , P.href_ "https://github.com/dmjio/miso/releases/latest"
+        , P.target_ "_blank", P.rel_ "noopener"
+        , P.title_ "Latest release", P.aria_ "label" "Latest miso release"
+        ]
+        [ text (maybe "" ("v" <>) version) ]
 -----------------------------------------------------------------------------
 footer :: Ctx -> View Ctx Model Action
 footer ctx =

@@ -144,6 +144,21 @@ code, kbd, pre { font-family: var(--font-mono); font-size: 0.92em; }
   display: flex; align-items: center; gap: 28px;
 }
 .brand { display: inline-flex; align-items: center; }
+.brand-cluster { display: inline-flex; align-items: center; gap: 10px; }
+/* latest-release pill next to the wordmark; invisible until the tag arrives */
+.topbar-version {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg-sunk);
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.02em; color: var(--ink-2);
+  opacity: 0; pointer-events: none;
+  transition: color 180ms var(--ease), border-color 180ms var(--ease),
+              opacity 420ms var(--ease), transform 420ms var(--ease);
+  transform: translateX(-4px);
+}
+.topbar-version.show { opacity: 1; transform: none; pointer-events: auto; }
+.topbar-version:hover { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .wordmark { display: inline-flex; align-items: center; gap: 9px; }
 .wordmark-mark { width: 26px; height: 26px; color: var(--ink); }
 .wordmark-text { font-family: var(--font-display); font-weight: 700; font-size: 1.28rem; letter-spacing: -0.03em; }
