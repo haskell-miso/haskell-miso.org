@@ -4,10 +4,9 @@
 -- toolchain with `nix develop .#wasm` (WASM), `nix develop .#ghcjs`
 -- (JavaScript backend) or `nix develop` (vanilla GHC, for the prerenderer).
 --
--- NOTE: the site needs misoWithContext / prerenderWithContext (merged to
--- master) plus the rAFSub cancelAnimationFrame fix (asyncCallback-canvas
--- branch). Once that branch is merged, bump the tag below to the merge
--- commit. For local development against a sibling ../miso checkout
+-- NOTE: the site needs misoWithContext / prerenderWithContext plus the
+-- rAFSub cancelAnimationFrame fix, both merged to master.
+-- For local development against a sibling ../miso checkout
 -- use:  make PROJECT=cabal.project.dev
 packages:
   .
@@ -18,8 +17,7 @@ allow-newer:
 source-repository-package
   type: git
   location: https://github.com/dmjio/miso
-  -- the asyncCallback-canvas branch (rAFSub: cancel pending frame on unmount)
-  tag: cba08d9
+  tag: 37c5475b1731533711283e73e3c9662089c783b0
 
 if arch(wasm32)
   shared: True
