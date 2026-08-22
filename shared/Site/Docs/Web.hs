@@ -327,7 +327,7 @@ components = DocPage
   , pageGroup = Concepts
   , pageTitle = "Components"
   , pageBlurb = "The Component record, composition with (+>), keys and the mount / unmount lifecycle."
-  , pageKeywords = [ "component", "+>", "mount_", "mountWithProps_", "lifecycle", "unmount", "VComp", "SomeComponent" ]
+  , pageKeywords = [ "component", "+>", "mount_", "mountWithProps_", "lifecycle", "unmount" ]
   , pageBody =
     [ lead
       [ "A ", c "Component", " bundles a model, the ", c "update", " that evolves it and the ", c "view", " that renders it — plus everything around the edges: subscriptions, lifecycle hooks, a mailbox. "
@@ -415,24 +415,6 @@ components = DocPage
     , para [ "Element nodes have their own hooks (", c "onCreated", ", ", c "onDestroyed", ", …) — see ", goto (docsPage "view-dsl") [ "the View DSL" ], "." ]
     , demo "mount, unmount, subs and the mailbox" lifecycleSource ("demo-lifecycle" +> lifecycleDemo)
     , para [ "Toggle the clock: the child's ", c "mount", " and ", c "unmount", " actions run, its ", c "subs", " start and stop with it, and it reports back through the parent's ", c "mailbox", ". Note the ", c "\"clock\" +> clock", " key — that is what makes the diff mount and unmount rather than patch." ]
-    , h2 "The View type"
-    , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
-    , hs """
-      data View context model action
-        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
-        | VText (Maybe Key) MisoString
-        | VComp (SomeComponent context)
-        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
-        | VFrag (Maybe Key) [View context model action]
-
-      data SomeComponent context
-        = forall model action props. (Eq context, Eq model, Eq props)
-        => SomeComponent (Maybe Key) props (Component context props model action)
-      """
-    , para
-      [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
-      , "The existential ", c "SomeComponent", " is what allows embedding polymorphic components in a ", c "View", ". ", c "VCompStatic", " carries a static pointer to its constructor and is used by the "
-      , goto (nativePage "static-mounting") [ "native dual-thread runtime" ], "." ]
     ]
   }
 -----------------------------------------------------------------------------
@@ -441,8 +423,8 @@ viewDsl = DocPage
   { pageSlug = "view-dsl"
   , pageGroup = Concepts
   , pageTitle = "The View DSL"
-  , pageBlurb = "Element nodes, the smart constructors in Miso.Html.Element and element lifecycle hooks."
-  , pageKeywords = [ "VNode", "node", "vnode", "div_", "html", "svg", "mathml", "onCreated", "onDestroyed", "highlight.js" ]
+  , pageBlurb = "The View type, element nodes, the smart constructors in Miso.Html.Element and element lifecycle hooks."
+  , pageKeywords = [ "View", "VNode", "node", "vnode", "div_", "html", "svg", "mathml", "onCreated", "onDestroyed", "highlight.js", "VComp", "SomeComponent", "VCompStatic" ]
   , pageBody =
     [ lead
       [ "A ", c "VNode", " represents a DOM element — the most common kind of virtual DOM node. It carries a ", c "Namespace", ", a tag name, a list of ", c "Attribute", " values and a list of child ", c "View", "s." ]
@@ -508,6 +490,24 @@ viewDsl = DocPage
           ]
       """
     , para [ "As a convention, the ", c "*With", " variant of a lifecycle hook (e.g. ", c "onCreatedWith", ") provides the target ", c "DOMRef", " to the callback." ]
+    , h2 "The View type"
+    , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
+    , hs """
+      data View context model action
+        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
+        | VText (Maybe Key) MisoString
+        | VComp (SomeComponent context)
+        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
+        | VFrag (Maybe Key) [View context model action]
+
+      data SomeComponent context
+        = forall model action props. (Eq context, Eq model, Eq props)
+        => SomeComponent (Maybe Key) props (Component context props model action)
+      """
+    , para
+      [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
+      , "The existential ", c "SomeComponent", " is what allows embedding polymorphic components in a ", c "View", ". ", c "VCompStatic", " carries a static pointer to its constructor and is used by the "
+      , goto (nativePage "static-mounting") [ "native dual-thread runtime" ], "." ]
     , h2 "The smart constructors, at a glance"
     , api
       [ ("node, vnode", [ "build a ", c "VNode" ])
