@@ -507,6 +507,18 @@ code.inline {
 .tk-prompt { color: var(--accent); user-select: none; }
 .tk-cmd { color: var(--tk-cmd); }
 
+/* code block with a copy button */
+.code-copy-wrap { position: relative; }
+.code-copy-wrap .code { padding-right: 54px; }
+.code-copy-btn {
+  position: absolute; top: 10px; right: 10px;
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+  color: var(--muted); border: 1px solid transparent; background: transparent;
+}
+.code-copy-btn .icon { width: 16px; height: 16px; }
+.code-copy-btn:hover { color: var(--ink); background: var(--bg-sunk); border-color: var(--line); }
+.code-copy-btn.copied { color: #1aa889; }
+
 /* callouts */
 .callout {
   display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline;

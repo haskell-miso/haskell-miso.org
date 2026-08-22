@@ -14,6 +14,7 @@ module Site.Prose
   , h3
   , hs
   , sh
+  , shCopy
   , pre
   , ul
   , ol
@@ -33,14 +34,19 @@ module Site.Prose
   , br
   ) where
 -----------------------------------------------------------------------------
+import           Control.Concurrent (threadDelay)
 import           Data.Char (isAlphaNum, toLower)
 -----------------------------------------------------------------------------
 import           Miso
+import           Miso.Lens (this, (.=))
+import           Miso.Navigator (copyClipboard)
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
 import           Miso.String (MisoString, ms, fromMisoString)
+import qualified Miso.String as MS
 -----------------------------------------------------------------------------
+import           Site.Icons (checkIcon, copyIcon)
 import           Site.Route
 import           Site.Syntax
 import           Site.Types
@@ -84,6 +90,46 @@ sh = shell
 -- | Plain preformatted block.
 pre :: MisoString -> Doc
 pre = plain
+-----------------------------------------------------------------------------
+-- | A shell block with a copy-to-clipboard button. @key@ must be unique on
+-- the page — it becomes the mounted sub-component's key.
+shCopy :: MisoString -> MisoString -> Doc
+shCopy key src = key +> copyBlock src
+-----------------------------------------------------------------------------
+data CopyAction = DoCopy | Copied | CopyFailed | CopyDone
+  deriving (Show, Eq)
+-----------------------------------------------------------------------------
+copyBlock :: MisoString -> Component Ctx () Bool CopyAction
+copyBlock src = component False update view
+  where
+    update = \case
+      DoCopy     -> copyClipboard (plainOf src) Copied (const CopyFailed)
+      Copied     -> do
+        this .= True
+        io (threadDelay 1600000 >> pure CopyDone)
+      CopyFailed -> pure ()
+      CopyDone   -> this .= False
+
+    -- strip the "$ " prompts a reader would not want in their clipboard
+    plainOf = MS.intercalate "\n" . map dropPrompt . MS.lines
+      where
+        dropPrompt l = maybe l id (MS.stripPrefix "$ " l)
+
+    view _ () copied =
+      H.div_ [ P.class_ "code-copy-wrap" ]
+        [ shell src
+        , H.button_
+            [ P.classList_ [ ("code-copy-btn", True), ("copied", copied) ]
+            , P.type_ "button", E.onClick DoCopy
+            , P.aria_ "label" "Copy commands", P.title_ "Copy"
+            ]
+            [ if copied then checkIcon else copyIcon ]
+        , H.span_
+            [ P.classList_ [ ("copy-toast", True), ("show", copied) ]
+            , P.role_ "status"
+            ]
+            [ checkIcon, "Copied" ]
+        ]
 -----------------------------------------------------------------------------
 ul :: [[Doc]] -> Doc
 ul items = H.ul_ [] [ H.li_ [] item | item <- items ]

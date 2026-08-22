@@ -125,11 +125,10 @@ installation = DocPage
       ]
     , h2 "1. Build and serve the sampler"
     , para [ "With ", a "https://nixos.org" "nix", " installed (flakes enabled), clone the ", a "https://github.com/haskell-miso/miso-sampler" "sampler", " and run it — the flake provides the whole WASM toolchain (", c "wasm32-wasi-cabal", ", ", c "wasm32-wasi-ghc", ", ", c "http-server", ", ", c "ghciwatch", "):" ]
-    , sh """
+    , shCopy "install-copy" """
       $ git clone https://github.com/haskell-miso/miso-sampler
       $ cd miso-sampler
-      $ nix develop .#wasm \\
-          --command bash -c 'make all && make serve'
+      $ nix develop .#wasm --command bash -c 'make all && make serve'
       """
     , para
       [ "Then open ", a "http://localhost:8080" "http://localhost:8080", ". ", c "make all", " runs ", c "wasm32-wasi-cabal build", ", copies ", c "static/", " to ", c "public/", ", generates the JS FFI glue with ", c "post-link.mjs", " and shrinks the ", c ".wasm", " with ", c "wasm-opt", ". "
