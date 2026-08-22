@@ -255,13 +255,17 @@ html[data-theme="dark"] .btn-primary { background: var(--accent); color: #1a1208
 }
 .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 30px; }
 .hero-install {
-  margin-top: 26px; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 7px;
-  padding: 12px 18px; border-radius: 12px; max-width: min(92vw, 720px); overflow-x: auto;
+  margin-top: 26px; display: inline-flex; flex-direction: column; align-items: stretch; gap: 7px;
+  padding: 12px 18px; border-radius: 12px; max-width: min(92vw, 720px); overflow-x: hidden;
   border: 1px solid var(--line); background: var(--bg-elev);
   font-family: var(--font-mono); font-size: 0.84rem; color: var(--ink-2); text-align: left;
 }
 .hero-install { position: relative; padding-right: 54px; }
-.hero-install-line { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.hero-install-line {
+  display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  overflow-x: auto; scrollbar-width: none;
+}
+.hero-install-line::-webkit-scrollbar { display: none; }
 .hero-copy {
   position: absolute; top: 8px; right: 8px;
   display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
