@@ -180,10 +180,10 @@ firstComponent = DocPage
   , pageGroup = Start
   , pageTitle = "Your first Component"
   , pageBlurb = "A counter: model, update, view — and how to run it with startApp or hydrate with miso."
-  , pageKeywords = [ "counter", "startApp", "vcomp", "component", "hello world", "App", "mount" ]
+  , pageKeywords = [ "counter", "startApp", "component", "hello world", "App", "mount" ]
   , pageBody =
     [ lead
-      [ "The core type of miso is ", c "Component", ". To define one, use the ", c "component", " smart constructor (or its synonym ", c "vcomp", "). "
+      [ "The core type of miso is ", c "Component", ". To define one, use the ", c "component", " smart constructor. "
       , "Below is a simple counter." ]
     , hs """
       module Main where
@@ -201,7 +201,7 @@ firstComponent = DocPage
       --   Action  - the action that updates the model
       counter
         :: Component context props Int Action
-      counter = vcomp m u v
+      counter = component m u v
         where
           -- | Initial model value
           m :: Int
@@ -327,13 +327,13 @@ components = DocPage
   , pageGroup = Concepts
   , pageTitle = "Components"
   , pageBlurb = "The Component record, composition with (+>), keys and the mount / unmount lifecycle."
-  , pageKeywords = [ "vcomp", "+>", "mount_", "mountWithProps_", "lifecycle", "unmount", "VComp", "SomeComponent" ]
+  , pageKeywords = [ "component", "+>", "mount_", "mountWithProps_", "lifecycle", "unmount", "VComp", "SomeComponent" ]
   , pageBody =
     [ lead
       [ "A ", c "Component", " bundles a model, the ", c "update", " that evolves it and the ", c "view", " that renders it — plus everything around the edges: subscriptions, lifecycle hooks, a mailbox. "
       , "Components nest, forming a typed UI tree." ]
     , note
-      [ "Always build components with the ", c "component", " smart constructor (or its synonym ", c "vcomp", ") — ", c "component m u v", " — rather than the ", c "Component", " record constructor directly. It fills every other field with sane defaults; override the ones you need with record-update syntax, e.g. ", c "(component m u v) { subs = [...] }", "." ]
+      [ "Always build components with the ", c "component", " smart constructor — ", c "component m u v", " — rather than the ", c "Component", " record constructor directly. It fills every other field with sane defaults; override the ones you need with record-update syntax, e.g. ", c "(component m u v) { subs = [...] }", "." ]
     , h2 "The record"
     , para [ "The ", c "component", " smart constructor fills in sane defaults; you override fields with record update syntax:" ]
     , hs """
@@ -523,7 +523,7 @@ viewDsl = DocPage
     , api
       [ ("node, vnode", [ "build a ", c "VNode" ])
       , ("text, vtext", [ "build a ", c "VText", " — see ", goto (docsPage "text-and-fragments") [ "Text & fragments" ] ])
-      , ("component, vcomp", [ "build a ", c "VComp" ])
+      , ("component", [ "build a ", c "VComp" ])
       , ("fragment, vfrag, fragment_, vfrag_", [ "build a ", c "VFrag" ])
       , ("(+>)", [ "key and mount a child ", c "Component" ])
       ]
@@ -991,7 +991,7 @@ props = DocPage
 
       child
         :: Component () Greeting () ChildAction
-      child = vcomp () updateChild viewChild
+      child = component () updateChild viewChild
         where
           viewChild
             :: ()
@@ -1014,7 +1014,7 @@ props = DocPage
       -- passes it to the child as props
       parentComp :: App ParentModel ParentAction
       parentComp =
-        vcomp (ParentModel "World") noop viewParent
+        component (ParentModel "World") noop viewParent
         where
           viewParent
             :: ()
@@ -1076,7 +1076,7 @@ communication = DocPage
 
       myComp
         :: Component context props model Action
-      myComp = (vcomp m u v)
+      myComp = (component m u v)
         { mailbox = checkMail ReceivedMsg MailError }
       """
     , h3 "Looking up a ComponentId"
