@@ -205,7 +205,7 @@ pillars ctx =
         ] Nothing
         [ P.href_ (routeHref (nativePage "overview")), E.onClickPrevent (Go (nativePage "overview")) ]
     , pillar "desktop" iconMonitor PillarDesktop [ t ctx PillarDesktopDesc ] (Just PillarComingSoon)
-        [ P.href_ "https://github.com/lynx-family/lynxtron", P.target_ "_blank", P.rel_ "noopener" ]
+        [ P.href_ "https://lynxjs.org/next/lynxtron/", P.target_ "_blank", P.rel_ "noopener" ]
     ]
   where
     -- The card itself is clickable via a stretched link, so the description
