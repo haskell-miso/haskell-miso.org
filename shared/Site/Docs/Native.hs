@@ -55,7 +55,7 @@ overview = DocPage
           --with-compiler=javascript-unknown-ghcjs-ghc \\
           --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg
       """
-    , para [ "The JavaScript output is bundled for Lynx with ", a "https://lynxjs.org/rspeedy" "rspeedy", " and loaded by the Lynx Explorer app or your own iOS / Android shell. The ", a "https://github.com/haskell-miso/miso-lynx" "miso-lynx", " repository has the tooling and a gallery." ]
+    , para [ "The JavaScript output is bundled for Lynx with ", a "https://lynxjs.org/rspeedy" "rspeedy", " and loaded by the Lynx Explorer app or your own iOS / Android shell. The ", a "https://github.com/haskell-miso/miso-lynx" "miso-lynx", " repository has the tooling, and ", a "https://github.com/haskell-miso/miso-lynx-gallery" "miso-lynx-gallery", " a gallery of native components." ]
     , h2 "Building a bundle with Nix"
     , para
       [ "miso's flake exports everything needed to produce a ", c "main.lynx.bundle", " reproducibly. ", c "miso.lib.${system}.ghcNative", " is the GHC-JS package set with ", c "miso-native", " preinstalled — ", c "callCabal2nix", " your own app into it — and ", c "pkgs.mkLynxBundle", " (also exported as ", c "miso.lib.${system}.mkLynxBundle", ") turns that JS derivation into a Lynx bundle:" ]
