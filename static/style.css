@@ -751,7 +751,8 @@ html[data-theme="dark"] .callout-tip .callout-label { color: #5fd7c6; }
 .demo-title { font-size: 0.86rem; font-weight: 600; color: var(--ink-2); }
 .demo-body { display: grid; grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr); align-items: start; }
 .demo-stage {
-  padding: 24px; min-height: 200px; max-height: 480px; overflow-y: auto; display: flex; flex-direction: column; justify-content: center;
+  padding: 24px; min-height: 200px; max-height: 480px; overflow-y: auto; align-self: stretch;
+  display: flex; flex-direction: column; justify-content: center;
   background-image: radial-gradient(var(--line) 1px, transparent 1px); background-size: 16px 16px;
   border-right: 1px solid var(--line);
   font-size: 0.95rem;
