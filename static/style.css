@@ -1040,6 +1040,10 @@ html[data-theme="dark"] .anat-miso { background: var(--accent); color: #1a1208; 
 
 /* pillar cards: stretched link + real inline links in the copy */
 .pillar-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+/* the desktop card goes nowhere, so its stretched target is a button */
+button.pillar-link {
+  width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer;
+}
 .pillar-inline-link {
   position: relative; z-index: 2; color: var(--accent-ink); font-weight: 600;
   text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px;

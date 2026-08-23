@@ -238,9 +238,9 @@ heroLogo = (component (LogoModel (0, 0) (1, 1) False) update view)
 pillars :: Ctx -> View Ctx () Nav
 pillars ctx =
   H.section_ [ P.class_ "pillars" ]
-    [ pillar "web" iconGlobe PillarWeb [ t ctx PillarWebDesc ] Nothing
-        [ P.href_ (routeHref (docsPage "installation")), E.onClickPrevent (Go (docsPage "installation")) ]
-    , pillar "mobile" iconNative PillarMobile
+    [ pillarCard [ "pillar-web" ] iconGlobe (t ctx PillarWeb) [ t ctx PillarWebDesc ] Nothing $
+        stretchedLink [ P.href_ (routeHref (docsPage "installation")), E.onClickPrevent (Go (docsPage "installation")) ]
+    , pillarCard [ "pillar-mobile" ] iconNative (t ctx PillarMobile)
         [ t ctx PillarMobileDesc, " "
         , H.a_ [ P.class_ "pillar-inline-link", P.href_ "https://lynxjs.org", P.target_ "_blank", P.rel_ "noopener" ] [ "LynxJS.org" ]
         , t ctx PillarMobileDescEnd, " "
@@ -250,27 +250,77 @@ pillars ctx =
             , E.onClickPrevent (Go (nativePage "overview"))
             ] [ t ctx PillarMobileSee ]
         , t ctx PillarMobileSeeEnd
-        ] Nothing
-        [ P.href_ (routeHref (nativePage "overview")), E.onClickPrevent (Go (nativePage "overview")) ]
-    , pillar "desktop" iconMonitor PillarDesktop [ t ctx PillarDesktopDesc ] (Just PillarComingSoon)
-        [ P.href_ "https://lynxjs.org/next/lynxtron/", P.target_ "_blank", P.rel_ "noopener" ]
+        ] Nothing $
+        stretchedLink [ P.href_ (routeHref (nativePage "overview")), E.onClickPrevent (Go (nativePage "overview")) ]
+    , "desktop-pillar" +> desktopPillar
     ]
-  where
-    -- The card itself is clickable via a stretched link, so the description
-    -- can carry real inline links without nesting anchors.
-    pillar cls icon title descViews badge attrs =
-      H.article_ [ P.classes_ [ "pillar", "pillar-" <> cls ] ]
-        [ H.a_ ( P.class_ "pillar-link" : attrs ) []
-        , H.div_ [ P.class_ "pillar-top" ]
-            [ H.div_ [ P.class_ "pillar-icon" ] [ icon ]
-            , case badge of
-                Just key -> H.span_ [ P.class_ "pillar-badge" ] [ t ctx key ]
-                Nothing  -> vfrag []
-            ]
-        , H.h3_ [] [ t ctx title ]
-        , H.p_ [] descViews
-        , H.span_ [ P.class_ "pillar-more" ] [ "→" ]
+-----------------------------------------------------------------------------
+-- | A platform card. The card is clicked through a stretched overlay element
+-- (the last argument), so the description can carry real inline links
+-- without nesting one interactive element inside another.
+pillarCard
+  :: [MisoString]                   -- ^ classes, on top of @pillar@
+  -> View Ctx model action          -- ^ icon
+  -> View Ctx model action          -- ^ title
+  -> [View Ctx model action]        -- ^ description
+  -> Maybe (View Ctx model action)  -- ^ badge
+  -> View Ctx model action          -- ^ the stretched click target
+  -> View Ctx model action
+pillarCard classes icon title descViews badge target =
+  H.article_ [ P.classes_ ("pillar" : classes) ]
+    [ target
+    , H.div_ [ P.class_ "pillar-top" ]
+        [ H.div_ [ P.class_ "pillar-icon" ] [ icon ]
+        , case badge of
+            Just b  -> H.span_ [ P.class_ "pillar-badge" ] [ b ]
+            Nothing -> vfrag []
         ]
+    , H.h3_ [] [ title ]
+    , H.p_ [] descViews
+    , H.span_ [ P.class_ "pillar-more" ] [ "→" ]
+    ]
+-----------------------------------------------------------------------------
+stretchedLink :: [Attribute model action] -> View Ctx model action
+stretchedLink attrs = H.a_ ( P.class_ "pillar-link" : attrs ) []
+-----------------------------------------------------------------------------
+-- The desktop card: Lynxtron has not shipped, so the card goes nowhere.
+-- Clicking it shakes it left and right instead — a head shaken "no". It is
+-- its own component so that a shake only re-renders this one card.
+-----------------------------------------------------------------------------
+data ShakeAction = Shake
+  deriving (Show, Eq)
+-----------------------------------------------------------------------------
+-- | 'Nothing' until the card is first clicked, then the parity of the click.
+type Shaking = Maybe Bool
+-----------------------------------------------------------------------------
+desktopPillar :: Component Ctx () Shaking ShakeAction
+desktopPillar = (component Nothing update view) { useContext = True }
+  where
+    -- A CSS animation only restarts when its animation-name changes, so
+    -- every click flips between two classes running identical keyframes
+    -- ('Site.Styles.shakeNo'). Clicking mid-shake therefore starts it over
+    -- rather than doing nothing.
+    update Shake = this %= Just . maybe False not
+
+    view ctx () shaking =
+      pillarCard
+        ("pillar-desktop" : shakeClass shaking)
+        iconMonitor
+        (t ctx PillarDesktop)
+        [ t ctx PillarDesktopDesc ]
+        (Just (t ctx PillarComingSoon))
+        (H.button_
+          [ P.class_ "pillar-link"
+          , P.type_ "button"
+          , P.aria_ "label" (translate ctx PillarDesktop <> " — " <> translate ctx PillarComingSoon)
+          , E.onClick Shake
+          ] [])
+
+    shakeClass :: Shaking -> [MisoString]
+    shakeClass = \case
+      Nothing    -> []
+      Just False -> [ "pillar-shake-a" ]
+      Just True  -> [ "pillar-shake-b" ]
 -----------------------------------------------------------------------------
 -- Code section ------------------------------------------------------------------
 -----------------------------------------------------------------------------

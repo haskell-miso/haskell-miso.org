@@ -16,7 +16,7 @@ module Site.Styles
   ) where
 -----------------------------------------------------------------------------
 import           Miso.CSS
-import           Miso.CSS.Types (StyleSheet, Style)
+import           Miso.CSS.Types (KeyframeStop, StyleSheet, Style)
 import           Miso.String (MisoString)
 -----------------------------------------------------------------------------
 -- | The site's easing curve.
@@ -44,6 +44,23 @@ logoTilt nx ny =
   where
     pxD :: Double -> MisoString
     pxD d = px (round d)
+-----------------------------------------------------------------------------
+-- | A head shaken "no": side to side, decaying, with a touch of yaw. Used by
+-- the desktop pillar on "Site.Home", which has nowhere to send a click.
+shakeNo :: [KeyframeStop]
+shakeNo =
+  [ from_ [ transforms [ translateX (px 0) ] ]
+  , at (pct 12) [ transforms [ translateX (px (-10)), rotate (deg (-1.2)) ] ]
+  , at (pct 28) [ transforms [ translateX (px 9), rotate (deg 1.1) ] ]
+  , at (pct 44) [ transforms [ translateX (px (-6)), rotate (deg (-0.8)) ] ]
+  , at (pct 60) [ transforms [ translateX (px 5), rotate (deg 0.6) ] ]
+  , at (pct 76) [ transforms [ translateX (px (-3)) ] ]
+  , at (pct 90) [ transforms [ translateX (px 2) ] ]
+  , to_ [ transforms [ translateX (px 0) ] ]
+  ]
+-----------------------------------------------------------------------------
+shakeDur :: MisoString
+shakeDur = ms 620
 -----------------------------------------------------------------------------
 motionCss :: MisoString
 motionCss = renderStyleSheet motionSheet
@@ -105,6 +122,11 @@ motionSheet = sheet_
       [ from_ [ transforms [ rotate (deg 0) ] ]
       , to_   [ transforms [ rotate (deg 360) ] ]
       ]
+    -- Two identical copies of the same shake under different names: a CSS
+    -- animation only restarts when its animation-name changes, so the
+    -- desktop pillar alternates between the two on every click.
+  , keyframes_ "shake-no-a" shakeNo
+  , keyframes_ "shake-no-b" shakeNo
 
     -- page + hero choreography ---------------------------------------------
   , selector_ ".page-root .home, .page-root .docs, .page-root .page" [ animation ("rise " <> slow <> " " <> easeOut <> " both") ]
@@ -146,6 +168,12 @@ motionSheet = sheet_
   , selector_ ".pillar, .feature, .example-card, .doc-pager-link"
       [ transition ("transform " <> medium <> " " <> easeOut <> ", border-color " <> medium <> " " <> easeOut <> ", box-shadow " <> medium <> " " <> easeOut) ]
   , selector_ ".pillar:hover"         [ transforms [ translateY (px (-4)) ] ]
+    -- doubled up on .pillar to outweigh the entrance delay on
+    -- .pillar:nth-child(3), which would otherwise hold the shake back too
+  , selector_ ".pillar.pillar-shake-a"
+      [ animation ("shake-no-a " <> shakeDur <> " ease-in-out"), animationDelay (s 0) ]
+  , selector_ ".pillar.pillar-shake-b"
+      [ animation ("shake-no-b " <> shakeDur <> " ease-in-out"), animationDelay (s 0) ]
   , selector_ ".feature:hover, .example-card:hover" [ transforms [ translateY (px (-3)) ] ]
   , selector_ ".doc-pager-link:hover" [ transforms [ translateY (px (-2)) ] ]
   , selector_ ".pillar-icon"          [ transition_ "transform" medium easeOut ]
