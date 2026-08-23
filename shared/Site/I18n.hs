@@ -24,7 +24,7 @@ import Site.Types
 -----------------------------------------------------------------------------
 data Key
   -- top bar
-  = NavDocs | NavBlog | NavExamples | NavTry | NavLegacy | NavSearch | NavLanguage | NavTheme | NavGitHub | NavMenu
+  = NavDocs | NavBlog | NavExamples | NavUI | NavTry | NavLegacy | NavSearch | NavLanguage | NavTheme | NavGitHub | NavMenu
   -- hero
   | HeroEyebrow | HeroTitle | HeroSubtitle | HeroGetStarted | HeroGitHub | HeroDrag
   -- platform pillars
@@ -96,6 +96,7 @@ en = \case
   NavDocs -> "Docs"
   NavBlog -> "Blog"
   NavExamples -> "Examples"
+  NavUI -> "UI"
   NavTry -> "Try"
   NavLegacy -> "Legacy"
   NavSearch -> "Search"

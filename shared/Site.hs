@@ -218,6 +218,10 @@ topbar ctx m =
             , navLink Blog NavBlog (isBlog current)
             , H.a_
                 [ P.classes_ [ "topnav-link", "topnav-external" ]
+                , P.href_ "https://ui.haskell-miso.org", P.target_ "_blank", P.rel_ "noopener" ]
+                [ t ctx NavUI, iconExternal ]
+            , H.a_
+                [ P.classes_ [ "topnav-link", "topnav-external" ]
                 , P.href_ "https://try.haskell-miso.org", P.target_ "_blank", P.rel_ "noopener" ]
                 [ t ctx NavTry, iconExternal ]
             , H.a_
