@@ -283,7 +283,8 @@ pillarCard classes icon title descViews badge target =
 stretchedLink :: [Attribute model action] -> View Ctx model action
 stretchedLink attrs = H.a_ ( P.class_ "pillar-link" : attrs ) []
 -----------------------------------------------------------------------------
--- The desktop card: Lynxtron has not shipped, so the card goes nowhere.
+-- The desktop card: Lynxtron has not shipped, so the card itself goes
+-- nowhere (only the inline "Lynxtron" link in the description does).
 -- Clicking it shakes it left and right instead — a head shaken "no". It is
 -- its own component so that a shake only re-renders this one card.
 -----------------------------------------------------------------------------
@@ -307,7 +308,14 @@ desktopPillar = (component Nothing update view) { useContext = True }
         ("pillar-desktop" : shakeClass shaking)
         iconMonitor
         (t ctx PillarDesktop)
-        [ t ctx PillarDesktopDesc ]
+        [ H.a_
+            [ P.class_ "pillar-inline-link"
+            , P.href_ "https://lynxjs.org/next/lynxtron/"
+            , P.target_ "_blank"
+            , P.rel_ "noopener"
+            ] [ "Lynxtron" ]
+        , " ", t ctx PillarDesktopDesc
+        ]
         (Just (t ctx PillarComingSoon))
         (H.button_
           [ P.class_ "pillar-link"

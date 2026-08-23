@@ -26,9 +26,10 @@ startPages =
 -----------------------------------------------------------------------------
 conceptPages :: [DocPage]
 conceptPages =
-  [ components
-  , viewDsl
-  , textAndFragments
+  [ viewDsl
+  , components
+  , textNodes
+  , fragments
   , keys
   , events
   , attributes
@@ -428,6 +429,25 @@ viewDsl = DocPage
   , pageBody =
     [ lead
       [ "A ", c "VNode", " represents a DOM element — the most common kind of virtual DOM node. It carries a ", c "Namespace", ", a tag name, a list of ", c "Attribute", " values and a list of child ", c "View", "s." ]
+    , h2 "The View type"
+    , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
+    , hs """
+      data View context model action
+        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
+        | VText (Maybe Key) MisoString
+        | VComp (SomeComponent context)
+        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
+        | VFrag (Maybe Key) [View context model action]
+
+      data SomeComponent context
+        = forall model action props. (Eq context, Eq model, Eq props)
+        => SomeComponent (Maybe Key) props (Component context props model action)
+      """
+    , para
+      [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
+      , "The existential ", c "SomeComponent", " is what allows embedding polymorphic components in a ", c "View", ". ", c "VCompStatic", " carries a static pointer to its constructor and is used by the "
+      , goto (nativePage "static-mounting") [ "native dual-thread runtime" ], "." ]
+    , h2 "Element nodes"
     , hs """
       VNode HTML "div" [ HP.id_ "container" ] [ "Hello, world!" ]
       """
@@ -490,28 +510,10 @@ viewDsl = DocPage
           ]
       """
     , para [ "As a convention, the ", c "*With", " variant of a lifecycle hook (e.g. ", c "onCreatedWith", ") provides the target ", c "DOMRef", " to the callback." ]
-    , h2 "The View type"
-    , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
-    , hs """
-      data View context model action
-        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
-        | VText (Maybe Key) MisoString
-        | VComp (SomeComponent context)
-        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
-        | VFrag (Maybe Key) [View context model action]
-
-      data SomeComponent context
-        = forall model action props. (Eq context, Eq model, Eq props)
-        => SomeComponent (Maybe Key) props (Component context props model action)
-      """
-    , para
-      [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
-      , "The existential ", c "SomeComponent", " is what allows embedding polymorphic components in a ", c "View", ". ", c "VCompStatic", " carries a static pointer to its constructor and is used by the "
-      , goto (nativePage "static-mounting") [ "native dual-thread runtime" ], "." ]
     , h2 "The smart constructors, at a glance"
     , api
       [ ("node, vnode", [ "build a ", c "VNode" ])
-      , ("text, vtext", [ "build a ", c "VText", " — see ", goto (docsPage "text-and-fragments") [ "Text & fragments" ] ])
+      , ("text, vtext", [ "build a ", c "VText", " — see ", goto (docsPage "text") [ "Text nodes" ] ])
       , ("component", [ "build a ", c "VComp" ])
       , ("fragment, vfrag, fragment_, vfrag_", [ "build a ", c "VFrag" ])
       , ("(+>)", [ "key and mount a child ", c "Component" ])
@@ -519,18 +521,16 @@ viewDsl = DocPage
     ]
   }
 -----------------------------------------------------------------------------
-textAndFragments :: DocPage
-textAndFragments = DocPage
-  { pageSlug = "text-and-fragments"
+textNodes :: DocPage
+textNodes = DocPage
+  { pageSlug = "text"
   , pageGroup = Concepts
-  , pageTitle = "Text & fragments"
-  , pageBlurb = "VText nodes (HTML encoding, keyed text) and VFrag — grouping siblings without a wrapper element."
-  , pageKeywords = [ "VText", "text", "textRaw", "text_", "textKey", "VFrag", "fragment", "vfrag_", "IsString" ]
+  , pageTitle = "Text nodes"
+  , pageBlurb = "VText nodes — string literals, HTML encoding on the server and keyed text."
+  , pageKeywords = [ "VText", "text", "textRaw", "text_", "textKey", "IsString" ]
   , pageBody =
     [ lead
-      [ "A ", c "VText", " represents a DOM text node; a ", c "VFrag", " groups siblings without a wrapper element, like React's ", c "<></>", ". "
-      , "Both participate in keyed reconciliation." ]
-    , h2 "Text nodes"
+      [ "A ", c "VText", " represents a DOM text node. Text nodes participate in keyed reconciliation." ]
     , para [ "The simplest way to produce a ", c "VText", " is via the ", c "IsString", " instance on ", c "View", ". String literals inside a child list are automatically promoted to text nodes:" ]
     , hs """
       H.div_ [] [ "Hello, world!" ]
@@ -568,8 +568,20 @@ textAndFragments = DocPage
       , ("textKey",  [ "single keyed string" ])
       , ("textKey_", [ "list of keyed strings joined with a space" ])
       ]
-    , h2 "Fragments"
-    , para [ c "VFrag", " groups sibling nodes without a wrapper element in the DOM, analogous to the React Fragment API and the browser's ", c "DocumentFragment", ":" ]
+    ]
+  }
+-----------------------------------------------------------------------------
+fragments :: DocPage
+fragments = DocPage
+  { pageSlug = "fragments"
+  , pageGroup = Concepts
+  , pageTitle = "Fragments"
+  , pageBlurb = "VFrag — grouping siblings without a wrapper element, with keyed variants."
+  , pageKeywords = [ "VFrag", "fragment", "vfrag", "fragment_", "vfrag_", "Fragment" ]
+  , pageBody =
+    [ lead
+      [ "A ", c "VFrag", " groups sibling nodes without a wrapper element in the DOM. Fragments participate in keyed reconciliation." ]
+    , para [ "Inspired by ", a "https://react.dev/reference/react/Fragment" "React's Fragment", " (", c "<></>", "), a ", c "VFrag", " is analogous to the browser's ", c "DocumentFragment", ":" ]
     , hs """
       -- Renders two <li> elements as direct
       -- siblings, no enclosing element

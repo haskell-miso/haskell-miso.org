@@ -435,7 +435,7 @@ reactPage = DocPage
     , ul
       [ [ b "Context", " — one global value shared by the whole tree, read without prop-drilling; write it with ", c "modifyContext", ". Where React components call the ", c "useContext", " hook to subscribe, in miso ", em "any", " component can subscribe to context changes by enabling the field of the same name — ", c "useContext = True", " — or by mounting with the ", c "mountUseContext", " shorthand. See ", goto (docsPage "context") [ "Context" ], "." ]
       , [ b "Props", " — read-only data a parent passes to a child (", c "mountWithProps_", "); the child re-renders when they change and can react via ", c "onPropsChanged", ". See ", goto (docsPage "props") [ "Props" ], "." ]
-      , [ b "Fragment", " — ", c "vfrag", " is ", c "<></>", ": group siblings without a wrapper element, keyed variants included. See ", goto (docsPage "text-and-fragments") [ "Text & fragments" ], "." ]
+      , [ b "Fragment", " — ", c "vfrag", " is ", c "<></>", ": group siblings without a wrapper element, keyed variants included. See ", goto (docsPage "fragments") [ "Fragments" ], "." ]
       , [ b "Keys, components, event delegation, virtual DOM", " — miso implements the same architecture internals as React, so ", goto (docsPage "keys") [ "keys" ], " drive reconciliation and events delegate through one root listener, exactly as you are used to." ]
       ]
     , hs """
