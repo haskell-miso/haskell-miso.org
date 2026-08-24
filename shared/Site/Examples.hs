@@ -143,6 +143,7 @@ catalogue =
   , ( ExCatNative
     , [ Example "miso-lynx" "🐈" "miso on Lynx: the native mobile backend, tooling and docs." (Just "https://lynxjs.haskell-miso.org/")
       , Example "miso-lynx-gallery" "📱" "A gallery of native components." Nothing
+      , Example "misogram" "📸" "An Instagram clone in miso and LynxJS." Nothing
       ]
     )
   ]
