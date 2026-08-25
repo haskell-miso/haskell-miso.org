@@ -64,7 +64,7 @@ english p =
 -----------------------------------------------------------------------------
 allPosts :: [Post]
 allPosts =
-  [ longLiveHaskell
+  [ newBlog
   ]
 -----------------------------------------------------------------------------
 lookupPost :: MisoString -> Maybe Post
@@ -114,17 +114,17 @@ blogPostPage p = (component () navigate view) { useContext = True }
           , H.div_ [ P.class_ "doc-body" ] postBody
           ]
 -----------------------------------------------------------------------------
--- Haskell is dead, long live Haskell ----------------------------------------
+-- New blog -------------------------------------------------------------------
 -----------------------------------------------------------------------------
-longLiveHaskell :: Post
-longLiveHaskell = Post
-  { postSlug = "haskell-is-dead-long-live-haskell"
+newBlog :: Post
+newBlog = Post
+  { postSlug = "new-blog"
   , postDate = "2026-08-18"
   , postVersions = [ (EN, postEn) ]
   }
   where
     postEn = PostContent
-      { postTitle = "Haskell is dead, long live Haskell"
+      { postTitle = "New blog"
       , postBlurb = "Welcome to the new home of haskell-miso.org. More blog posts coming soon."
       , postBody =
         [ lead [ "Welcome to the new home of ", a "https://haskell-miso.org" "haskell-miso.org", ". More blog posts coming soon." ]
