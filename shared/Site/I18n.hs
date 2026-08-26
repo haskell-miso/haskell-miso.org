@@ -42,7 +42,7 @@ data Key
   | AnatTitle | AnatSubtitle | AnatHint | AnatMain | AnatBg | AnatApp
   | AnatStage1 | AnatStage2 | AnatStage3 | AnatStage4 | AnatStage5
   -- generative AI
-  | AiTitle | AiBody | AiBadge
+  | AiTitle | AiBadge
   -- ecosystem strip
   | EcoTitle | EcoSubtitle | EcoAll
   -- footer
@@ -161,7 +161,6 @@ en = \case
   AnatStage4 -> "Each interpreter loads the same bundle: JavaScript, CSS, assets."
   AnatStage5 -> "And inside the JS: two GHC runtimes, one application, one miso."
   AiTitle -> "Generative AI ready"
-  AiBody -> "miso itself was built without AI tools. But its DSL, thanks to its simplicity, is a great fit for agentic coding tools like Claude or Codex."
   AiBadge -> "Agent-friendly by design · 100% miso"
   EcoTitle -> "Batteries included"
   EcoSubtitle -> "Games, browser API demos, integrations and libraries, all written in miso."

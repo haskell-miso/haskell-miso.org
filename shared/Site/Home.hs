@@ -454,7 +454,15 @@ aiSection ctx =
     [ H.div_ [ P.class_ "ai-card" ]
         [ H.span_ [ P.class_ "ai-sparkle", P.aria_ "hidden" "true" ] [ "✦" ]
         , H.h2_ [] [ t ctx AiTitle ]
-        , H.p_ [] [ t ctx AiBody ]
+        , H.p_ []
+            [ "miso was built in 2016. The simplicity of the DSL makes it ideal for code generation tools like "
+            , H.a_ [ P.href_ "https://www.anthropic.com/claude", P.target_ "_blank", P.rel_ "noopener" ] [ "Claude" ]
+            , ", "
+            , H.a_ [ P.href_ "https://openai.com/codex", P.target_ "_blank", P.rel_ "noopener" ] [ "Codex" ]
+            , ", "
+            , H.a_ [ P.href_ "https://www.kimi.com", P.target_ "_blank", P.rel_ "noopener" ] [ "Kimi K3" ]
+            , ", etc."
+            ]
         , H.a_
             [ P.class_ "ai-badge"
             , P.href_ "https://www.anthropic.com/claude", P.target_ "_blank", P.rel_ "noopener" ]
