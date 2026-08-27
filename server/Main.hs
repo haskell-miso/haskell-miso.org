@@ -56,7 +56,7 @@ main = do
 -- | Every route on the site, with its SEO metadata.
 pages :: [(Route, Meta)]
 pages =
-  [ (Index,    website "miso — a tasty Haskell UI framework for web, mobile and desktop"
+  [ (Index,    website "The React framework for Haskell"
                        "miso is a small, fast and composable Haskell library for building web and native user interfaces. Compiles to WebAssembly or JavaScript." [ "functional programming", "UI framework" ])
   , (Docs,     website "Documentation — miso" "The miso documentation: from your first Component to the native dual-thread runtime, with live examples." [ "documentation", "guide" ])
   , (Examples, website "Examples — miso" "Real applications built with miso: games, browser API demos, integrations and libraries from the haskell-miso organisation." [ "examples", "demos", "games" ])

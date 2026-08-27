@@ -37,6 +37,7 @@ homePage = (component () navigate view) { useContext = True }
         , pillars ctx
         , codeSection ctx
         , features ctx
+        , timeline ctx
         , aiSection ctx
         , ecosystem ctx
         ]
@@ -446,6 +447,58 @@ features ctx =
         , H.p_ [] [ t ctx desc ]
         ]
 -----------------------------------------------------------------------------
+-- Timeline -----------------------------------------------------------------
+-----------------------------------------------------------------------------
+timeline :: Ctx -> View Ctx () Nav
+timeline ctx =
+  H.section_ [ P.class_ "timeline-section" ]
+    [ H.div_ [ P.class_ "section-head" ]
+        [ H.h2_ [] [ t ctx TimelineTitle ]
+        , H.p_ [] [ t ctx TimelineSubtitle ]
+        ]
+    , H.div_ [ P.class_ "timeline" ]
+        [ item "2016" "Launched"
+            [ dlink (docsPage "view-dsl") "Virtual DOM"
+            , dlink (docsPage "events") "Event delegation"
+            , dlink (docsPage "html-and-prerendering") "Hydration"
+            ]
+        , milestone "8 years in production"
+        , item "2024" "Components"
+            [ dlink (docsPage "installation") "Web Assembly"
+            , dlink (docsPage "internals") "TypeScript"
+            , dlink (docsPage "components") "VComp"
+            ]
+        , item "2025" "React Summit"
+            [ H.a_
+                [ P.href_ "https://youtu.be/l2dByiwiQcM?si=3IghUTRryYAyb7SK&t=1712"
+                , P.target_ "_blank", P.rel_ "noopener" ]
+                [ "LynxJS: Unlock Native for More" ]
+            , dlink (nativePage "overview") "Native mobile"
+            ]
+        , item "2026" "React API"
+            [ dlink (docsPage "props") "Props"
+            , dlink (docsPage "fragments") "Fragment"
+            , dlink (docsPage "context") "Context"
+            , dlink (nativePage "dual-thread") "Dual Thread"
+            ]
+        ]
+    ]
+  where
+    item year title bullets =
+      H.div_ [ P.class_ "timeline-item" ]
+        [ H.span_ [ P.class_ "timeline-dot" ] []
+        , H.span_ [ P.class_ "timeline-year" ] [ year ]
+        , H.h3_ [] [ title ]
+        , H.ul_ [] [ H.li_ [] [ bullet ] | bullet <- bullets ]
+        ]
+    milestone note =
+      H.div_ [ P.class_ "timeline-item milestone" ]
+        [ H.span_ [ P.class_ "timeline-dot" ] []
+        , H.p_ [ P.class_ "timeline-note" ] [ note ]
+        ]
+    dlink route label =
+      H.a_ [ P.href_ (routeHref route), E.onClickPrevent (Go route) ] [ label ]
+-----------------------------------------------------------------------------
 -- Generative AI ----------------------------------------------------------------------
 -----------------------------------------------------------------------------
 aiSection :: Ctx -> View Ctx () Nav
@@ -455,17 +508,17 @@ aiSection ctx =
         [ H.span_ [ P.class_ "ai-sparkle", P.aria_ "hidden" "true" ] [ "✦" ]
         , H.h2_ [] [ t ctx AiTitle ]
         , H.p_ []
-            [ "miso was built in 2016. The simplicity of the DSL makes it ideal for code generation tools like "
+            [ "The simplicity of miso's API makes it an ideal tool for AI agents like "
             , H.a_ [ P.href_ "https://www.anthropic.com/claude", P.target_ "_blank", P.rel_ "noopener" ] [ "Claude" ]
             , ", "
             , H.a_ [ P.href_ "https://openai.com/codex", P.target_ "_blank", P.rel_ "noopener" ] [ "Codex" ]
-            , ", "
+            , ", and "
             , H.a_ [ P.href_ "https://www.kimi.com", P.target_ "_blank", P.rel_ "noopener" ] [ "Kimi K3" ]
             , ", etc."
             ]
         , H.a_
             [ P.class_ "ai-badge"
-            , P.href_ "https://www.anthropic.com/claude", P.target_ "_blank", P.rel_ "noopener" ]
+            , P.href_ "https://github.com/haskell-miso/haskell-miso.org", P.target_ "_blank", P.rel_ "noopener" ]
             [ "✦ ", t ctx AiBadge ]
         ]
     ]

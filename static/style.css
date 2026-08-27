@@ -409,7 +409,7 @@ html[data-theme="dark"] .pillar-desktop .pillar-icon { color: #a79dff; }
 .section-head h2 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); margin-bottom: 12px; }
 .section-head p { color: var(--ink-2); font-size: 1.08rem; }
 
-.code-section, .features, .ecosystem { max-width: var(--content-w); margin: 0 auto; padding: 96px 24px 0; }
+.code-section, .features, .ecosystem, .timeline-section { max-width: var(--content-w); margin: 0 auto; padding: 96px 24px 0; }
 
 .code-split { display: grid; grid-template-columns: 1.25fr 1fr; gap: 20px; align-items: stretch; }
 .code-pane {
@@ -465,6 +465,52 @@ html[data-theme="dark"] .pillar-desktop .pillar-icon { color: #a79dff; }
 .feature-glyph .icon { width: 24px; height: 24px; }
 .feature h3 { font-size: 1.08rem; }
 .feature p { color: var(--ink-2); font-size: 0.93rem; line-height: 1.55; }
+
+/* ---- timeline --------------------------------------------------------- */
+.timeline { position: relative; display: flex; gap: 8px; margin-top: 44px; }
+.timeline::before {
+  content: ""; position: absolute; top: 9px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(to right, transparent, var(--line-strong) 4%, var(--line-strong) 96%, transparent);
+}
+.timeline-item { position: relative; flex: 1; padding-top: 30px; }
+.timeline-dot {
+  position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg-elev); border: 2px solid var(--accent); box-shadow: 0 0 0 4px var(--bg);
+  transition: box-shadow 220ms var(--ease), transform 220ms var(--ease);
+}
+.timeline-item:hover .timeline-dot {
+  box-shadow: 0 0 0 4px var(--bg), 0 0 16px 3px var(--accent-glow);
+  transform: scale(1.15);
+}
+.timeline-year { display: block; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; color: var(--accent-ink); margin-bottom: 4px; }
+.timeline-item h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.timeline-item ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.timeline-item li { font-size: 0.9rem; }
+.timeline-item a { color: var(--ink-2); }
+.timeline-item a:hover { color: var(--accent-ink); text-decoration: underline; }
+.timeline-item.milestone { flex: 0.7; padding-top: 24px; }
+.timeline-item.milestone .timeline-dot { width: 10px; height: 10px; top: 5px; left: 5px; background: var(--bg-sunk); border-color: var(--line-strong); }
+.timeline-item.milestone .timeline-note { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+@media (max-width: 900px) {
+  .timeline { flex-direction: column; gap: 30px; }
+  .timeline::before { top: 0; bottom: 0; left: 9px; right: auto; width: 2px; height: auto; background: linear-gradient(to bottom, transparent, var(--line-strong) 4%, var(--line-strong) 96%, transparent); }
+  .timeline-item, .timeline-item.milestone { padding-top: 0; padding-left: 34px; flex: none; }
+  .timeline-item.milestone .timeline-dot { left: 5px; top: 5px; }
+
+  /* light each dot up independently as it scrolls into view; browsers
+     without scroll-driven animations keep the plain always-lit dot */
+  @supports (animation-timeline: view()) {
+    .timeline-dot {
+      border-color: var(--line-strong); background: var(--bg-sunk); box-shadow: 0 0 0 4px var(--bg);
+      animation: timeline-light linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}
+@keyframes timeline-light {
+  to { border-color: var(--accent); background: var(--bg-elev); box-shadow: 0 0 0 4px var(--bg), 0 0 16px 3px var(--accent-glow); }
+}
 
 .eco-marquee {
   overflow: hidden; position: relative; padding: 6px 0;

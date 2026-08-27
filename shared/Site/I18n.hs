@@ -43,6 +43,8 @@ data Key
   | AnatStage1 | AnatStage2 | AnatStage3 | AnatStage4 | AnatStage5
   -- generative AI
   | AiTitle | AiBadge
+  -- timeline
+  | TimelineTitle | TimelineSubtitle
   -- ecosystem strip
   | EcoTitle | EcoSubtitle | EcoAll
   -- footer
@@ -160,8 +162,10 @@ en = \case
   AnatStage3 -> "Lynx hosts two JavaScript interpreters: the main thread renders, the background thread thinks."
   AnatStage4 -> "Each interpreter loads the same bundle: JavaScript, CSS, assets."
   AnatStage5 -> "And inside the JS: two GHC runtimes, one application, one miso."
-  AiTitle -> "Generative AI ready"
+  AiTitle -> "AI agent ready"
   AiBadge -> "Agent-friendly by design · 100% miso"
+  TimelineTitle -> "Timeline"
+  TimelineSubtitle -> "From launch in 2016 to native mobile apps and React-style primitives today."
   EcoTitle -> "Batteries included"
   EcoSubtitle -> "Games, browser API demos, integrations and libraries, all written in miso."
   EcoAll -> "Browse all examples"
