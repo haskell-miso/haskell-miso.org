@@ -508,7 +508,7 @@ aiSection ctx =
         [ H.span_ [ P.class_ "ai-sparkle", P.aria_ "hidden" "true" ] [ "✦" ]
         , H.h2_ [] [ t ctx AiTitle ]
         , H.p_ []
-            [ "The simplicity of miso's API makes it an ideal tool for AI agents like "
+            [ "A simple API ideal for coding agents like "
             , H.a_ [ P.href_ "https://www.anthropic.com/claude", P.target_ "_blank", P.rel_ "noopener" ] [ "Claude" ]
             , ", "
             , H.a_ [ P.href_ "https://openai.com/codex", P.target_ "_blank", P.rel_ "noopener" ] [ "Codex" ]
