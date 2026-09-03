@@ -598,7 +598,7 @@ fragments = DocPage
         ]
       """
     , para
-      [ "Fragments may be nested. The differ recurses into nested fragments and processes them as if they were a flat sequence of sibling DOM nodes, so nesting carries no runtime cost beyond the constructor allocation. "
+      [ "Fragments may be nested. Diffing recurses into nested fragments and processes them as if they were a flat sequence of sibling DOM nodes, so nesting carries no runtime cost beyond the constructor allocation. "
       , "Empty fragments in child lists are erased before diffing and are therefore a no-op." ]
     , api
       [ ("fragment",  [ "unkeyed fragment" ])
@@ -627,7 +627,7 @@ keys = DocPage
       , "For components, differing keys trigger the ", c "unmount", " phase for the old component and the ", c "mount", " phase for the new one; the DOM reference is replaced." ]
     , h2 "Keys preserve the DOM reference"
     , para
-      [ "Because a stable key keeps the same DOM node in place, CSS animations on that node are not interrupted by re-renders. Without a key the differ may recreate the node, resetting any in-progress animation. "
+      [ "Because a stable key keeps the same DOM node in place, CSS animations on that node are not interrupted by re-renders. Without a key diffing may recreate the node, resetting any in-progress animation. "
       , "Assigning a stable key to an animated element guarantees the animation runs to completion." ]
     , h2 "Usage"
     , para [ "See the ", c "key_", " property, and smart constructors like ", c "textKey_", ", ", c "vfrag_", " and ", c "(+>)", ":" ]
