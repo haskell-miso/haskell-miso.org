@@ -86,6 +86,7 @@ catalogue =
       , Example "minesweeper" "💣" "The classic Minesweeper." (Just "https://minesweeper.haskell-miso.org/")
       , Example "tic-tac-miso" "❌" "Tic-tac-toe." (Just "https://tic-tac-miso.haskell-miso.org/")
       , Example "blockout" "🟦" "The game of Blockout." (Just "https://blockout.haskell-miso.org/")
+      , Example "mahjong" "🀄" "The game of Mahjong." (Just "https://mahjong.haskell-miso.org/")
       ]
     )
   , ( ExCatBrowser
