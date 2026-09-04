@@ -88,7 +88,8 @@ catalogue =
       , Example "blockout" "🟦" "The game of Blockout." (Just "https://blockout.haskell-miso.org/")
       , Example "mahjong" "🀄" "The game of Mahjong." (Just "https://mahjong.haskell-miso.org/")
       , Example "sudoku" "🧩" "The game of Sudoku." (Just "https://sudoku.haskell-miso.org/")
-      , Example "slingo" "🎰" "The game of Slingo." (Just "https://slingo.haskell-miso.org/")      
+      , Example "slingo" "🎰" "The game of Slingo." (Just "https://slingo.haskell-miso.org/")
+      , Example "Texas Hold Em'" "🤠" "Texas Hold Em' poker" (Just "https://texasholdem.haskell-miso.org/")      
       ]
     )
   , ( ExCatBrowser
