@@ -35,6 +35,7 @@ homePage = (component () navigate view) { useContext = True }
       H.div_ [ P.class_ "home" ]
         [ hero ctx
         , pillars ctx
+        , tweetSection ctx
         , codeSection ctx
         , features ctx
         , timeline ctx
@@ -498,6 +499,51 @@ timeline ctx =
         ]
     dlink route label =
       H.a_ [ P.href_ (routeHref route), E.onClickPrevent (Go route) ] [ label ]
+-----------------------------------------------------------------------------
+-- A word from the Lynx team ------------------------------------------------------
+-----------------------------------------------------------------------------
+-- | The Lynx team's post announcing Haskell support, rendered as a card.
+-- The whole card is one link to the post on X.
+tweetSection :: Ctx -> View Ctx () Nav
+tweetSection ctx =
+  H.section_ [ P.class_ "tweet-section" ]
+    [ H.div_ [ P.class_ "section-head" ]
+        [ H.h2_ [] [ t ctx TweetTitle, " 🔓" ]
+        , H.p_ []
+            [ t ctx TweetSubtitle, " "
+            , H.a_ [ P.class_ "pillar-inline-link", P.href_ "https://lynxjs.org", P.target_ "_blank", P.rel_ "noopener" ] [ "LynxJS.org" ]
+            ]
+        ]
+    , H.a_
+        [ P.class_ "tweet-card"
+        , P.href_ tweetUrl
+        , P.target_ "_blank", P.rel_ "noopener"
+        , P.aria_ "label" "Read the post from Lynx on X"
+        ]
+        [ H.div_ [ P.class_ "tweet-head" ]
+            [ H.img_
+                [ P.class_ "tweet-avatar", P.src_ "/assets/lynx/lynx-avatar.jpg", P.alt_ ""
+                , P.width_ "48", P.height_ "48", P.loading_ "lazy"
+                ]
+            , H.div_ [ P.class_ "tweet-who" ]
+                [ H.span_ [ P.class_ "tweet-name" ] [ "Lynx", iconVerified ]
+                , H.span_ [ P.class_ "tweet-handle" ] [ "@LynxJS_org" ]
+                ]
+            , H.span_ [ P.class_ "tweet-x" ] [ iconX ]
+            ]
+        , H.p_ [ P.class_ "tweet-body" ]
+            [ "Did you know? You can now build native mobile apps with Lynx in… "
+            , H.strong_ [] [ "Haskell" ], "!"
+            ]
+        , H.p_ [ P.class_ "tweet-body" ] [ "Thanks to Miso 🍜" ]
+        , H.div_ [ P.class_ "tweet-foot" ]
+            [ H.time_ [ textProp "datetime" "2026-08-31" ] [ "August 31, 2026" ]
+            , H.span_ [ P.class_ "tweet-cta" ] [ "View on X", H.span_ [ P.class_ "btn-arrow" ] [ "→" ] ]
+            ]
+        ]
+    ]
+  where
+    tweetUrl = "https://x.com/LynxJS_org/status/2094571507418837260"
 -----------------------------------------------------------------------------
 -- Generative AI ----------------------------------------------------------------------
 -----------------------------------------------------------------------------

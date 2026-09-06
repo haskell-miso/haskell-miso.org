@@ -45,6 +45,8 @@ data Key
   | AiTitle | AiBadge
   -- timeline
   | TimelineTitle | TimelineSubtitle
+  -- the Lynx team's post on X
+  | TweetTitle | TweetSubtitle
   -- ecosystem strip
   | EcoTitle | EcoSubtitle | EcoAll
   -- footer
@@ -165,6 +167,8 @@ en = \case
   AiTitle -> "AI agent ready"
   AiBadge -> "Agent-friendly by design · 100% miso"
   TimelineTitle -> "Timeline"
+  TweetTitle -> "Native unlocked"
+  TweetSubtitle -> "Native mobile ready via"
   TimelineSubtitle -> "From launch in 2016 to native mobile apps and React-style primitives today."
   EcoTitle -> "Batteries included"
   EcoSubtitle -> "Games, browser API demos, integrations and libraries, all written in miso."

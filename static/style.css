@@ -1013,6 +1013,40 @@ html[data-theme="dark"] .anat-miso { background: var(--accent); color: #1a1208; 
 /* center the counter row (and similar) on the demo stage */
 .demo-stage .row { justify-content: center; }
 
+/* ---- a word from the Lynx team (post on X) ---------------------------------- */
+.tweet-section { max-width: var(--content-w); margin: 0 auto; padding: 96px 24px 0; }
+.tweet-card {
+  position: relative; display: block; max-width: 640px; margin: 0 auto; padding: 26px 28px 20px;
+  border-radius: var(--radius); border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(90% 60% at 0% 0%, var(--accent-soft), transparent 70%),
+    var(--bg-elev);
+  box-shadow: var(--shadow-1); color: var(--ink); text-decoration: none; overflow: hidden;
+  transition: transform var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease), border-color var(--t-med) var(--ease);
+}
+.tweet-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-2), 0 0 0 1px var(--accent); text-decoration: none; }
+.tweet-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.tweet-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.tweet-avatar { width: 48px; height: 48px; border-radius: 50%; flex: none; border: 1px solid var(--line); background: var(--bg-sunk); }
+.tweet-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.tweet-name { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 1rem; }
+.tweet-verified { width: 17px; height: 17px; color: #1d9bf0; }
+.tweet-handle { font-size: 0.88rem; color: var(--muted); }
+.tweet-x { margin-left: auto; color: var(--ink); opacity: 0.55; transition: opacity var(--t-fast) var(--ease); }
+.tweet-x .icon { width: 22px; height: 22px; }
+.tweet-card:hover .tweet-x { opacity: 1; }
+.tweet-body { font-size: clamp(1.12rem, 2vw, 1.4rem); line-height: 1.45; letter-spacing: -0.01em; color: var(--ink); margin: 0 0 12px; }
+.tweet-body strong { color: var(--accent-ink); font-weight: 800; }
+.tweet-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line);
+  font-size: 0.85rem; color: var(--muted);
+}
+.tweet-cta { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--accent-ink); }
+.tweet-cta .btn-arrow { transition: transform var(--t-med) var(--ease); }
+.tweet-card:hover .tweet-cta .btn-arrow { transform: translateX(3px); }
+@media (max-width: 640px) { .tweet-card { padding: 20px 18px 16px; } }
+
 /* ---- generative AI ---------------------------------------------------------- */
 .ai-section { max-width: var(--content-w); margin: 0 auto; padding: 96px 24px 0; }
 .ai-card {
