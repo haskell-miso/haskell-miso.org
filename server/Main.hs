@@ -81,13 +81,12 @@ baseKeywords = [ "miso", "Haskell", "web framework", "WebAssembly", "virtual DOM
 notFoundMeta :: Meta
 notFoundMeta = website "Page not found — miso" "There is nothing at this address." []
 -----------------------------------------------------------------------------
--- | @\/docs\/components@ → @docs\/components\/index.html@; @\/@ → @index.html@.
+-- | @\/docs\/components\/@ → @docs\/components\/index.html@; @\/@ → @index.html@.
 outputPath :: Route -> String
 outputPath route =
-  case fromMisoString (routeHref route) of
-    "/" -> "index.html"
-    ('/':rest) -> rest <> "/index.html"
-    other -> other <> "/index.html"
+  case dropWhile (== '/') (fromMisoString (routeHref route)) of
+    "" -> "index.html"
+    rest -> rest <> "index.html"
 -----------------------------------------------------------------------------
 siteUrl :: MisoString
 siteUrl = "https://haskell-miso.org"

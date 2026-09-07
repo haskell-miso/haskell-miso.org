@@ -66,7 +66,7 @@ docsShell = (component (DocsModel False) update view)
       CloseSidebar  -> sidebarOpen .= False
       DocsGo r      -> do
         sidebarOpen .= False
-        io_ (pushRoute r)
+        io_ (pushRouteHref r)
       SidebarScrolled top ->
         io_ (setSessionStorage sidebarScrollKey (ms top))
       RestoreSidebarScroll -> io_ $ do

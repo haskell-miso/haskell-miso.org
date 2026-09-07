@@ -90,7 +90,7 @@ updateSearch = \case
       [] -> pure ()
   Pick r -> do
     issue Close
-    io_ (pushRoute r)
+    io_ (pushRouteHref r)
   HotKey KeyInfo {..} -> do
     isOpen <- use open
     let KeyCode code = keyCode

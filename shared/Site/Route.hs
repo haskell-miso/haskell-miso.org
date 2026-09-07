@@ -13,12 +13,15 @@ module Site.Route
   , thinkingPage
   , blogPost
   , routeHref
+  , routeURI
+  , pushRouteHref
   , allStaticRoutes
   ) where
 -----------------------------------------------------------------------------
 import GHC.Generics (Generic)
 -----------------------------------------------------------------------------
 import Miso.Router
+import Miso.Subscription.History (pushURI)
 import Miso.String (MisoString)
 import qualified Miso.String as MS
 -----------------------------------------------------------------------------
@@ -71,9 +74,31 @@ thinkingPage = DocsThinking (Path "thinking") . Capture
 blogPost :: MisoString -> Route
 blogPost = BlogPost . Capture
 -----------------------------------------------------------------------------
--- | The URL for a 'Route' (e.g. @\/docs\/components@).
+-- | The URL for a 'Route' (e.g. @\/docs\/components\/@).
+--
+-- Always with a trailing slash: the site is prerendered to
+-- @<path>\/index.html@ and static hosts (GitHub Pages) 301 the unslashed
+-- form to the slashed one. Emitting the slashed form everywhere means no
+-- redirect on hard loads, one URL per page in analytics, and links that
+-- match the page's canonical.
 routeHref :: Route -> MisoString
-routeHref = prettyRoute
+routeHref = prettyURI . routeURI
+-----------------------------------------------------------------------------
+-- | 'toURI' with the trailing slash added (see 'routeHref').
+routeURI :: Route -> URI
+routeURI r = u { uriPath = slashed (uriPath u) }
+  where
+    u = toURI r
+    -- The root's path is empty; 'prettyURI' renders it as @/@ already.
+    slashed p
+      | MS.null p = p
+      | "/" `MS.isSuffixOf` p = p
+      | otherwise = p <> "/"
+-----------------------------------------------------------------------------
+-- | Client-side navigation to a 'Route', pushing the slashed URL (unlike
+-- miso's 'Miso.Subscription.History.pushRoute', which uses 'toURI').
+pushRouteHref :: Route -> IO ()
+pushRouteHref = pushURI . routeURI
 -----------------------------------------------------------------------------
 -- | Routes that are not parameterised by content (used by the prerenderer
 -- together with the docs / blog tables).

@@ -121,7 +121,7 @@ updateSite = \case
   Go route -> do
     menuOpen .= False
     langOpen .= False
-    io_ (pushRoute route)
+    io_ (pushRouteHref route)
   ToggleMenu -> do
     menuOpen %= not
     langOpen .= False

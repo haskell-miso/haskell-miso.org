@@ -58,7 +58,7 @@ newtype Nav = Go Route
 -- | The 'update' for a content page: push the route; the root component's
 -- 'Miso.Subscription.History.uriSub' does the rest.
 navigate :: Nav -> Effect Ctx props model Nav
-navigate (Go r) = io_ (pushRoute r)
+navigate (Go r) = io_ (pushRouteHref r)
 -----------------------------------------------------------------------------
 type Doc = View Ctx () Nav
 -----------------------------------------------------------------------------
