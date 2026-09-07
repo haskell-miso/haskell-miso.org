@@ -91,6 +91,17 @@ outputPath route =
 -----------------------------------------------------------------------------
 siteUrl :: MisoString
 siteUrl = "https://haskell-miso.org"
+
+-- | Absolute URL of a page as GitHub Pages actually serves it. Every route
+-- is written to @<path>/index.html@, so Pages 301s @/examples@ to
+-- @/examples/@. The canonical, og:url, JSON-LD, sitemap and feed links
+-- must all name the slashed form; otherwise Google sees each page's
+-- canonical pointing at a redirect back to itself and refuses to index it
+-- ("Alternate page with proper canonical tag").
+pageUrl :: MisoString -> MisoString
+pageUrl path
+  | "/" `MS.isSuffixOf` path = siteUrl <> path
+  | otherwise = siteUrl <> path <> "/"
 -----------------------------------------------------------------------------
 -- | Cache-busting stamp appended as @?v=…@ to the payload URLs below.
 -- A content hash of @app.wasm@ (or @index.js@ on the JS backend), so the
@@ -190,7 +201,7 @@ render ver uri path Meta {..} = fromMisoString . ms . toHtml $
     ]
   ]
   where
-    canonical = siteUrl <> path
+    canonical = pageUrl path
     ogImage = siteUrl <> "/assets/logo/og-image.png"
     og k v = H.meta_ [ textProp "property" k, P.content_ v ]
 -----------------------------------------------------------------------------
@@ -208,7 +219,7 @@ jsonLd path title description published = MS.concat
   , "{\"@type\":\"SoftwareSourceCode\",\"name\":\"miso\",\"codeRepository\":\"https://github.com/dmjio/miso\","
   , "\"programmingLanguage\":\"Haskell\",\"license\":\"https://opensource.org/licenses/BSD-3-Clause\","
   , "\"runtimePlatform\":[\"WebAssembly\",\"JavaScript\",\"Lynx\"],\"url\":\"", siteUrl, "/\"},"
-  , "{\"@type\":\"", pageType, "\",\"@id\":\"", siteUrl, path, "\",\"url\":\"", siteUrl, path, "\","
+  , "{\"@type\":\"", pageType, "\",\"@id\":\"", pageUrl path, "\",\"url\":\"", pageUrl path, "\","
   , "\"name\":\"", esc title, "\",\"headline\":\"", esc title, "\",\"description\":\"", esc description, "\","
   , "\"image\":\"", siteUrl, "/assets/logo/og-image.png\",\"inLanguage\":\"en\","
   , "\"isPartOf\":{\"@id\":\"", siteUrl, "/#website\"}"
@@ -229,14 +240,14 @@ rss = unlines $
   , "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">"
   , "<channel>"
   , "  <title>miso blog</title>"
-  , "  <link>https://haskell-miso.org/blog</link>"
+  , "  <link>" <> fromMisoString (pageUrl (routeHref Blog)) <> "</link>"
   , "  <description>Notes from the miso maintainers.</description>"
   , "  <language>en</language>"
   , "  <atom:link href=\"https://haskell-miso.org/blog/feed.xml\" rel=\"self\" type=\"application/rss+xml\"/>"
   ] ++ concat
   [ [ "  <item>"
     , "    <title>" <> xmlEsc (fromMisoString (postTitle (english p))) <> "</title>"
-    , "    <link>https://haskell-miso.org" <> fromMisoString (routeHref (blogPost (postSlug p))) <> "</link>"
+    , "    <link>" <> fromMisoString (pageUrl (routeHref (blogPost (postSlug p)))) <> "</link>"
     , "    <guid>https://haskell-miso.org" <> fromMisoString (routeHref (blogPost (postSlug p))) <> "</guid>"
     , "    <pubDate>" <> fromMisoString (postDate p) <> "T00:00:00Z</pubDate>"
     , "    <description>" <> xmlEsc (fromMisoString (postBlurb (english p))) <> "</description>"
@@ -280,7 +291,7 @@ sitemap = unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   , "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"
   ] ++
-  [ "  <url><loc>" <> fromMisoString siteUrl <> fromMisoString (routeHref route) <> "</loc><changefreq>weekly</changefreq><priority>" <> priority route <> "</priority></url>"
+  [ "  <url><loc>" <> fromMisoString (pageUrl (routeHref route)) <> "</loc><changefreq>weekly</changefreq><priority>" <> priority route <> "</priority></url>"
   | (route, _) <- pages
   ] ++
   [ "</urlset>" ]
