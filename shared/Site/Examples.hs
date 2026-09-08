@@ -133,15 +133,11 @@ catalogue =
     )
   , ( ExCatLibraries
     , [ Example "miso.ui" "💅" "A component library based on shadcn and Tailwind, built with Basecoat." (Just "https://ui.haskell-miso.org/")
-      , Example "miso-from-html" "🍜" "Convert HTML into miso View syntax." (Just "https://miso-from-html.haskell-miso.org/")
       , Example "miso-tagsoup" "🥫" "Parse raw HTML / SVG into a View." Nothing
-      , Example "miso-aeson" "🔁" "Convert Value between aeson and miso." Nothing
       , Example "servant-miso-html" "📄" "Render miso Views as HTML with servant." Nothing
       , Example "servant-miso-router" "🧭" "A servant router for miso." Nothing
       , Example "servant-miso-client" "📬" "A servant-client interpretation for miso." Nothing
-      , Example "bun-wasm" "🥟" "Call Haskell WASM modules from bun tests." Nothing
       , Example "try-miso" "🥡" "Try miso in the browser." (Just "https://try.haskell-miso.org/")
-      , Example "awesome-miso" "🕶️" "A curated list of the miso ecosystem." Nothing
       ]
     )
   , ( ExCatNative
