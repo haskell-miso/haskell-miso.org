@@ -78,7 +78,8 @@ docsShell = (component (DocsModel False) update view)
             -- assigning the stored string coerces to a number in JS
             setField el "scrollTop" top
 
-    view ctx (DocsProps route) m =
+    -- context and props are both ambient in the view now
+    view m = vcontext $ \ctx -> vprops $ \(DocsProps route) ->
       let current = lookupRoute route
       in H.div_ [ P.class_ "docs" ]
           [ H.aside_
@@ -136,7 +137,7 @@ docPageComponent :: DocPage -> Component Ctx () () Nav
 docPageComponent page = (component () navigate view) { useContext = True }
   where
     (prev, next) = neighbours page
-    view ctx () () =
+    view () = vcontext $ \ctx ->
       H.article_ [ P.class_ "doc" ]
         [ H.header_ [ P.class_ "doc-header" ]
             [ H.p_ [ P.class_ "doc-eyebrow" ] [ t ctx (groupKey (pageGroup page)) ]

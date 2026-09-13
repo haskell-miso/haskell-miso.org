@@ -179,12 +179,12 @@ staticMounting = DocPage
   { pageSlug = "static-mounting"
   , pageGroup = Native
   , pageTitle = "Static mounting"
-  , pageBlurb = "Component constructors cross the thread boundary as static pointers: mountStatic_, vcomp and VCompStatic."
-  , pageKeywords = [ "static", "StaticPointers", "mountStatic_", "mountStaticWithProps", "mountStaticUseContext", "VCompStatic", "StaticKey", "vcomp" ]
+  , pageBlurb = "Component constructors cross the thread boundary as static pointers: mountStatic, vcomp and VCompStatic."
+  , pageKeywords = [ "static", "StaticPointers", "mountStatic", "VCompStatic", "StaticKey", "vcomp", "vcomp_" ]
   , pageBody =
     [ lead
       [ "Because component constructors, event handlers and effects may need to be reconstructed on the ", em "other", " thread, native miso threads them across the boundary as ", c "static", " pointers rather than closures. This requires the ", c "StaticPointers", " language extension." ]
-    , para [ "The root component is mounted with ", c "mountStatic_", " wrapped in ", c "static", ":" ]
+    , para [ "The root component is mounted with ", c "mountStatic", " wrapped in ", c "static", ":" ]
     , hs """
       {-# LANGUAGE StaticPointers #-}
       module Main where
@@ -193,13 +193,13 @@ staticMounting = DocPage
       import Miso.Native
 
       main :: IO ()
-      main = native nativeEvents (static (mountStatic_ app))
+      main = native nativeEvents (static (mountStatic app))
       """
     , para [ "Child components are embedded in a ", c "view", " the same way, with ", c "vcomp", ":" ]
     , hs """
-      view _ _ _ =
+      view _ =
         view_ []
-          [ vcomp () (static (mountStatic_ child)) ]
+          [ vcomp_ (static (mountStatic child)) ]
       """
     , warn
       [ b "Static-pointer limitation. ", "A ", c "static", " form may only close over ", em "top-level, closed", " bindings — it cannot capture local variables. This is why component constructors and main-thread handlers are supplied as references to top-level definitions, with any runtime data (props, decoded event payloads) shipped separately as serialised values rather than captured in a closure." ]
@@ -208,9 +208,9 @@ staticMounting = DocPage
       [ c "VCompStatic", " is the ", c "View", " constructor behind ", c "vcomp", ". Unlike ", c "VComp", " it carries a ", c "StaticPtr", " to its component constructor, giving the mount a stable, cross-thread-resolvable identity (a ", c "StaticKey", ") instead of relying on a manually-supplied ", c "Key", ". "
       , "This is what lets the MTS independently reconstruct a mirror of a component mounted on the BTS, including ones mounted after the initial frame, and is also how actions dispatched from a main-thread handler get routed back to the correct component on the BTS." ]
     , para
-      [ "The ", c "StaticKey", " itself serves as the mount's identity, so there is no need for ", c "(+>)", " or a manual key — use ", c "vcomp", " / ", c "vcomp_", " together with ", c "mountStatic_", " (or ", c "mountStaticWithProps", " / ", c "mountStaticUseContext", ") to build a ", c "VCompStatic", "." ]
+      [ "The ", c "StaticKey", " itself serves as the mount's identity, so there is no need for ", c "(+>)", " or a manual key — use ", c "vcomp", " (or ", c "vcomp_", " when the child takes no props) together with ", c "mountStatic", " to build a ", c "VCompStatic", ". ", c "mountStatic", " accepts components with props directly; for a context-reading child, mount ", c "comp { useContext = True }", "." ]
     , note
-      [ "Under ", c "NATIVE", ", ", c "(+>)", ", ", c "mount_", " and ", c "mountWithProps_", " build a ", c "VComp", " with no ", c "StaticKey", ". A component mounted that way as part of the ", em "initial", " frame is fine, but if it is mounted ", em "later", " — inside a list or behind a conditional — the MTS never registers a mirror for it, and any main-thread handler inside that subtree silently fails to dispatch. Use ", c "vcomp", " with ", c "mountStaticWithProps", " for anything that may mount after the first frame." ]
+      [ "Under ", c "NATIVE", ", ", c "(+>)", ", ", c "mount_", " and ", c "mountWithProps_", " build a ", c "VComp", " with no ", c "StaticKey", ". A component mounted that way as part of the ", em "initial", " frame is fine, but if it is mounted ", em "later", " — inside a list or behind a conditional — the MTS never registers a mirror for it, and any main-thread handler inside that subtree silently fails to dispatch. Use ", c "vcomp", " with ", c "mountStatic", " for anything that may mount after the first frame." ]
     ]
   }
 -----------------------------------------------------------------------------
@@ -266,7 +266,7 @@ mainThreadEvents = DocPage
     , hs """
       {-# LANGUAGE StaticPointers #-}
 
-      view _ _ _ =
+      view _ =
         view_ [ event (static (onTapMain HandleTap)) ] []
       """
     , para [ "The same ", c "static", " capture limitation applies: an ", c "onTapMain", " handler refers to a top-level action / function; runtime data reaches the handler via the decoded event payload, not a captured closure." ]
@@ -327,7 +327,7 @@ mainThreadState = DocPage
     , para
       [ "It pairs with ", c "eachFrame", " for a vsync-coalesced animation loop: read the latest gesture state from the ref, imperatively paint at most once per frame (via ", c "setStyleProperty", " / ", c "setStylePropertyTransform", "), and stop by returning ", c "False", " when the gesture ends." ]
     , hs """
-      followSub :: Sub Action
+      followSub :: Sub Model Action
       followSub _ = when mts $ eachFrame $ \\_ts -> do
         offset <- readMainThreadRef dragRef
         setStylePropertyTransform card
@@ -398,11 +398,9 @@ minimalComponent = DocPage
         Decrement -> this -= 1
 
       view
-        :: ()
-        -> ()
-        -> Int
-        -> View () Int Action
-      view _ _ m =
+        :: Int
+        -> View () () Int Action
+      view m =
         vfrag
           [ view_ [ onTap Increment ] [ text_ [] [ "+" ] ]
           , text_ [] [ text (ms (show m)) ]
@@ -410,7 +408,7 @@ minimalComponent = DocPage
           ]
 
       main :: IO ()
-      main = native nativeEvents (static (mountStatic_ app))
+      main = native nativeEvents (static (mountStatic app))
       """
     , para
       [ c "view_", " and ", c "text_", " come from ", c "Miso.Native.Element", "; ", c "onTap", " from the element's event module. ", c "nativeEvents", " is the Lynx equivalent of ", c "defaultEvents", ". "

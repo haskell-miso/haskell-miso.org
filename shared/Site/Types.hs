@@ -34,10 +34,11 @@ import Miso.String (MisoString)
 -- string.
 type Catalog = [ (Lang, [ (MisoString, MisoString) ]) ]
 -----------------------------------------------------------------------------
--- | The app-global context. Read via 'Miso.Effect.getContext' and the first
--- argument of every @view@, mutated via 'Miso.Effect.modifyContext'.
--- Seeded on the client by 'Miso.misoWithContext', on the server by
--- 'Miso.setContext'.
+-- | The app-global context. Read via 'Miso.Effect.getContext' in an
+-- @update@, and ambiently in a @view@ with 'Miso.vcontext'; mutated via
+-- 'Miso.Effect.modifyContext'. Seeded on the client by
+-- 'Miso.misoWithContext', on the server by handing it to
+-- 'Miso.Html.Render.toHtmlWith'.
 data Ctx
   = Ctx
   { ctxLang    :: Lang

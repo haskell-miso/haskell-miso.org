@@ -165,8 +165,8 @@ scrollTop = [js| window.scrollTo({ top: 0, left: 0, behavior: "instant" }); |]
 trackPage :: URI -> IO ()
 trackPage u = void (jsg1 "__misoTrack" (prettyURI u))
 -----------------------------------------------------------------------------
-viewSite :: Ctx -> () -> Model -> View Ctx Model Action
-viewSite ctx () m =
+viewSite :: Model -> View Ctx () Model Action
+viewSite m = vcontext $ \ctx ->
   H.div_
     [ P.classList_ [ ("site", True), ("menu-open", m ^. menuOpen) ], E.onClick CloseMenus ]
     [ topbar ctx m
@@ -175,7 +175,7 @@ viewSite ctx () m =
     ]
 -----------------------------------------------------------------------------
 -- | Route dispatch. Every page is a keyed component, mounted with (+>).
-dispatch :: Ctx -> Maybe Route -> View Ctx Model Action
+dispatch :: Ctx -> Maybe Route -> View Ctx () Model Action
 dispatch ctx = \case
   Just Index -> "home" +> homePage
   Just Examples -> "examples" +> examplesPage
@@ -192,7 +192,7 @@ dispatch ctx = \case
   where
     docs route = mountWithProps_ "docs" (DocsProps route) docsShell
 -----------------------------------------------------------------------------
-notFound :: Ctx -> View Ctx Model Action
+notFound :: Ctx -> View Ctx () Model Action
 notFound ctx =
   H.section_ [ P.class_ "not-found page" ]
     [ H.p_ [ P.class_ "not-found-code" ] [ "404" ]
@@ -202,7 +202,7 @@ notFound ctx =
         [ t ctx NotFoundHome ]
     ]
 -----------------------------------------------------------------------------
-topbar :: Ctx -> Model -> View Ctx Model Action
+topbar :: Ctx -> Model -> View Ctx () Model Action
 topbar ctx m =
   H.header_ [ P.class_ "topbar" ]
     [ H.div_ [ P.class_ "topbar-inner" ]
@@ -350,7 +350,7 @@ topbarVersion = (component Nothing update view) { mount = Just FetchVersion }
 
     -- rendered (invisibly) even before the tag arrives; fades in next to
     -- the wordmark and stays hidden if the request fails
-    view _ () version =
+    view version =
       H.a_
         [ P.classList_ [ ("topbar-version", True), ("show", isJust version) ]
         , P.href_ "https://github.com/dmjio/miso/releases/latest"
@@ -359,7 +359,7 @@ topbarVersion = (component Nothing update view) { mount = Just FetchVersion }
         ]
         [ text (maybe "" ("v" <>) version) ]
 -----------------------------------------------------------------------------
-footer :: Ctx -> View Ctx Model Action
+footer :: Ctx -> View Ctx () Model Action
 footer ctx =
   H.footer_ [ P.class_ "footer" ]
     [ H.div_ [ P.class_ "footer-inner" ]

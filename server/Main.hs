@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- | Static site generator. Renders every route of the site to
--- @public/<path>/index.html@ with 'toHtml', plus @404.html@,
+-- @public/<path>/index.html@ with 'toHtmlWith', plus @404.html@,
 -- @sitemap.xml@, @robots.txt@ and @manifest.json@.
 --
 -- Built with vanilla GHC and miso's @ssr@ flag; depends on @base@, @miso@
@@ -16,7 +16,7 @@ import           System.IO (hSetEncoding, utf8, withFile, IOMode (..), hPutStr)
 import           Text.Printf (printf)
 -----------------------------------------------------------------------------
 import           Miso
-import           Miso.Html.Render (toHtml)
+import           Miso.Html.Render (toHtmlWith)
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Property as P
 import           Miso.Router (emptyURI, toURI)
@@ -34,9 +34,9 @@ import           Site.Types
 -----------------------------------------------------------------------------
 main :: IO ()
 main = do
-  -- Views read the app-global context (language table, theme), so seed it
-  -- before rendering anything.
-  setContext (mkCtx catalog)
+  -- Views read the app-global context (language table, theme) ambiently, via
+  -- 'vcontext'. Since miso 1.14.0 there is no global context cell to seed:
+  -- the value is handed to the renderer instead, in 'render' below.
   ver <- buildVersion
   putStrLn ("Prerendering haskell-miso.org into public/ (v=" <> fromMisoString ver <> ") ...")
   forM_ pages $ \(route, meta) -> do
@@ -124,7 +124,8 @@ buildVersion = go [ "public/app.wasm", "public/index.js" ]
         step h b = (h `xor` fromIntegral b) * 0x100000001b3
 -----------------------------------------------------------------------------
 render :: MisoString -> URI -> MisoString -> Meta -> String
-render ver uri path Meta {..} = fromMisoString . ms . toHtml $
+render ver uri path Meta {..} =
+  fromMisoString . ms . toHtmlWith (mkCtx catalog) () () . vfrag $
   [ H.doctype_
   , H.html_ [ P.lang_ "en", P.data_ "theme" "light" ]
     [ H.head_ []

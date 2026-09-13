@@ -20,7 +20,7 @@ import qualified Miso.Svg.Element as S
 import qualified Miso.Svg.Property as SP
 -----------------------------------------------------------------------------
 -- | Monochrome mark (uses @currentColor@).
-logoMark :: [Attribute model action] -> View context model action
+logoMark :: [Attribute model action] -> View context props model action
 logoMark attrs =
   S.svg_
     ( [ SP.viewBox_ "0 0 24 24"
@@ -32,7 +32,7 @@ logoMark attrs =
     ]
 -----------------------------------------------------------------------------
 -- | Gradient mark used by the interactive hero logo.
-logoMarkGradient :: [Attribute model action] -> View context model action
+logoMarkGradient :: [Attribute model action] -> View context props model action
 logoMarkGradient attrs =
   S.svg_
     ( [ SP.viewBox_ "0 0 24 24"
@@ -52,7 +52,7 @@ logoMarkGradient attrs =
     ]
 -----------------------------------------------------------------------------
 -- | Mark + the word "miso".
-wordmark :: View context model action
+wordmark :: View context props model action
 wordmark =
   H.span_ [ P.class_ "wordmark" ]
     [ logoMark [ P.class_ "wordmark-mark" ]
@@ -61,7 +61,7 @@ wordmark =
 -----------------------------------------------------------------------------
 -- | The hollow leg: same footprint as the lower-right leg of the stroke
 -- (6.3 units wide at the baseline), outlined with a thin stroke.
-legPolygon :: MisoString -> View context model action
+legPolygon :: MisoString -> View context props model action
 legPolygon color =
   S.polygon_
     [ SP.points_ legPoints

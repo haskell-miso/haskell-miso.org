@@ -31,7 +31,7 @@ import           Site.Types
 homePage :: Component Ctx () () Nav
 homePage = (component () navigate view) { useContext = True }
   where
-    view ctx () () =
+    view () = vcontext $ \ctx ->
       H.div_ [ P.class_ "home" ]
         [ hero ctx
         , pillars ctx
@@ -43,7 +43,7 @@ homePage = (component () navigate view) { useContext = True }
         , ecosystem ctx
         ]
 -----------------------------------------------------------------------------
-hero :: Ctx -> View Ctx () Nav
+hero :: Ctx -> View Ctx () () Nav
 hero ctx =
   H.section_ [ P.class_ "hero" ]
     [ H.div_ [ P.class_ "hero-bg", P.aria_ "hidden" "true" ]
@@ -101,7 +101,7 @@ heroTerminal = component False update view
       CopyFailed -> pure ()
       CopyDone   -> this .= False
 
-    view _ () copied =
+    view copied =
       H.div_ [ P.class_ "hero-install" ]
         [ H.button_
             [ P.classList_ [ ("hero-copy", True), ("copied", copied) ]
@@ -148,7 +148,7 @@ heroStars = (component Nothing update view) { mount = Just FetchStars }
 
     -- rendered (invisibly) even before the count arrives, so the hero
     -- doesn't reflow when the badge fades in
-    view _ () stars =
+    view stars =
       H.a_
         [ P.classList_ [ ("hero-stars", True), ("show", isJust stars) ]
         , P.href_ "https://github.com/dmjio/miso"
@@ -213,7 +213,7 @@ heroLogo = (component (LogoModel (0, 0) (1, 1) False) update view)
 
     clamp = max (-1) . min 1
 
-    view _ () m =
+    view m =
       let (nx, ny) = m ^. pointer
           -- the glow drifts the opposite way for parallax
           glow =
@@ -237,7 +237,7 @@ heroLogo = (component (LogoModel (0, 0) (1, 1) False) update view)
 -----------------------------------------------------------------------------
 -- Platform pillars ------------------------------------------------------------
 -----------------------------------------------------------------------------
-pillars :: Ctx -> View Ctx () Nav
+pillars :: Ctx -> View Ctx () () Nav
 pillars ctx =
   H.section_ [ P.class_ "pillars" ]
     [ pillarCard [ "pillar-web" ] iconGlobe (t ctx PillarWeb) [ t ctx PillarWebDesc ] Nothing $
@@ -262,12 +262,12 @@ pillars ctx =
 -- without nesting one interactive element inside another.
 pillarCard
   :: [MisoString]                   -- ^ classes, on top of @pillar@
-  -> View Ctx model action          -- ^ icon
-  -> View Ctx model action          -- ^ title
-  -> [View Ctx model action]        -- ^ description
-  -> Maybe (View Ctx model action)  -- ^ badge
-  -> View Ctx model action          -- ^ the stretched click target
-  -> View Ctx model action
+  -> View Ctx props model action          -- ^ icon
+  -> View Ctx props model action          -- ^ title
+  -> [View Ctx props model action]        -- ^ description
+  -> Maybe (View Ctx props model action)  -- ^ badge
+  -> View Ctx props model action          -- ^ the stretched click target
+  -> View Ctx props model action
 pillarCard classes icon title descViews badge target =
   H.article_ [ P.classes_ ("pillar" : classes) ]
     [ target
@@ -282,7 +282,7 @@ pillarCard classes icon title descViews badge target =
     , H.span_ [ P.class_ "pillar-more" ] [ "→" ]
     ]
 -----------------------------------------------------------------------------
-stretchedLink :: [Attribute model action] -> View Ctx model action
+stretchedLink :: [Attribute model action] -> View Ctx props model action
 stretchedLink attrs = H.a_ ( P.class_ "pillar-link" : attrs ) []
 -----------------------------------------------------------------------------
 -- The desktop card: Lynxtron has not shipped, so the card itself goes
@@ -305,7 +305,7 @@ desktopPillar = (component Nothing update view) { useContext = True }
     -- rather than doing nothing.
     update Shake = this %= Just . maybe False not
 
-    view ctx () shaking =
+    view shaking = vcontext $ \ctx ->
       pillarCard
         ("pillar-desktop" : shakeClass shaking)
         iconMonitor
@@ -334,7 +334,7 @@ desktopPillar = (component Nothing update view) { useContext = True }
 -----------------------------------------------------------------------------
 -- Code section ------------------------------------------------------------------
 -----------------------------------------------------------------------------
-codeSection :: Ctx -> View Ctx () Nav
+codeSection :: Ctx -> View Ctx () () Nav
 codeSection ctx =
   H.section_ [ P.class_ "code-section" ]
     [ H.div_ [ P.class_ "section-head" ]
@@ -382,11 +382,9 @@ counterSource = """
         Add      -> this += 1
         Subtract -> this -= 1
 
-      v :: context
-        -> props
-        -> Int
-        -> View context Int Action
-      v _ _ n = vfrag
+      v :: Int
+        -> View context props Int Action
+      v n = vfrag
         [ button_ [ onClick Subtract ] [ "−" ]
         , text (ms n)
         , button_ [ onClick Add ] [ "+" ]
@@ -407,7 +405,7 @@ counterDemo = component 0 update view
       Subtract     -> this -= 1
       ResetCounter -> this .= 0
 
-    view _ () n =
+    view n =
       H.div_ [ P.class_ "counter" ]
         [ H.button_ [ P.class_ "counter-btn", E.onClick Subtract, P.aria_ "label" "decrement" ] [ "−" ]
         , H.span_ [ P.class_ "counter-value", key_ (ms n) ] [ text (ms n) ]
@@ -417,7 +415,7 @@ counterDemo = component 0 update view
 -----------------------------------------------------------------------------
 -- Features -------------------------------------------------------------------------
 -----------------------------------------------------------------------------
-features :: Ctx -> View Ctx () Nav
+features :: Ctx -> View Ctx () () Nav
 features ctx =
   H.section_ [ P.class_ "features" ]
     [ H.div_ [ P.class_ "section-head" ]
@@ -450,7 +448,7 @@ features ctx =
 -----------------------------------------------------------------------------
 -- Timeline -----------------------------------------------------------------
 -----------------------------------------------------------------------------
-timeline :: Ctx -> View Ctx () Nav
+timeline :: Ctx -> View Ctx () () Nav
 timeline ctx =
   H.section_ [ P.class_ "timeline-section" ]
     [ H.div_ [ P.class_ "section-head" ]
@@ -504,7 +502,7 @@ timeline ctx =
 -----------------------------------------------------------------------------
 -- | The Lynx team's post announcing Haskell support, rendered as a card.
 -- The whole card is one link to the post on X.
-tweetSection :: Ctx -> View Ctx () Nav
+tweetSection :: Ctx -> View Ctx () () Nav
 tweetSection ctx =
   H.section_ [ P.class_ "tweet-section" ]
     [ H.div_ [ P.class_ "section-head" ]
@@ -547,7 +545,7 @@ tweetSection ctx =
 -----------------------------------------------------------------------------
 -- Generative AI ----------------------------------------------------------------------
 -----------------------------------------------------------------------------
-aiSection :: Ctx -> View Ctx () Nav
+aiSection :: Ctx -> View Ctx () () Nav
 aiSection ctx =
   H.section_ [ P.class_ "ai-section" ]
     [ H.div_ [ P.class_ "ai-card" ]
@@ -571,7 +569,7 @@ aiSection ctx =
 -----------------------------------------------------------------------------
 -- Ecosystem strip --------------------------------------------------------------------
 -----------------------------------------------------------------------------
-ecosystem :: Ctx -> View Ctx () Nav
+ecosystem :: Ctx -> View Ctx () () Nav
 ecosystem ctx =
   H.section_ [ P.class_ "ecosystem" ]
     [ H.div_ [ P.class_ "section-head" ]

@@ -75,7 +75,7 @@ catalog =
 -----------------------------------------------------------------------------
 -- | Render a translated text node by looking the key up in the context's
 -- translation table.
-t :: Ctx -> Key -> View context model action
+t :: Ctx -> Key -> View context props model action
 t ctx = text . translate ctx
 -----------------------------------------------------------------------------
 -- | Look a key up in the context's table for the active language, falling

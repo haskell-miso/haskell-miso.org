@@ -76,7 +76,7 @@ lookupPost slug =
 blogIndex :: Component Ctx () () Nav
 blogIndex = (component () navigate view) { useContext = True }
   where
-    view ctx () () =
+    view () = vcontext $ \ctx ->
       H.div_ [ P.class_ "blog page" ]
         [ H.header_ [ P.class_ "page-head" ]
             [ H.h1_ [] [ t ctx BlogTitle ]
@@ -103,7 +103,7 @@ blogIndex = (component () navigate view) { useContext = True }
 blogPostPage :: Post -> Component Ctx () () Nav
 blogPostPage p = (component () navigate view) { useContext = True }
   where
-    view ctx () () =
+    view () = vcontext $ \ctx ->
       let PostContent {..} = localized ctx p
       in H.article_ [ P.class_ "post page" ]
           [ H.a_ [ P.class_ "post-back", P.href_ (routeHref Blog), E.onClickPrevent (Go Blog) ] [ "← ", t ctx BlogBack ]

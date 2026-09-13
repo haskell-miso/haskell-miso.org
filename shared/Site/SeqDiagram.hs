@@ -22,7 +22,7 @@ data Seq
   | Self Int Bool MisoString
   -- ^ @Self at accent label@ — a self-message loop on one lifeline
 -----------------------------------------------------------------------------
-seqDiagram :: [MisoString] -> [Seq] -> View context model action
+seqDiagram :: [MisoString] -> [Seq] -> View context props model action
 seqDiagram participants rows =
   S.svg_
     [ SP.viewBox_ ("0 0 " <> ms width <> " " <> ms height)
@@ -43,14 +43,14 @@ seqDiagram participants rows =
     height = top + length rows * rowH + 52
     xs = [ colW `div` 2 + i * colW | i <- [0 .. n - 1] ]
 
-    lifeline :: Int -> View c m a
+    lifeline :: Int -> View c p m a
     lifeline x =
       S.line_
         [ SP.x1_ (ms x), SP.y1_ "38", SP.x2_ (ms x), SP.y2_ (ms (height - 40))
         , P.class_ "seq-lifeline"
         ]
 
-    box :: Int -> Int -> MisoString -> [View c m a]
+    box :: Int -> Int -> MisoString -> [View c p m a]
     box x y name =
       [ S.path_
           [ SP.d_ ("M" <> ms (x - 56) <> " " <> ms y
@@ -62,7 +62,7 @@ seqDiagram participants rows =
           [ text name ]
       ]
 
-    row :: Int -> Seq -> [View c m a]
+    row :: Int -> Seq -> [View c p m a]
     row i (Arrow from to accent label) =
       let y = top + i * rowH
           x1 = xs !! from
@@ -99,7 +99,7 @@ seqDiagram participants rows =
          , arrowHead (x + 8) (y + 8) (-1) accent
          ]
 
-    arrowHead :: Int -> Int -> Int -> Bool -> View c m a
+    arrowHead :: Int -> Int -> Int -> Bool -> View c p m a
     arrowHead x y dir accent =
       S.polygon_
         [ SP.points_

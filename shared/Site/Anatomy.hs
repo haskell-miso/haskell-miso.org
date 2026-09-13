@@ -123,8 +123,8 @@ pxD = CSS.px . round
 -----------------------------------------------------------------------------
 -- View ------------------------------------------------------------------------
 -----------------------------------------------------------------------------
-viewAnat :: Ctx -> () -> Model -> View Ctx Model Action
-viewAnat ctx () m =
+viewAnat :: Model -> View Ctx () Model Action
+viewAnat m = vcontext $ \ctx ->
   H.section_ [ P.class_ "anatomy", P.id_ "anatomy-track" ]
     [ H.div_ [ P.class_ "anatomy-sticky" ]
         [ H.div_ [ P.classes_ [ "section-head", "anat-head" ] ]
@@ -219,7 +219,7 @@ calloutTop :: Int -> Double
 calloutTop i = [4, 26, 46, 64, 84] `at'` i
 -----------------------------------------------------------------------------
 -- | The phone itself: shell, dynamic island, and a tiny miso app on screen.
-phoneLayer :: Double -> [View Ctx Model Action]
+phoneLayer :: Double -> [View Ctx () Model Action]
 phoneLayer appOpacity =
   [ H.div_ [ P.class_ "anat-phone" ]
       [ H.div_ [ P.class_ "anat-island" ] []
@@ -232,7 +232,7 @@ phoneLayer appOpacity =
       ]
   ]
 -----------------------------------------------------------------------------
-processLayer :: [View Ctx Model Action]
+processLayer :: [View Ctx () Model Action]
 processLayer =
   [ H.div_ [ P.classes_ [ "anat-plate", "anat-process" ] ]
       [ H.span_ [ P.class_ "anat-tag" ] [ "iOS process" ]
@@ -240,7 +240,7 @@ processLayer =
       ]
   ]
 -----------------------------------------------------------------------------
-interpLayer :: Ctx -> [View Ctx Model Action]
+interpLayer :: Ctx -> [View Ctx () Model Action]
 interpLayer ctx =
   [ H.div_ [ P.classes_ [ "anat-plate", "anat-cols" ] ]
       [ H.div_ [ P.classes_ [ "anat-card", "anat-mts" ] ]
@@ -256,13 +256,13 @@ interpLayer ctx =
       ]
   ]
 -----------------------------------------------------------------------------
-bundleLayer :: [View Ctx Model Action]
+bundleLayer :: [View Ctx () Model Action]
 bundleLayer =
   [ H.div_ [ P.classes_ [ "anat-plate", "anat-cols" ] ]
       [ bundleCard, bundleCard ]
   ]
   where
-    bundleCard :: View Ctx Model Action
+    bundleCard :: View Ctx () Model Action
     bundleCard =
       H.div_ [ P.classes_ [ "anat-card", "anat-bundle" ] ]
         [ H.span_ [ P.class_ "anat-card-title" ] [ "main.lynx.bundle" ]
@@ -273,7 +273,7 @@ bundleLayer =
             ]
         ]
 -----------------------------------------------------------------------------
-runtimeLayer :: Ctx -> [View Ctx Model Action]
+runtimeLayer :: Ctx -> [View Ctx () Model Action]
 runtimeLayer ctx =
   [ H.div_ [ P.classes_ [ "anat-plate", "anat-runtime" ] ]
       [ H.div_ [ P.class_ "anat-rts-row" ]

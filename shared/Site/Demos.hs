@@ -65,7 +65,7 @@ counter = component m u v
       Add      -> this += 1
       Subtract -> this -= 1
 
-    v _ () n =
+    v n =
       H.div_ [ HP.class_ "row" ]
         [ H.button_ [ HE.onClick Subtract ] [ "−" ]
         , H.strong_ [] [ text (ms n) ]
@@ -90,7 +90,7 @@ counterSource = """
         Add      -> this += 1
         Subtract -> this -= 1
 
-      v _ () n =
+      v n =
         H.div_ [ HP.class_ "row" ]
           [ H.button_ [ HE.onClick Subtract ] [ "−" ]
           , H.strong_ [] [ text (ms n) ]
@@ -132,7 +132,7 @@ parent = (component (ParentModel True []) update view)
       ChildSaid s -> entries %= take 6 . (s :)
       BadMail _   -> pure ()
 
-    view _ () m =
+    view m =
       H.div_ []
         [ H.button_ [ HE.onClick ToggleChild ]
             [ text $ if m ^. mounted
@@ -159,7 +159,7 @@ clock = (component 0 update view)
     -- runs for the component's lifetime
   }
   where
-    everySecond sink =
+    everySecond sink _ =
       forever (threadDelay 1000000 >> sink Tick)
 
     update = \case
@@ -167,7 +167,7 @@ clock = (component 0 update view)
       Mounted   -> mailParent ("clock mounted" :: MisoString)
       Unmounted -> mailParent ("clock unmounted" :: MisoString)
 
-    view _ () secs =
+    view secs =
       H.p_ [] [ "⏱ ", text (ms secs), "s since mount" ]
 -- <<< lifecycle
 lifecycleDemo :: Component Ctx () ParentModel ParentAction
@@ -206,7 +206,7 @@ lifecycleSource = """
         ChildSaid s -> entries %= take 6 . (s :)
         BadMail _   -> pure ()
 
-      view _ () m =
+      view m =
         H.div_ []
           [ H.button_ [ HE.onClick ToggleChild ]
               [ text $ if m ^. mounted
@@ -233,7 +233,7 @@ lifecycleSource = """
       -- runs for the component's lifetime
     }
     where
-      everySecond sink =
+      everySecond sink _ =
         forever (threadDelay 1000000 >> sink Tick)
 
       update = \\case
@@ -241,7 +241,7 @@ lifecycleSource = """
         Mounted   -> mailParent ("clock mounted" :: MisoString)
         Unmounted -> mailParent ("clock unmounted" :: MisoString)
 
-      view _ () secs =
+      view secs =
         H.p_ [] [ "⏱ ", text (ms secs), "s since mount" ]
   """
 -----------------------------------------------------------------------------
@@ -262,7 +262,7 @@ namer = component "World" update view
   where
     update (NameChanged s) = this .= s
 
-    view _ () name =
+    view name =
       H.div_ []
         [ H.input_
             [ HP.value_ name
@@ -303,15 +303,17 @@ greeter = (component (GreeterModel 0 "") update view)
         -- props are readable in Effect
         shown .= "props are: " <> g
 
-    view _ (Greeting g) m =
-      H.div_ []
-        [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
-        , H.p_ [ HP.class_ "muted" ]
-            [ "props changed ", text (ms (m ^. changes)), " times" ]
-        , H.button_ [ HE.onClick ShowProps ]
-            [ "show props" ]
-        , H.p_ [] [ text (m ^. shown) ]
-        ]
+    view m =
+      -- props are ambient in the view: read them with 'vprops'
+      vprops $ \(Greeting g) ->
+        H.div_ []
+          [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
+          , H.p_ [ HP.class_ "muted" ]
+              [ "props changed ", text (ms (m ^. changes)), " times" ]
+          , H.button_ [ HE.onClick ShowProps ]
+              [ "show props" ]
+          , H.p_ [] [ text (m ^. shown) ]
+          ]
 -- <<< props
 propsDemo :: Component Ctx () MisoString NamerAction
 propsDemo = namer
@@ -332,7 +334,7 @@ propsSource = """
     where
       update (NameChanged s) = this .= s
 
-      view _ () name =
+      view name =
         H.div_ []
           [ H.input_
               [ HP.value_ name
@@ -373,22 +375,24 @@ propsSource = """
           -- props are readable in Effect
           shown .= "props are: " <> g
 
-      view _ (Greeting g) m =
-        H.div_ []
-          [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
-          , H.p_ [ HP.class_ "muted" ]
-              [ "props changed ", text (ms (m ^. changes)), " times" ]
-          , H.button_ [ HE.onClick ShowProps ]
-              [ "show props" ]
-          , H.p_ [] [ text (m ^. shown) ]
-          ]
+      view m =
+        -- props are ambient in the view: read them with 'vprops'
+        vprops $ \\(Greeting g) ->
+          H.div_ []
+            [ H.p_ [] [ "Hello, ", H.strong_ [] [ text g ], "!" ]
+            , H.p_ [ HP.class_ "muted" ]
+                [ "props changed ", text (ms (m ^. changes)), " times" ]
+            , H.button_ [ HE.onClick ShowProps ]
+                [ "show props" ]
+            , H.p_ [] [ text (m ^. shown) ]
+            ]
   """
 -----------------------------------------------------------------------------
 -- Context -------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -- >>> context
 -- This site's context holds the language and the theme.
--- Any component can read it (first argument of view) and
+-- Any component can read it (ambiently, with vcontext) and
 -- change it (modifyContext). Only components with
 -- useContext = True re-render when it changes.
 data ThemeAction = FlipTheme
@@ -411,20 +415,22 @@ themeSwitch = (component () update view)
         void $ html # "setAttribute" $
           ("data-theme" :: MisoString, themeCode theme)
 
-    view ctx () () =
-      H.div_ []
-        [ H.p_ []
-            [ "The context says: theme = "
-            , H.strong_ []
-                [ text (ms (show (ctxTheme ctx))) ]
-            , ", language = "
-            , H.strong_ []
-                [ text (langName (ctxLang ctx)) ]
-            ]
-        , H.button_ [ HE.onClick FlipTheme ]
-            [ "Flip the whole site's theme" ]
-        , "frozen" +> frozen
-        ]
+    view () =
+      -- context is ambient in the view: read it with 'vcontext'
+      vcontext $ \ctx ->
+        H.div_ []
+          [ H.p_ []
+              [ "The context says: theme = "
+              , H.strong_ []
+                  [ text (ms (show (ctxTheme ctx))) ]
+              , ", language = "
+              , H.strong_ []
+                  [ text (langName (ctxLang ctx)) ]
+              ]
+          , H.button_ [ HE.onClick FlipTheme ]
+              [ "Flip the whole site's theme" ]
+          , "frozen" +> frozen
+          ]
 
 -- A sibling that does not opt in: it keeps showing the
 -- context it mounted with.
@@ -432,10 +438,11 @@ frozen :: Component Ctx () () ()
 frozen = component () (\() -> pure ()) view
   -- useContext defaults to False
   where
-    view ctx () () =
-      H.p_ [ HP.class_ "muted" ]
-        [ "useContext = False: I still think the theme is "
-        , text (ms (show (ctxTheme ctx))) ]
+    view () =
+      vcontext $ \ctx ->
+        H.p_ [ HP.class_ "muted" ]
+          [ "useContext = False: I still think the theme is "
+          , text (ms (show (ctxTheme ctx))) ]
 -- <<< context
 contextDemo :: Component Ctx () () ThemeAction
 contextDemo = themeSwitch
@@ -443,7 +450,7 @@ contextDemo = themeSwitch
 contextSource :: MisoString
 contextSource = """
   -- This site's context holds the language and the theme.
-  -- Any component can read it (first argument of view) and
+  -- Any component can read it (ambiently, with vcontext) and
   -- change it (modifyContext). Only components with
   -- useContext = True re-render when it changes.
   data ThemeAction = FlipTheme
@@ -466,20 +473,22 @@ contextSource = """
           void $ html # "setAttribute" $
             ("data-theme" :: MisoString, themeCode theme)
 
-      view ctx () () =
-        H.div_ []
-          [ H.p_ []
-              [ "The context says: theme = "
-              , H.strong_ []
-                  [ text (ms (show (ctxTheme ctx))) ]
-              , ", language = "
-              , H.strong_ []
-                  [ text (langName (ctxLang ctx)) ]
-              ]
-          , H.button_ [ HE.onClick FlipTheme ]
-              [ "Flip the whole site's theme" ]
-          , "frozen" +> frozen
-          ]
+      view () =
+        -- context is ambient in the view: read it with 'vcontext'
+        vcontext $ \\ctx ->
+          H.div_ []
+            [ H.p_ []
+                [ "The context says: theme = "
+                , H.strong_ []
+                    [ text (ms (show (ctxTheme ctx))) ]
+                , ", language = "
+                , H.strong_ []
+                    [ text (langName (ctxLang ctx)) ]
+                ]
+            , H.button_ [ HE.onClick FlipTheme ]
+                [ "Flip the whole site's theme" ]
+            , "frozen" +> frozen
+            ]
 
   -- A sibling that does not opt in: it keeps showing the
   -- context it mounted with.
@@ -487,10 +496,11 @@ contextSource = """
   frozen = component () (\\() -> pure ()) view
     -- useContext defaults to False
     where
-      view ctx () () =
-        H.p_ [ HP.class_ "muted" ]
-          [ "useContext = False: I still think the theme is "
-          , text (ms (show (ctxTheme ctx))) ]
+      view () =
+        vcontext $ \\ctx ->
+          H.p_ [ HP.class_ "muted" ]
+            [ "useContext = False: I still think the theme is "
+            , text (ms (show (ctxTheme ctx))) ]
   """
 -----------------------------------------------------------------------------
 -- Events --------------------------------------------------------------------
@@ -536,7 +546,7 @@ events = component (EventsModel "" Nothing Nothing) update view
       Pressed (KeyCode k) -> lastKey .= Just k
       ClickedAt xy        -> clickAt .= Just xy
 
-    view _ () m =
+    view m =
       H.div_ []
         [ H.input_
             [ HP.placeholder_ "Type, then press keys…"
@@ -608,7 +618,7 @@ eventsSource = """
         Pressed (KeyCode k) -> lastKey .= Just k
         ClickedAt xy        -> clickAt .= Just xy
 
-      view _ () m =
+      view m =
         H.div_ []
           [ H.input_
               [ HP.placeholder_ "Type, then press keys…"
@@ -674,7 +684,7 @@ dice = component (DiceModel [] False) update view
         rolls .= []
         io_ (consoleLog "cleared")
 
-    view _ () m =
+    view m =
       H.div_ []
         [ H.button_
             [ HE.onClick Roll
@@ -732,7 +742,7 @@ effectsSource = """
           rolls .= []
           io_ (consoleLog "cleared")
 
-      view _ () m =
+      view m =
         H.div_ []
           [ H.button_
               [ HE.onClick Roll
@@ -771,8 +781,8 @@ timer
   :: Component ctx () TimerModel TimerAction
 timer = component (TimerModel 0 False) update view
   where
-    tenTimesASecond :: Sub TimerAction
-    tenTimesASecond sink =
+    tenTimesASecond :: Sub TimerModel TimerAction
+    tenTimesASecond sink _ =
       forever (threadDelay 100000 >> sink Ticked)
 
     update = \case
@@ -785,7 +795,7 @@ timer = component (TimerModel 0 False) update view
       Ticked ->
         ticks += 1
 
-    view _ () m =
+    view m =
       H.div_ [ HP.class_ "row" ]
         [ H.button_ [ HE.onClick toggle ] [ text label ]
         , H.strong_ []
@@ -819,8 +829,8 @@ subsSource = """
     :: Component ctx () TimerModel TimerAction
   timer = component (TimerModel 0 False) update view
     where
-      tenTimesASecond :: Sub TimerAction
-      tenTimesASecond sink =
+      tenTimesASecond :: Sub TimerModel TimerAction
+      tenTimesASecond sink _ =
         forever (threadDelay 100000 >> sink Ticked)
 
       update = \\case
@@ -833,7 +843,7 @@ subsSource = """
         Ticked ->
           ticks += 1
 
-      view _ () m =
+      view m =
         H.div_ [ HP.class_ "row" ]
           [ H.button_ [ HE.onClick toggle ] [ text label ]
           , H.strong_ []
@@ -873,7 +883,7 @@ chat = (component () update view)
         -- parent → all of its children
       MailErr _ -> pure ()
 
-    view _ () _ =
+    view _ =
       H.div_ [ HP.class_ "cols" ]
         [ "publisher"  +> publisher
         , "subscriber" +> subscriber
@@ -894,7 +904,7 @@ publisher = component "hello from the publisher" update view
         mailParent (Note s)
         -- and tell the parent directly
 
-    view _ () s =
+    view s =
       H.div_ []
         [ H.input_ [ HP.value_ s, HE.onInput Draft ]
         , H.button_ [ HE.onClick Send ] [ "publish" ]
@@ -919,7 +929,7 @@ subscriber = (component [] update view)
       Got (Note s) -> this %= take 5 . (s :)
       Oops _       -> pure ()
 
-    view _ () received =
+    view received =
       H.ul_ [ HP.class_ "log" ]
         [ H.li_ [] [ text s ] | s <- received ]
 -- <<< mail
@@ -952,7 +962,7 @@ mailSource = """
           -- parent → all of its children
         MailErr _ -> pure ()
 
-      view _ () _ =
+      view _ =
         H.div_ [ HP.class_ "cols" ]
           [ "publisher"  +> publisher
           , "subscriber" +> subscriber
@@ -973,7 +983,7 @@ mailSource = """
           mailParent (Note s)
           -- and tell the parent directly
 
-      view _ () s =
+      view s =
         H.div_ []
           [ H.input_ [ HP.value_ s, HE.onInput Draft ]
           , H.button_ [ HE.onClick Send ] [ "publish" ]
@@ -998,7 +1008,7 @@ mailSource = """
         Got (Note s) -> this %= take 5 . (s :)
         Oops _       -> pure ()
 
-      view _ () received =
+      view received =
         H.ul_ [ HP.class_ "log" ]
           [ H.li_ [] [ text s ] | s <- received ]
   """
@@ -1035,7 +1045,7 @@ person = component (Person "Ada" 36) update view
         -- arithmetic through a lens
       Younger  -> age %= max 0 . subtract 1
 
-    view _ () p =
+    view p =
       H.div_ []
         [ H.input_
             [ HP.value_ (p ^. name), HE.onInput Rename ]
@@ -1083,7 +1093,7 @@ lensSource = """
           -- arithmetic through a lens
         Younger  -> age %= max 0 . subtract 1
 
-      view _ () p =
+      view p =
         H.div_ []
           [ H.input_
               [ HP.value_ (p ^. name), HE.onInput Rename ]
@@ -1115,7 +1125,7 @@ battery = component (BarModel 65) update view
   where
     update (SetPct v) = pct .= fromMisoString v
 
-    view _ () (BarModel p) =
+    view (BarModel p) =
       H.div_ []
         [ H.div_
             [ HP.class_ "bar-track"
@@ -1173,7 +1183,7 @@ attrsSource = """
     where
       update (SetPct v) = pct .= fromMisoString v
 
-      view _ () (BarModel p) =
+      view (BarModel p) =
         H.div_ []
           [ H.div_
               [ HP.class_ "bar-track"
@@ -1232,7 +1242,7 @@ jsonRoundTrip = component initial update view
 
     update (Edit s) = this .= s
 
-    view _ () input =
+    view input =
       H.div_ []
         [ H.textarea_
             [ HP.value_ input
@@ -1272,7 +1282,7 @@ jsonSource = """
 
       update (Edit s) = this .= s
 
-      view _ () input =
+      view input =
         H.div_ []
           [ H.textarea_
               [ HP.value_ input
@@ -1308,7 +1318,7 @@ orbits = (component 0 update view)
   where
     update (Frame ms') = this .= ms' / 1000
 
-    view _ () t =
+    view t =
       Canvas.canvas [ HP.width_ "320", HP.height_ "220" ]
         (\_ -> pure ())
         -- init: runs once, no state needed
@@ -1352,7 +1362,7 @@ canvasSource = """
     where
       update (Frame ms') = this .= ms' / 1000
 
-      view _ () t =
+      view t =
         Canvas.canvas [ HP.width_ "320", HP.height_ "220" ]
           (\\_ -> pure ())
           -- init: runs once, no state needed
@@ -1444,7 +1454,7 @@ bookmarksDemo =
 
     allTags bs = nub (concatMap bmTags bs)
 
-    view _ () m =
+    view m =
       H.div_ [ HP.class_ "bm-app" ]
         [ H.div_ [ HP.class_ "bm-head" ]
             [ H.input_

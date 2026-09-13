@@ -32,13 +32,13 @@ data Tok
   deriving (Eq, Show)
 -----------------------------------------------------------------------------
 -- | A highlighted Haskell code block.
-haskell :: MisoString -> View context model action
+haskell :: MisoString -> View context props model action
 haskell src =
   H.pre_ [ P.class_ "code", P.data_ "lang" "haskell" ]
     [ H.code_ [] (map render (tokenize (trimEnd (fromMisoString src)))) ]
 -----------------------------------------------------------------------------
 -- | A shell / terminal block. Lines starting with @$@ get a prompt style.
-shell :: MisoString -> View context model action
+shell :: MisoString -> View context props model action
 shell src =
   H.pre_ [ P.class_ "code", P.data_ "lang" "shell" ]
     [ H.code_ [] (concatMap line (lines (trimEnd (fromMisoString src)))) ]
@@ -51,14 +51,14 @@ shell src =
     line other = [ H.span_ [ P.class_ "tk-comment" ] [ text (ms other) ], "\n" ]
 -----------------------------------------------------------------------------
 -- | An unhighlighted block (HTML, JSON, …).
-plain :: MisoString -> View context model action
+plain :: MisoString -> View context props model action
 plain src =
   H.pre_ [ P.class_ "code" ] [ H.code_ [] [ text (ms (trimEnd (fromMisoString src))) ] ]
 -----------------------------------------------------------------------------
 trimEnd :: String -> String
 trimEnd = dropWhileEnd (== '\n')
 -----------------------------------------------------------------------------
-render :: (Tok, String) -> View context model action
+render :: (Tok, String) -> View context props model action
 render (TSpace, s) = text (ms s)
 render (TPunct, s) = text (ms s)
 render (TIdent, s) = text (ms s)

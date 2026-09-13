@@ -60,7 +60,7 @@ newtype Nav = Go Route
 navigate :: Nav -> Effect Ctx props model Nav
 navigate (Go r) = io_ (pushRouteHref r)
 -----------------------------------------------------------------------------
-type Doc = View Ctx () Nav
+type Doc = View Ctx () () Nav
 -----------------------------------------------------------------------------
 -- | Opening paragraph, set larger.
 lead :: [Doc] -> Doc
@@ -115,7 +115,7 @@ copyBlock src = component False update view
       where
         dropPrompt l = maybe l id (MS.stripPrefix "$ " l)
 
-    view _ () copied =
+    view copied =
       H.div_ [ P.class_ "code-copy-wrap" ]
         [ shell src
         , H.button_

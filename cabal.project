@@ -1,13 +1,12 @@
 -- haskell-miso.org
 --
--- The only dependency is miso itself, pulled straight from GitHub. Enter a
--- toolchain with `nix develop .#wasm` (WASM), `nix develop .#ghcjs`
--- (JavaScript backend) or `nix develop` (vanilla GHC, for the prerenderer).
+-- The only dependency is miso itself, taken from the sibling ../miso
+-- checkout. Enter a toolchain with `nix develop .#wasm` (WASM),
+-- `nix develop .#ghcjs` (JavaScript backend) or `nix develop` (vanilla GHC,
+-- for the prerenderer).
 --
 -- NOTE: the site needs misoWithContext / prerenderWithContext plus the
 -- rAFSub cancelAnimationFrame fix, both merged to master.
--- For local development against a sibling ../miso checkout
--- use:  make PROJECT=cabal.project.dev
 packages:
   .
 
@@ -17,7 +16,7 @@ allow-newer:
 source-repository-package
   type: git
   location: https://github.com/dmjio/miso
-  tag: 07a0e3d128afe66158afc0ba5ba219042797077a
+  tag: 1.14.0
 
 if arch(wasm32)
   shared: True

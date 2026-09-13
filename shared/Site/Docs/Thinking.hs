@@ -182,12 +182,12 @@ componentsPage = DocPage
       , [ b "is reused with different props", " — the same ", c "avatar", " component mounted for each user;" ]
       , [ b "should re-render independently", " — its model changes often while the parent's does not." ]
       ]
-    , para [ "Otherwise write a function. ", c "bookmarkRow :: Bookmark -> View ctx Model Action", " is simpler than a component, is trivially testable, and re-renders as part of its parent." ]
+    , para [ "Otherwise write a function. ", c "bookmarkRow :: Bookmark -> View ctx props Model Action", " is simpler than a component, is trivially testable, and re-renders as part of its parent." ]
     , hs """
       bookmarkRow
         :: Maybe BookmarkId
         -> Bookmark
-        -> View ctx Model Action
+        -> View ctx props Model Action
       bookmarkRow selected b =
         H.tr_
           [ key_ (bookmarkId b)
@@ -213,11 +213,9 @@ componentsPage = DocPage
     , para [ "The rule of thumb: state lives in the ", b "closest common owner", " of everything that reads or writes it. Push it up only as far as it needs to go, and pass it down as props." ]
     , hs """
       viewApp
-        :: Ctx
-        -> ()
-        -> Model
-        -> View Ctx Model Action
-      viewApp ctx _ m =
+        :: Model
+        -> View Ctx () Model Action
+      viewApp m = vcontext $ \\ctx ->
         H.main_ []
           [ searchBar (m ^. query)
           , H.div_ [ HP.class_ "columns" ]
@@ -421,7 +419,7 @@ reactPage = DocPage
     , para
       [ "Where React reaches for ", c "useRef", " to hold a DOM node, miso's element ", goto (docsPage "view-dsl") [ "lifecycle hooks" ], " hand the node to you: ", c "onCreatedWith", " dispatches an action carrying the ", c "DOMRef", " when the element is created (and ", c "onDestroyed", " when it goes away):" ]
     , hs """
-      view _ _ _ =
+      view _ =
         H.canvas_ [ onCreatedWith SetupChart ] []
 
       update = \\case
@@ -445,7 +443,7 @@ reactPage = DocPage
         { useContext = True }
 
       -- or at the mount site:
-      view ctx _ _ =
+      view _ =
         H.div_ []
           [ mountUseContext themedBadge ]
       """

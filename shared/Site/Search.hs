@@ -103,8 +103,8 @@ updateSearch = \case
       _ -> pure ()
   NoOp -> pure ()
 -----------------------------------------------------------------------------
-viewSearch :: Ctx -> () -> Model -> View Ctx Model Action
-viewSearch ctx () m =
+viewSearch :: Model -> View Ctx () Model Action
+viewSearch m = vcontext $ \ctx ->
   vfrag
     [ H.button_
         [ P.class_ "search-trigger", P.type_ "button", E.onClick Open
@@ -135,14 +135,14 @@ viewSearch ctx () m =
                       ]
                   , H.kbd_ [ P.class_ "search-esc", E.onClick Close ] [ "esc" ]
                   ]
-              , results
+              , results ctx
               , H.div_ [ P.class_ "search-hint" ] [ t ctx SearchHint ]
               ]
           ]
     ]
   where
     hits = search (m ^. query)
-    results
+    results ctx
       | null hits && not (blank (m ^. query)) =
           H.div_ [ P.class_ "search-empty" ]
             [ t ctx SearchNoResults, " “", text (m ^. query), "”" ]

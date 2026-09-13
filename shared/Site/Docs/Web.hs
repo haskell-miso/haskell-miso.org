@@ -36,6 +36,7 @@ conceptPages =
   , effects
   , context
   , props
+  , ambient
   , communication
   , subscriptions
   , stateAndLenses
@@ -214,11 +215,9 @@ firstComponent = DocPage
             Add      -> this += 1
             Subtract -> this -= 1
 
-          v :: context
-            -> props
-            -> Int
-            -> View context Int Action
-          v _context _props x = vfrag
+          v :: Int
+            -> View context props Int Action
+          v x = vfrag
             [ H.button_
                 [ HE.onClick Add, HP.id_ "add" ]
                 [ "+" ]
@@ -347,10 +346,8 @@ components = DocPage
             :: action
             -> Effect context props model action
         , view
-            :: context
-            -> props
-            -> model
-            -> View context model action
+            :: model
+            -> View context props model action
         , useContext :: Bool
           -- re-render when the global context changes
         , subs :: [ Sub action ]
@@ -384,17 +381,15 @@ components = DocPage
         :: (Eq context, Eq model)
         => MisoString
         -> Component context () model action
-        -> View context parentModel parentAction
+        -> View context props parentModel parentAction
       key +> comp = VComp (SomeComponent (Just (toKey key)) () comp)
       """
     , para [ "Practically, using this combinator looks like:" ]
     , hs """
       viewModel
-        :: context
-        -> props
-        -> Int
-        -> View context Int Action
-      viewModel _ _ _ =
+        :: Int
+        -> View context props Int Action
+      viewModel _ =
         H.div_ [ HP.id_ "container" ]
           [ "counter" +> counter ]
       """
@@ -432,12 +427,12 @@ viewDsl = DocPage
     , h2 "The View type"
     , para [ "The ", c "View", " is a rose tree of nodes, mutually recursive with ", c "Component", " through ", c "view", ":" ]
     , hs """
-      data View context model action
-        = VNode Namespace Tag [Attribute model action] [View context model action] DirectEvents
+      data View context props model action
+        = VNode Namespace Tag [Attribute model action] [View context props model action] DirectEvents
         | VText (Maybe Key) MisoString
         | VComp (SomeComponent context)
         | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
-        | VFrag (Maybe Key) [View context model action]
+        | VFrag (Maybe Key) [View context props model action]
 
       data SomeComponent context
         = forall model action props. (Eq context, Eq model, Eq props)
@@ -498,11 +493,9 @@ viewDsl = DocPage
           io_ [js| hljs.highlightElement(${domRef}) |]
 
       view
-        :: context
-        -> props
-        -> model
-        -> View context model Action
-      view _ _ _ =
+        :: model
+        -> View context props model Action
+      view _ =
         H.code_ [ onCreatedWith Highlight ]
           [ \"\"\"
             function addOne (x) { return x + 1; }
@@ -555,7 +548,7 @@ textNodes = DocPage
 
       renderItem
         :: Item
-        -> View context model Action
+        -> View context props model Action
       renderItem item =
         H.li_ []
           [ textKey (itemId item) (itemLabel item) ]
@@ -713,7 +706,7 @@ events = DocPage
             pure (floor ox, floor oy)
         }
 
-      view =
+      view _model =
         H.canvas_
           [ on "click" clickDecoder $ \\(x, y) _ _ ->
               Clicked x y
@@ -878,18 +871,18 @@ context = DocPage
     , api
       [ ("startAppWithContext", [ "the client entry point, replaces ", c "startApp", "." ])
       , ("misoWithContext / prerenderWithContext", [ "the hydrating counterparts of ", c "miso", " / ", c "prerender", "." ])
-      , ("setContext", [ "seeds the value directly. Needed for server-side rendering, where a ", c "View", " is serialised without starting the runtime." ])
+      , ("toHtmlWith", [ "supplies the context (with the props and model) when serialising a ", c "View", " without starting the runtime — the server-side rendering path. As of 1.14.0 there is no global context cell to seed: ", c "setContext", " is gone, the value is passed to the renderer." ])
       , ("liveWithContext / reloadWithContext", [ "context-aware variants of ", c "live", " / ", c "reload", " for interactive (GHCi) development." ])
       ]
     , h2 "Reading"
-    , para [ "The current context is the ", b "first argument", " of every component's ", c "view", ", so any component — however deeply nested — reads it synchronously during render:" ]
+    , para
+      [ "As of 1.14.0 a ", c "view", " takes only the ", c "model", ". The context is read ", em "ambiently", " with ", c "vcontext", ", so any component — however deeply nested — still reads it synchronously during render, without anything threading it down (see ", goto (docsPage "ambient") [ "Ambient accessors" ], "):" ]
     , hs """
       view
-        :: context
-        -> props
-        -> model
-        -> View context model action
-      view ctx _props _model = ...
+        :: model
+        -> View context props model action
+      view _model =
+        vcontext $ \\ctx -> ...
       """
     , para [ "Inside ", c "update", " it is readable in the ", c "Effect", " monad, just like props — use ", c "getContext", " (or ", c "Miso.Lens.view", " with the ", c "context", " lens):" ]
     , hs """
@@ -925,7 +918,7 @@ context = DocPage
         , ctxTheme   :: Theme
         } deriving Eq
 
-      t :: Ctx -> Key -> View Ctx model action
+      t :: Ctx -> Key -> View Ctx props model action
       t ctx key = text (translate ctx key)
 
       update (SetLang l) = do
@@ -958,13 +951,14 @@ props = DocPage
       [ "Props suit ", em "metadata", " — contextual or configuration data the child needs to know about but should not own: a display name, a theme token, a locale, a read-only identifier. "
       , "If the data drives the child's own business logic — counters it increments, form fields it edits, async state it manages — it belongs in the child's ", c "model", ". Prefer props for \"what the child should know\" and the model for \"what the child should do\"." ]
     , h2 "Props in view and update"
-    , para [ c "view", " always takes props as its second argument; top-level applications have no parent, so props are ", c "()", ":" ]
+    , para
+      [ "As of 1.14.0 ", c "view", " takes only the ", c "model", "; props are read ", em "ambiently", " with ", c "vprops", " (see ", goto (docsPage "ambient") [ "Ambient accessors" ], "). Top-level applications have no parent, so their props are ", c "()", ":" ]
     , hs """
       view
-        :: context
-        -> props
-        -> model
-        -> View context model action
+        :: model
+        -> View context props model action
+      view _model =
+        vprops $ \\props -> ...
       """
     , para [ "Use ", c "getProps", " inside ", c "Effect", " (or ", c "Miso.Lens.view props", ") to read the current value:" ]
     , hs """
@@ -981,7 +975,7 @@ props = DocPage
         => MisoString
         -> props
         -> Component context props model action
-        -> View context parentModel parentAction
+        -> View context props parentModel parentAction
       """
     , h2 "Example: child reading parent-supplied props"
     , hs """
@@ -996,12 +990,11 @@ props = DocPage
         where
           viewChild
             :: ()
-            -> Greeting
-            -> ()
-            -> View () () ChildAction
-          viewChild _ (Greeting g) _ =
-            H.div_ []
-              [ text ("Hello, " <> g <> "!") ]
+            -> View () Greeting () ChildAction
+          viewChild _ =
+            vprops $ \\(Greeting g) ->
+              H.div_ []
+                [ text ("Hello, " <> g <> "!") ]
 
           updateChild
             :: ChildAction
@@ -1018,11 +1011,9 @@ props = DocPage
         component (ParentModel "World") noop viewParent
         where
           viewParent
-            :: ()
-            -> ()
-            -> ParentModel
-            -> View () ParentModel ParentAction
-          viewParent _ _ (ParentModel g) =
+            :: ParentModel
+            -> View () () ParentModel ParentAction
+          viewParent (ParentModel g) =
             mountWithProps_ "child" (Greeting g) child
 
       newtype ParentModel = ParentModel MisoString
@@ -1039,6 +1030,107 @@ props = DocPage
       ]
     , h2 "Try it"
     , demo "Props flowing from a parent to a child" propsSource ("demo-props" +> propsDemo)
+    ]
+  }
+-----------------------------------------------------------------------------
+ambient :: DocPage
+ambient = DocPage
+  { pageSlug = "ambient"
+  , pageGroup = Concepts
+  , pageTitle = "Ambient accessors"
+  , pageBlurb = "VContext, VProps and VModel: read the context, props or model anywhere in a view with vcontext, vprops and vmodel."
+  , pageKeywords =
+    [ "ambient", "VContext", "VProps", "VModel"
+    , "vcontext", "vprops", "vmodel"
+    , "withContext", "withProps", "withModel"
+    ]
+  , pageBody =
+    [ lead
+      [ "As of ", b "1.14.0", ", a component's ", c "view", " takes only the ", c "model", ". The ", c "context", " and ", c "props", " are read ", em "ambiently", " instead — at the point in the tree that actually needs them — with ", c "vcontext", " and ", c "vprops", ". ", c "vmodel", " completes the trio." ]
+    , para
+      [ "These three are ", em "accessors", ", not nodes. Each wraps a function from the value to a ", c "View", ". The function is applied and the wrapper discarded whenever the enclosing ", c "View", " is built or rendered, so ", c "VContext", ", ", c "VProps", " and ", c "VModel", " never appear in the virtual DOM the runtime diffs." ]
+    , h2 "The trio"
+    , api
+      [ ("vcontext", [ "read the app-global ", c "context", ". Synonym: ", c "withContext", "." ])
+      , ("vprops", [ "read the enclosing component's ", c "props", ". Synonym: ", c "withProps", "." ])
+      , ("vmodel", [ "read the enclosing component's ", c "model", ". Synonym: ", c "withModel", "." ])
+      ]
+    , para [ "All three share one shape — a function in, a ", c "View", " out:" ]
+    , hs """
+      vcontext :: (context -> View context props model action)
+               -> View context props model action
+
+      vprops   :: (props   -> View context props model action)
+               -> View context props model action
+
+      vmodel   :: (model   -> View context props model action)
+               -> View context props model action
+      """
+    , h2 "Why they exist"
+    , para [ "Before 1.14.0, a view was handed all three values as arguments:" ]
+    , hs """
+      -- before 1.14.0
+      view :: context -> props -> model -> View context model action
+      view ctx props model = ...
+      """
+    , para
+      [ "That meant every helper needing the ", c "context", " had to take it as an extra parameter, threaded down through the whole tree — even helpers that used nothing else. Now the view takes only the model, and anything deeper reaches for what it needs, where it needs it:" ]
+    , hs """
+      -- 1.14.0
+      view :: model -> View Ctx props model action
+      view model =
+        H.div_ []
+          [ H.h1_ [] [ text (title model) ]
+          , themeBadge          -- nothing has to pass it the context
+          ]
+
+      themeBadge :: View Ctx props model action
+      themeBadge =
+        vcontext $ \\ctx ->
+          H.span_ [] [ text (themeLabel (ctxTheme ctx)) ]
+      """
+    , h2 "Scope: what each one sees"
+    , para
+      [ "Unlike ", c "context", ", which is one global value, ", c "props", " and ", c "model", " are per-component. That is why both are type parameters of ", c "View", ": the ", c "props", " a ", c "VProps", " sees is statically the ", c "props", " of the ", c "Component", " whose ", c "view", " contains it, and a mismatch is a compile-time error." ]
+    , ul
+      [ [ b "context", " — the one live value for the whole tree; every nested component agrees on its type." ]
+      , [ b "props", " — the enclosing component's own. A child mounted with ", c "mountWithProps", " / ", c "vcomp", " sees ", em "its", " props, never its parent's." ]
+      , [ b "model", " — likewise the enclosing component's own; a mount boundary forgets the child's model type just as it forgets its props and action." ]
+      ]
+    , note
+      [ "Accessors add no redraw logic of their own. Whether a component redraws on a ", c "context", " change is still decided solely by ", c "useContext", "; a component redraws on new ", c "props", " from its parent, and on its own ", c "model", " changing after an ", c "update", ". The accessor is simply re-resolved as part of that redraw." ]
+    , h2 "vmodel and view"
+    , para
+      [ "The ", c "model", " is the one value the view already receives, so ", c "vmodel", " is a convenience rather than a necessity — these two are equivalent:" ]
+    , hs """
+      view model = H.p_ [] [ text (ms (count model)) ]
+
+      view _ = vmodel $ \\model ->
+                 H.p_ [] [ text (ms (count model)) ]
+      """
+    , para
+      [ "It earns its keep deeper in a tree, where a helper wants the model but sits several combinators away from the ", c "view", " that was handed it." ]
+    , h2 "Why not ImplicitParams or a Reader?"
+    , para
+      [ "Both are alternatives for ambient values. ", c "ImplicitParams", " gives the same \"read it where you need it\" ergonomics, but is a GHC-specific extension whose constraints leak into every helper's signature. A ", c "Reader", " would work on any compiler, but forces a monadic style onto view code that is otherwise plain applicative expressions and lists. The accessors keep the ", c "View", " DSL as ordinary Haskell values: just another constructor, resolved by the runtime, with nothing to lift or thread." ]
+    , h2 "Rendering to HTML"
+    , para
+      [ "When serialising, a bare ", c "View", " under ", c "toHtml", " is static markup with ", c "context ~ ()", ", ", c "props ~ ()", " and ", c "model ~ ()", ". A view that reads real values is rendered with ", c "toHtmlWith", ", which takes them:" ]
+    , hs """
+      toHtmlWith
+        :: context
+        -> props
+        -> model
+        -> View context props model action
+        -> ByteString
+
+      toHtmlWith ctx props model (view comp model)
+      """
+    , para
+      [ "This site's prerenderer does exactly that — there is no global context cell to seed, the value is handed to the renderer. See ", goto (docsPage "html-and-prerendering") [ "HTML & prerendering" ], "." ]
+    , h2 "Try it"
+    , para
+      [ "The ", goto (docsPage "context") [ "Context" ], " and ", goto (docsPage "props") [ "Props" ], " pages both have live demos whose views read their values through these accessors." ]
     ]
   }
 -----------------------------------------------------------------------------
@@ -1122,24 +1214,26 @@ subscriptions = DocPage
   , pageKeywords = [ "Sub", "subs", "startSub", "stopSub", "createSub", "timer", "websocket", "onLineSub", "rAFSub" ]
   , pageBody =
     [ lead
-      [ "A ", c "Sub", " is any long-running operation that is external to a component but that can write to the component's ", c "Sink", ". Subs come in two flavours: the static ", c "subs", " list and dynamic subs via ", c "startSub", " / ", c "stopSub", "." ]
+      [ "A ", c "Sub", " is any long-running operation that is external to a component but that can write to the component's ", c "Sink", ". As of 1.14.0 it is also handed an ", c "IO model", ", to read the component's current model on demand. Subs come in two flavours: the static ", c "subs", " list and dynamic subs via ", c "startSub", " / ", c "stopSub", "." ]
     , hs """
-      type Sub action = Sink action -> IO ()
+      type Sub model action =
+        Sink action -> IO model -> IO ()
       """
     , h2 "subs"
     , hs """
       main :: IO ()
       main = startApp defaultEvents app { subs = [ timerSub ] }
 
-      timerSub :: Sub Action
-      timerSub sink = forever $ threadDelay 100000 >> sink Log
+      timerSub :: Sub Model Action
+      timerSub sink _readModel =
+        forever $ threadDelay 100000 >> sink Log
 
       data Action = Log
       """
     , para [ "The ", c "subs", " field contains subs that exist for the lifetime of the component. When it unmounts, they are stopped and their resources finalised. Here is a real one from ", c "Miso.Subscription.OnLine", ":" ]
     , hs """
-      onLineSub :: (Bool -> action) -> Sub action
-      onLineSub f sink = createSub acquire release sink
+      onLineSub :: (Bool -> action) -> Sub model action
+      onLineSub f sink _readModel = createSub acquire release sink
         where
           release (cb1, cb2) = do
             windowRemoveEventListener "online"  cb1
@@ -1159,8 +1253,9 @@ subscriptions = DocPage
         StopTimer  -> stopSub "timer"
         Log        -> io_ (consoleLog "log")
         where
-          timerSub :: Sub Action
-          timerSub sink = forever $ threadDelay 100000 >> sink Log
+          timerSub :: Sub Model Action
+          timerSub sink _ =
+            forever $ threadDelay 100000 >> sink Log
       """
     , h2 "createSub"
     , para
@@ -1362,10 +1457,10 @@ htmlAndSsr = DocPage
              (Component context props model action)
 
       type About = "about"
-        :> Get '[HTML] (View context model action)
+        :> Get '[HTML] (View context props model action)
 
       type Contact = "contact"
-        :> Get '[HTML] [View context model action]
+        :> Get '[HTML] [View context props model action]
       """
     , h2 "Prerendering"
     , para
@@ -1378,7 +1473,7 @@ htmlAndSsr = DocPage
         (component () noop view)
           { logLevel = DebugPrerender }
         where
-          view _ _ () = "hello world"
+          view () = "hello world"
       """
     , para [ "With the payload and HTML delivered together, the console shows:" ]
     , pre "[DEBUG_HYDRATE] Successfully prerendered page"
@@ -1399,11 +1494,9 @@ htmlAndSsr = DocPage
       -- window.__initialModel__ alongside
       -- the rendered HTML:
       serverView
-        :: context
-        -> props
-        -> Model
-        -> View context Model Action
-      serverView _ _ m =
+        :: Model
+        -> View context props Model Action
+      serverView m =
         H.div_ []
           [ H.script_ []
               ("window.__initialModel__ = " <> encode m)
@@ -1668,9 +1761,8 @@ json = DocPage
     , para [ "Prefer aeson? The ", a "https://github.com/haskell-miso/miso-aeson" "miso-aeson", " package bridges aeson's ", c "ToJSON", " / ", c "FromJSON", " instances with miso's event decoder and fetch API, so existing instances work without rewriting." ]
     , h2 "aeson polyfill"
     , para
-      [ H.span_ [ P.class_ "soon-badge" ] [ "Coming soon" ]
-      , " — an ", b "aeson polyfill", " behind an ", c "aeson", " cabal flag (", c "-faeson", "): building miso with it defines every operator and class exported by ", c "Miso.JSON", " (", c "ToJSON", ", ", c "FromJSON", ", ", c ".:", ", ", c ".=", ", ", c "withObject", ", ", c "encode", ", ", c "decode", ", …) in terms of ", a "https://hackage.haskell.org/package/aeson" "Data.Aeson", ". "
-      , "Existing aeson code — and its instances — will work with miso unchanged, with no bridge package and no import churn: keep importing ", c "Miso.JSON", " and flip the flag." ]
+      [ "An ", b "aeson polyfill", " lives behind an ", c "aeson", " cabal flag (", c "-faeson", "): building miso with it defines every operator and class exported by ", c "Miso.JSON", " (", c "ToJSON", ", ", c "FromJSON", ", ", c ".:", ", ", c ".=", ", ", c "withObject", ", ", c "encode", ", ", c "decode", ", …) in terms of ", a "https://hackage.haskell.org/package/aeson" "Data.Aeson", ". "
+      , "Existing aeson code — and its instances — works with miso unchanged, with no bridge package and no import churn: keep importing ", c "Miso.JSON", " and flip the flag." ]
     ]
   }
 -----------------------------------------------------------------------------

@@ -29,7 +29,7 @@ repo name = "https://github.com/haskell-miso/" <> name
 examplesPage :: Component Ctx () () Nav
 examplesPage = (component () navigate view) { useContext = True }
   where
-    view ctx () () =
+    view () = vcontext $ \ctx ->
       H.div_ [ P.class_ "examples page" ]
         [ H.header_ [ P.class_ "page-head" ]
             [ H.h1_ [] [ t ctx ExTitle ]
