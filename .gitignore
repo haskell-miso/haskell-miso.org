@@ -5,4 +5,5 @@ result
 all.js
 .direnv/
 *~
-public-mhs/
+.mcabal/
+.emcache/
