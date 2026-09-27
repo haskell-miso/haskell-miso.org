@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- | Client-side routes for the whole site, derived generically with
 -- "Miso.Router". Every page and every documentation sub-page is a URL.
@@ -21,6 +22,9 @@ module Site.Route
 import GHC.Generics (Generic)
 -----------------------------------------------------------------------------
 import Miso.Router
+#ifdef __MHS__
+import Miso.Util.Parser (satisfy)
+#endif
 import Miso.Subscription.History (pushURI)
 import Miso.String (MisoString)
 import qualified Miso.String as MS
@@ -43,7 +47,36 @@ data Route
   | Index
   -- ^ @\/@
   deriving stock (Show, Eq, Generic)
+#ifndef __MHS__
   deriving anyclass Router
+#endif
+-----------------------------------------------------------------------------
+#ifdef __MHS__
+-- MicroHs has no GHC.Generics metadata, so the instance that @deriving
+-- anyclass Router@ produces is written out: the constructor name, lowercased
+-- and cut at its first upper-case letter, is the first path segment
+-- (@docs@, @blog@, ...), and 'Index' is the root.
+instance Router Route where
+  fromRoute r = case r of
+    DocsNative (Path p) (Capture s)   -> [toPath "docs", toPath p, toCapture s]
+    DocsThinking (Path p) (Capture s) -> [toPath "docs", toPath p, toCapture s]
+    DocsPage (Capture s)              -> [toPath "docs", toCapture s]
+    Docs                              -> [toPath "docs"]
+    BlogPost (Capture s)              -> [toPath "blog", toCapture s]
+    Blog                              -> [toPath "blog"]
+    Examples                          -> [toPath "examples"]
+    Index                             -> [IndexToken]
+  routeParser = routes
+    [ DocsNative <$ path "docs" <*> (Path <$> path "native") <*> (Capture <$> capture)
+    , DocsThinking <$ path "docs" <*> (Path <$> path "thinking") <*> (Capture <$> capture)
+    , DocsPage <$ path "docs" <*> (Capture <$> capture)
+    , Docs <$ path "docs"
+    , BlogPost <$ path "blog" <*> (Capture <$> capture)
+    , Blog <$ path "blog"
+    , Examples <$ path "examples"
+    , Index <$ satisfy (== IndexToken)
+    ]
+#endif
 -----------------------------------------------------------------------------
 -- | Parse a 'URI' into a 'Route'. Unknown routes are 'Nothing' (rendered as
 -- the 404 page).
