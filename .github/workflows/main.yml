@@ -29,6 +29,20 @@ jobs:
         with:
           path: ./public
 
+  # The same site built with MicroHs (mhs) instead of GHC
+  build-mhs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build using MicroHs
+        run: make mhs
+
   deploy:
     if: github.ref == 'refs/heads/new-site'
     runs-on: ubuntu-latest
