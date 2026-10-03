@@ -3,8 +3,6 @@
 
   inputs = {
     miso.url = "github:dmjio/miso";
-    # The MicroHs backend lives on miso's rts_standalone branch until it is merged.
-    miso-mhs.url = "github:dmjio/miso/rts_standalone";
   };
 
   outputs = inputs:
@@ -17,6 +15,6 @@
       devShells.default = inputs.miso.outputs.devShells.${system}.default;
       devShells.wasm = inputs.miso.outputs.devShells.${system}.wasm;
       devShells.ghcjs = inputs.miso.outputs.devShells.${system}.ghcjs;
-      devShells.mhs = inputs.miso-mhs.outputs.devShells.${system}.mhs;
+      devShells.mhs = inputs.miso.outputs.devShells.${system}.mhs;
     });
 }
