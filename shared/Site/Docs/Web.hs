@@ -420,7 +420,7 @@ viewDsl = DocPage
   , pageGroup = Concepts
   , pageTitle = "The View DSL"
   , pageBlurb = "The View type, element nodes, the smart constructors in Miso.Html.Element and element lifecycle hooks."
-  , pageKeywords = [ "View", "VNode", "node", "vnode", "div_", "html", "svg", "mathml", "onCreated", "onDestroyed", "highlight.js", "VComp", "SomeComponent", "VCompStatic" ]
+  , pageKeywords = [ "View", "VNode", "node", "vnode", "div_", "html", "svg", "mathml", "onCreated", "onDestroyed", "highlight.js", "VComp", "SomeComponent", "VCompStatic", "VContext", "VProps", "VModel" ]
   , pageBody =
     [ lead
       [ "A ", c "VNode", " represents a DOM element — the most common kind of virtual DOM node. It carries a ", c "Namespace", ", a tag name, a list of ", c "Attribute", " values and a list of child ", c "View", "s." ]
@@ -431,8 +431,11 @@ viewDsl = DocPage
         = VNode Namespace Tag [Attribute model action] [View context props model action] DirectEvents
         | VText (Maybe Key) MisoString
         | VComp (SomeComponent context)
-        | forall props. VCompStatic (StaticPtr (SomeStaticComponent props context)) props
+        | forall childProps. VCompStatic (StaticPtr (SomeStaticComponent childProps context)) childProps
         | VFrag (Maybe Key) [View context props model action]
+        | VContext (context -> View context props model action)
+        | VProps   (props   -> View context props model action)
+        | VModel   (model   -> View context props model action)
 
       data SomeComponent context
         = forall model action props. (Eq context, Eq model, Eq props)
@@ -442,6 +445,11 @@ viewDsl = DocPage
       [ c "VNode", " and ", c "VText", " map one-to-one onto the physical DOM. ", c "VComp", " and ", c "VFrag", " are abstract (they live only in the virtual DOM). "
       , "The existential ", c "SomeComponent", " is what allows embedding polymorphic components in a ", c "View", ". ", c "VCompStatic", " carries a static pointer to its constructor and is used by the "
       , goto (nativePage "static-mounting") [ "native dual-thread runtime" ], "." ]
+    , para
+      [ c "VContext", ", ", c "VProps", " and ", c "VModel", " are not nodes at all, but ", em "accessors", ". Each wraps a function from the app-global "
+      , c "context", ", the enclosing component's ", c "props", " or its ", c "model", " to a ", c "View", ". The function is applied and the wrapper discarded "
+      , "when the enclosing ", c "View", " is built or rendered, so none of the three ever reaches the diff. Build them with ", c "vcontext", ", ", c "vprops"
+      , " and ", c "vmodel", " — see ", goto (docsPage "ambient") [ "Ambient accessors" ], "." ]
     , h2 "Element nodes"
     , hs """
       VNode HTML "div" [ HP.id_ "container" ] [ "Hello, world!" ]
@@ -510,6 +518,7 @@ viewDsl = DocPage
       , ("component", [ "build a ", c "VComp" ])
       , ("fragment, vfrag, fragment_, vfrag_", [ "build a ", c "VFrag" ])
       , ("(+>)", [ "key and mount a child ", c "Component" ])
+      , ("vcontext, vprops, vmodel", [ "build a ", c "VContext", ", ", c "VProps", " or ", c "VModel", " — see ", goto (docsPage "ambient") [ "Ambient accessors" ] ])
       ]
     ]
   }
