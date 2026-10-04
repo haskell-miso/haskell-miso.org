@@ -6,6 +6,7 @@
 #   make            update + build (WASM) + optimise + prerender  →  public/
 #   make serve      serve public/ on http://localhost:8080
 #   make js         build with the GHC JavaScript backend instead of WASM
+#   make mhs        build with MicroHs (WebAssembly through emscripten) instead
 #   make watch      hot reload via the WASM browser GHCi (ghciwatch)
 #
 # PROJECT selects the cabal project file:
@@ -19,8 +20,9 @@ CABAL_FLAGS = --project-file=$(PROJECT)
 WASM_SHELL  = nix develop .\#wasm --command
 GHC_SHELL   = nix develop .\#default --command
 GHCJS_SHELL = nix develop .\#ghcjs --command
+MHS_SHELL   = nix develop .\#mhs --command
 
-.PHONY: all update build prerender assets optim serve clean js watch repl
+.PHONY: all update build prerender assets optim serve clean js mhs watch repl
 
 # optim runs before prerender: the prerender hashes the final app.wasm
 # into the ?v= cache-busting stamp baked into every page.
@@ -75,5 +77,18 @@ js:
 	  cp -v $$jsexe/app.jsexe/all.js public/index.js'
 	$(MAKE) prerender
 
+# MicroHs (mhs) instead of GHC: the client is compiled with mhs and emscripten
+# into a single index.js with the WebAssembly embedded.  The shell copies
+# mhs's package database (with miso) to .mcabal and emscripten's cache to
+# .emcache on first use.
+mhs:
+	$(MHS_SHELL) bash -c '\
+	  set -e; \
+	  rm -rf public; mkdir -p public; \
+	  cp -r static/. public/; \
+	  cp -r assets public/assets; \
+	  mhs -XCPP -ishared -iclient -tbrowser Main -opublic/index.js'
+	$(MAKE) prerender
+
 clean:
-	rm -rf dist-newstyle public
+	rm -rf dist-newstyle public .mcabal .emcache

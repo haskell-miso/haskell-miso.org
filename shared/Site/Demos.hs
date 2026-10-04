@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- | Live, interactive examples embedded in the documentation.
 --
@@ -35,7 +36,10 @@ import           Data.List (nub)
 import           GHC.Generics (Generic)
 -----------------------------------------------------------------------------
 import           Miso
-import           Miso.JSON (ToJSON, FromJSON, Parser, encode, eitherDecode, withObject, (.:))
+import           Miso.JSON (ToJSON (..), FromJSON (..), Parser, encode, eitherDecode, withObject, (.:))
+#ifdef __MHS__
+import qualified Miso.JSON as JSON
+#endif
 import           Miso.Lens
 import qualified Miso.CSS as CSS
 import qualified Miso.Canvas as Canvas
@@ -863,7 +867,17 @@ subsSource = """
 -- PubSub topic; the publisher also mails its parent,
 -- which relays the message to every child.
 data Note = Note MisoString
+#ifdef __MHS__
+  deriving (Show, Eq, Generic)
+
+-- MicroHs has no GHC.Generics metadata, so no generic JSON instances.
+instance ToJSON Note where
+  toJSON (Note s) = toJSON s
+instance FromJSON Note where
+  parseJSON v = Note <$> parseJSON v
+#else
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
+#endif
 
 notes :: Topic Note
 notes = topic "demo-notes"
@@ -1229,8 +1243,17 @@ attrsSource = """
 data User = User
   { userName :: MisoString
   , userAge  :: Int
+#ifdef __MHS__
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON User where
+  toJSON (User n a) = JSON.object [ "userName" JSON..= n, "userAge" JSON..= a ]
+instance FromJSON User where
+  parseJSON = withObject "User" $ \o -> User <$> o .: "userName" <*> o .: "userAge"
+#else
   } deriving (Show, Eq, Generic, ToJSON, FromJSON)
     -- generic instances from Miso.JSON
+#endif
 
 data JsonAction = Edit MisoString
 

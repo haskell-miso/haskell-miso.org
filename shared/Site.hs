@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 {-# LANGUAGE QuasiQuotes #-}
 -----------------------------------------------------------------------------
@@ -18,7 +19,9 @@ import           Data.Maybe (isJust)
 -----------------------------------------------------------------------------
 import           Miso
 import qualified Miso.CSS as CSS
+#ifndef __MHS__
 import           Miso.FFI.QQ (js)
+#endif
 import           Miso.JSON (FromJSON (..), withObject, (.:))
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
@@ -156,8 +159,13 @@ applyTheme theme = do
 -- | @behavior: instant@ bypasses the @scroll-behavior: smooth@ on <html>:
 -- a smooth reset is cancelled when the route swap mutates the DOM
 -- mid-animation, leaving the page scrolled partway down.
+#ifdef __MHS__
+foreign import javascript unsafe "window.scrollTo({ top: 0, left: 0, behavior: 'instant' })"
+  scrollTop :: IO ()
+#else
 scrollTop :: IO ()
 scrollTop = [js| window.scrollTo({ top: 0, left: 0, behavior: "instant" }); |]
+#endif
 -----------------------------------------------------------------------------
 -- | Report a client-side navigation to GoatCounter. @__misoTrack@ is
 -- defined in the prerendered \<head\> and no-ops when the counter script
