@@ -21,10 +21,15 @@ data Example
   , exEmoji :: MisoString
   , exBlurb :: MisoString
   , exLive  :: Maybe MisoString
+  , exRepo  :: MisoString
   }
 -----------------------------------------------------------------------------
 repo :: MisoString -> MisoString
 repo name = "https://github.com/haskell-miso/" <> name
+-----------------------------------------------------------------------------
+-- | An example hosted in the haskell-miso GitHub organisation.
+example :: MisoString -> MisoString -> MisoString -> Maybe MisoString -> Example
+example name emoji blurb live = Example name emoji blurb live (repo name)
 -----------------------------------------------------------------------------
 examplesPage :: Component Ctx () () Nav
 examplesPage = (component () navigate view) { useContext = True }
@@ -55,7 +60,7 @@ examplesPage = (component () navigate view) { useContext = True }
       H.article_ [ P.class_ "example-card", key_ exName ]
         [ H.a_
             [ P.class_ "example-card-link"
-            , P.href_ (maybe (repo exName) id exLive)
+            , P.href_ (maybe exRepo id exLive)
             , P.target_ "_blank", P.rel_ "noopener"
             , P.aria_ "label" exName
             ] []
@@ -65,7 +70,7 @@ examplesPage = (component () navigate view) { useContext = True }
             ]
         , H.p_ [] [ text exBlurb ]
         , H.div_ [ P.class_ "example-links" ]
-            [ H.a_ [ P.href_ (repo exName), P.target_ "_blank", P.rel_ "noopener" ] [ iconGitHub, t ctx ExSource ]
+            [ H.a_ [ P.href_ exRepo, P.target_ "_blank", P.rel_ "noopener" ] [ iconGitHub, t ctx ExSource ]
             , case exLive of
                 Just url -> H.a_ [ P.href_ url, P.target_ "_blank", P.rel_ "noopener" ] [ iconExternal, t ctx ExLive ]
                 Nothing  -> vfrag []
@@ -75,75 +80,76 @@ examplesPage = (component () navigate view) { useContext = True }
 catalogue :: [(Key, [Example])]
 catalogue =
   [ ( ExCatGames
-    , [ Example "chess" "♟️" "The game of chess." (Just "https://chess.haskell-miso.org/")
-      , Example "solitaire" "🃏" "Klondike solitaire." (Just "https://solitaire.haskell-miso.org/")
-      , Example "tetris" "🧱" "The game of Tetris." (Just "https://tetris.haskell-miso.org/")
-      , Example "2048" "🔢" "A 2048 clone." (Just "https://2048.haskell-miso.org/")
-      , Example "snake" "🐍" "A snake clone." (Just "https://snake.haskell-miso.org/")
-      , Example "asteroid" "🚀" "The game of Asteroids." (Just "https://asteroid.haskell-miso.org/")
-      , Example "plane" "🛩️" "A Flappy Bird clone." (Just "https://plane.haskell-miso.org/")
-      , Example "mario" "🍄" "A Super Mario physics example." (Just "https://mario.haskell-miso.org/")
-      , Example "minesweeper" "💣" "The classic Minesweeper." (Just "https://minesweeper.haskell-miso.org/")
-      , Example "tic-tac-miso" "❌" "Tic-tac-toe." (Just "https://tic-tac-miso.haskell-miso.org/")
-      , Example "blockout" "🟦" "The game of Blockout." (Just "https://blockout.haskell-miso.org/")
-      , Example "mahjong" "🀄" "The game of Mahjong." (Just "https://mahjong.haskell-miso.org/")
-      , Example "sudoku" "🧩" "The game of Sudoku." (Just "https://sudoku.haskell-miso.org/")
-      , Example "slingo" "🎰" "The game of Slingo." (Just "https://slingo.haskell-miso.org/")
-      , Example "texasholdem" "🤠" "Texas Hold 'Em poker." (Just "https://texasholdem.haskell-miso.org/")
+    , [ example "chess" "♟️" "The game of chess." (Just "https://chess.haskell-miso.org/")
+      , example "solitaire" "🃏" "Klondike solitaire." (Just "https://solitaire.haskell-miso.org/")
+      , example "tetris" "🧱" "The game of Tetris." (Just "https://tetris.haskell-miso.org/")
+      , example "2048" "🔢" "A 2048 clone." (Just "https://2048.haskell-miso.org/")
+      , example "snake" "🐍" "A snake clone." (Just "https://snake.haskell-miso.org/")
+      , example "asteroid" "🚀" "The game of Asteroids." (Just "https://asteroid.haskell-miso.org/")
+      , example "plane" "🛩️" "A Flappy Bird clone." (Just "https://plane.haskell-miso.org/")
+      , example "mario" "🍄" "A Super Mario physics example." (Just "https://mario.haskell-miso.org/")
+      , example "minesweeper" "💣" "The classic Minesweeper." (Just "https://minesweeper.haskell-miso.org/")
+      , example "tic-tac-miso" "❌" "Tic-tac-toe." (Just "https://tic-tac-miso.haskell-miso.org/")
+      , example "blockout" "🟦" "The game of Blockout." (Just "https://blockout.haskell-miso.org/")
+      , example "mahjong" "🀄" "The game of Mahjong." (Just "https://mahjong.haskell-miso.org/")
+      , example "sudoku" "🧩" "The game of Sudoku." (Just "https://sudoku.haskell-miso.org/")
+      , example "slingo" "🎰" "The game of Slingo." (Just "https://slingo.haskell-miso.org/")
+      , example "texasholdem" "🤠" "Texas Hold 'Em poker." (Just "https://texasholdem.haskell-miso.org/")
+      , Example "orbital-breakdown" "🪐" "Breakout in space, and every ball is a curveball." (Just "https://orbital-breakdown.haskell-game.dev/") "https://gitlab.com/dpwiz/orbital-breakdown"
       ]
     )
   , ( ExCatBrowser
-    , [ Example "canvas2d" "🖌️" "2D canvas rendering." (Just "https://canvas.haskell-miso.org/")
-      , Example "svg" "🖼️" "SVG rendering showcase." (Just "https://svg.haskell-miso.org/")
-      , Example "mathml" "➕" "MathML rendering." (Just "https://mathml.haskell-miso.org/")
-      , Example "audio" "🔊" "The <audio> API." (Just "https://audio.haskell-miso.org/")
-      , Example "video" "📽️" "The <video> API." (Just "https://video.haskell-miso.org/")
-      , Example "camera" "📷" "The Camera API." (Just "https://camera.haskell-miso.org/")
-      , Example "filereader" "📁" "The FileReader API." (Just "https://file-reader.haskell-miso.org/")
-      , Example "fileupload" "⬆️" "File uploads." Nothing
-      , Example "drag-and-drop" "🫳" "The Drag-and-drop API." (Just "https://drag-and-drop.haskell-miso.org/")
-      , Example "storage" "🗂️" "Local and session storage." (Just "https://storage.haskell-miso.org/")
-      , Example "cookies" "🍪" "The CookieStore API." (Just "https://cookies.haskell-miso.org/")
-      , Example "fetch" "⚡" "AJAX requests with fetch." (Just "https://fetch.haskell-miso.org/")
-      , Example "websocket" "🔌" "A multi-WebSocket example." (Just "https://websocket.haskell-miso.org/")
-      , Example "sse" "📡" "Server-sent events." (Just "https://sse.haskell-miso.org/")
+    , [ example "canvas2d" "🖌️" "2D canvas rendering." (Just "https://canvas.haskell-miso.org/")
+      , example "svg" "🖼️" "SVG rendering showcase." (Just "https://svg.haskell-miso.org/")
+      , example "mathml" "➕" "MathML rendering." (Just "https://mathml.haskell-miso.org/")
+      , example "audio" "🔊" "The <audio> API." (Just "https://audio.haskell-miso.org/")
+      , example "video" "📽️" "The <video> API." (Just "https://video.haskell-miso.org/")
+      , example "camera" "📷" "The Camera API." (Just "https://camera.haskell-miso.org/")
+      , example "filereader" "📁" "The FileReader API." (Just "https://file-reader.haskell-miso.org/")
+      , example "fileupload" "⬆️" "File uploads." Nothing
+      , example "drag-and-drop" "🫳" "The Drag-and-drop API." (Just "https://drag-and-drop.haskell-miso.org/")
+      , example "storage" "🗂️" "Local and session storage." (Just "https://storage.haskell-miso.org/")
+      , example "cookies" "🍪" "The CookieStore API." (Just "https://cookies.haskell-miso.org/")
+      , example "fetch" "⚡" "AJAX requests with fetch." (Just "https://fetch.haskell-miso.org/")
+      , example "websocket" "🔌" "A multi-WebSocket example." (Just "https://websocket.haskell-miso.org/")
+      , example "sse" "📡" "Server-sent events." (Just "https://sse.haskell-miso.org/")
       ]
     )
   , ( ExCatPatterns
-    , [ Example "counter" "💯" "The simplest possible app." (Just "https://counter.haskell-miso.org/")
-      , Example "todo-mvc" "✅" "The classic TodoMVC." (Just "https://todomvc.haskell-miso.org/")
-      , Example "router" "🌐" "Client-side routing." (Just "https://router.haskell-miso.org/")
-      , Example "props" "🎁" "React-style props." (Just "https://props.haskell-miso.org/")
-      , Example "context" "🧵" "The global context." (Just "https://context.haskell-miso.org/")
-      , Example "pubsub" "🚰" "Publish / subscribe between components." (Just "https://pubsub.haskell-miso.org/")
-      , Example "sampler" "🍱" "A sample application for getting started quickly." (Just "https://sampler.haskell-miso.org/")
+    , [ example "counter" "💯" "The simplest possible app." (Just "https://counter.haskell-miso.org/")
+      , example "todo-mvc" "✅" "The classic TodoMVC." (Just "https://todomvc.haskell-miso.org/")
+      , example "router" "🌐" "Client-side routing." (Just "https://router.haskell-miso.org/")
+      , example "props" "🎁" "React-style props." (Just "https://props.haskell-miso.org/")
+      , example "context" "🧵" "The global context." (Just "https://context.haskell-miso.org/")
+      , example "pubsub" "🚰" "Publish / subscribe between components." (Just "https://pubsub.haskell-miso.org/")
+      , example "sampler" "🍱" "A sample application for getting started quickly." (Just "https://sampler.haskell-miso.org/")
       ]
     )
   , ( ExCatIntegrations
-    , [ Example "three-miso" "🧊" "Three.js via three.hs." (Just "https://threejs.haskell-miso.org/")
-      , Example "aframe" "🎮" "A-Frame WebXR scenes." (Just "https://aframe.haskell-miso.org/")
-      , Example "chartjs" "📊" "chart.js charts." (Just "https://chartjs.haskell-miso.org/")
-      , Example "c3.js" "📈" "c3.js charts." (Just "https://c3js.haskell-miso.org/")
-      , Example "highlight.js" "✨" "highlight.js syntax highlighting." (Just "https://highlightjs.haskell-miso.org/")
-      , Example "mathjax" "🔣" "MathJax typesetting." (Just "https://mathjax.haskell-miso.org/")
-      , Example "tiptap" "📝" "The TipTap rich-text editor." (Just "https://tiptap.haskell-miso.org/")
-      , Example "supabase-miso" "🟢" "Supabase bindings." Nothing
-      , Example "miso-diagrams" "📐" "Draw diagrams with miso." (Just "https://diagrams.haskell-miso.org/")
+    , [ example "three-miso" "🧊" "Three.js via three.hs." (Just "https://threejs.haskell-miso.org/")
+      , example "aframe" "🎮" "A-Frame WebXR scenes." (Just "https://aframe.haskell-miso.org/")
+      , example "chartjs" "📊" "chart.js charts." (Just "https://chartjs.haskell-miso.org/")
+      , example "c3.js" "📈" "c3.js charts." (Just "https://c3js.haskell-miso.org/")
+      , example "highlight.js" "✨" "highlight.js syntax highlighting." (Just "https://highlightjs.haskell-miso.org/")
+      , example "mathjax" "🔣" "MathJax typesetting." (Just "https://mathjax.haskell-miso.org/")
+      , example "tiptap" "📝" "The TipTap rich-text editor." (Just "https://tiptap.haskell-miso.org/")
+      , example "supabase-miso" "🟢" "Supabase bindings." Nothing
+      , example "miso-diagrams" "📐" "Draw diagrams with miso." (Just "https://diagrams.haskell-miso.org/")
       ]
     )
   , ( ExCatLibraries
-    , [ Example "miso.ui" "💅" "A component library based on shadcn and Tailwind, built with Basecoat." (Just "https://ui.haskell-miso.org/")
-      , Example "miso-tagsoup" "🥫" "Parse raw HTML / SVG into a View." Nothing
-      , Example "servant-miso-html" "📄" "Render miso Views as HTML with servant." Nothing
-      , Example "servant-miso-router" "🧭" "A servant router for miso." Nothing
-      , Example "servant-miso-client" "📬" "A servant-client interpretation for miso." Nothing
-      , Example "try-miso" "🥡" "Try miso in the browser." (Just "https://try.haskell-miso.org/")
+    , [ example "miso.ui" "💅" "A component library based on shadcn and Tailwind, built with Basecoat." (Just "https://ui.haskell-miso.org/")
+      , example "miso-tagsoup" "🥫" "Parse raw HTML / SVG into a View." Nothing
+      , example "servant-miso-html" "📄" "Render miso Views as HTML with servant." Nothing
+      , example "servant-miso-router" "🧭" "A servant router for miso." Nothing
+      , example "servant-miso-client" "📬" "A servant-client interpretation for miso." Nothing
+      , example "try-miso" "🥡" "Try miso in the browser." (Just "https://try.haskell-miso.org/")
       ]
     )
   , ( ExCatNative
-    , [ Example "miso-lynx" "🐈" "miso on Lynx: the native mobile backend, tooling and docs." (Just "https://lynxjs.haskell-miso.org/")
-      , Example "miso-lynx-gallery" "📱" "A gallery of native components." Nothing
-      , Example "misogram" "📸" "An Instagram clone in miso and LynxJS." Nothing
+    , [ example "miso-lynx" "🐈" "miso on Lynx: the native mobile backend, tooling and docs." (Just "https://lynxjs.haskell-miso.org/")
+      , example "miso-lynx-gallery" "📱" "A gallery of native components." Nothing
+      , example "misogram" "📸" "An Instagram clone in miso and LynxJS." Nothing
       ]
     )
   ]
