@@ -47,11 +47,16 @@ build:
 prerender:
 	$(GHC_SHELL) bash -c 'set -e; mkdir -p public; cabal $(CABAL_FLAGS) run prerender'
 
-# Shrink the WASM payload
+# Shrink the WASM payload.  Compact imports are off because browsers do not
+# accept that import encoding yet; the node check fails the build if
+# app.wasm would not compile in a browser.
 optim:
 	$(WASM_SHELL) bash -c '\
-	  wasm-opt -all -O2 public/app.wasm -o public/app.wasm; \
-	  wasm-tools strip -o public/app.wasm public/app.wasm'
+	  set -e; \
+	  wasm-opt -all --disable-compact-imports -O2 public/app.wasm -o public/app.wasm; \
+	  wasm-tools strip -o public/app.wasm public/app.wasm; \
+	  node -e "process.exit(WebAssembly.validate(require(\"fs\").readFileSync(\"public/app.wasm\")) ? 0 : 1)" \
+	    || { echo "public/app.wasm does not validate" >&2; exit 1; }'
 
 serve:
 	$(WASM_SHELL) http-server public -p 8080 -c-1
