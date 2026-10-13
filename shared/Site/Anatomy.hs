@@ -58,23 +58,30 @@ anatomyScene = (component (Model 0 Nothing) updateAnat viewAnat)
 -----------------------------------------------------------------------------
 updateAnat :: Action -> Effect Ctx () Model Action
 updateAnat = \case
-  Recompute      -> io (SetProgress <$> measure)
+  Recompute      -> withSink $ \sink -> mapM_ (sink . SetProgress) =<< measure
   SetProgress p  -> progress .= p
   Hover i        -> hovered .= Just i
   Unhover        -> hovered .= Nothing
 -----------------------------------------------------------------------------
 -- | How far the sticky viewport has travelled through the track, 0..1,
 -- quantised to 0.5% so scrolling doesn't trigger redundant redraws.
-measure :: IO Double
+--
+-- 'Nothing' when the track is gone: a 'Recompute' still queued when the
+-- page navigates away is drained during unmount, after the element has
+-- left the DOM.
+measure :: IO (Maybe Double)
 measure = do
   el <- getElementById "anatomy-track"
-  rect <- el # "getBoundingClientRect" $ ()
-  top :: Double <- fromJSValUnchecked =<< rect ! "top"
-  height :: Double <- fromJSValUnchecked =<< rect ! "height"
-  vh <- fromIntegral <$> windowInnerHeight :: IO Double
-  let denom = max 1 (height - vh)
-      p = max 0 (min 1 (negate top / denom))
-  pure (fromIntegral (round (p * 200) :: Int) / 200)
+  isNull el >>= \case
+    True -> pure Nothing
+    False -> do
+      rect <- el # "getBoundingClientRect" $ ()
+      top :: Double <- fromJSValUnchecked =<< rect ! "top"
+      height :: Double <- fromJSValUnchecked =<< rect ! "height"
+      vh <- fromIntegral <$> windowInnerHeight :: IO Double
+      let denom = max 1 (height - vh)
+          p = max 0 (min 1 (negate top / denom))
+      pure (Just (fromIntegral (round (p * 200) :: Int) / 200))
 -----------------------------------------------------------------------------
 -- Geometry --------------------------------------------------------------------
 -----------------------------------------------------------------------------
