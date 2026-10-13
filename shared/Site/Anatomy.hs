@@ -58,7 +58,7 @@ anatomyScene = (component (Model 0 Nothing) updateAnat viewAnat)
 -----------------------------------------------------------------------------
 updateAnat :: Action -> Effect Ctx () Model Action
 updateAnat = \case
-  Recompute      -> withSink $ \sink -> mapM_ (sink . SetProgress) =<< measure
+  Recompute      -> withSink $ \sink -> maybe (pure ()) (sink . SetProgress) =<< measure
   SetProgress p  -> progress .= p
   Hover i        -> hovered .= Just i
   Unhover        -> hovered .= Nothing
