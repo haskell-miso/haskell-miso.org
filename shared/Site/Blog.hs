@@ -96,8 +96,6 @@ blogIndex = (component () navigate view) { useContext = True }
                 ]
             | p <- allPosts
             ]
-        , H.p_ [ P.class_ "blog-archive" ]
-            [ H.a_ [ P.href_ "https://blog.haskell-miso.org", P.target_ "_blank", P.rel_ "noopener" ] [ t ctx BlogArchive, " ↗" ] ]
         ]
 -----------------------------------------------------------------------------
 blogPostPage :: Post -> Component Ctx () () Nav
