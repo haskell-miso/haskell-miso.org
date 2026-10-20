@@ -123,17 +123,61 @@ say "Downloading miso ($version) for $system"
 curl -fSL --progress-bar -o "$tmp/$asset" "$url/$asset" || die "could not download $url/$asset"
 curl -fsSL -o "$tmp/$asset.sha256" "$url/$asset.sha256" || die "could not download $url/$asset.sha256"
 (cd "$tmp" && $sha -c "$asset.sha256" >/dev/null) || die "checksum mismatch for $asset"
+sum=$(cut -c1-16 "$tmp/$asset.sha256")
+printf '  %s✓%s sha256 %s... matches %s\n' "$bold$green" "$reset" "$sum" "$asset.sha256"
 
-say "Installing in $home"
 tar -C "$tmp" -xzf "$tmp/$asset"
+new=$tmp/miso-$system
+new_version=$("$new/bin/miso" version) || die "the downloaded miso does not run on this system"
+
+# Paths as the user knows them: ~ for $HOME
+tilde() {
+  case "$1" in
+    "$HOME"/*) printf '~/%s' "${1#"$HOME"/}" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+size() { du -sh "$1" 2>/dev/null | cut -f1; }
+# plan VERB PATH NOTE: a line of what the install does
+plan() { printf '      %s%-8s%s %s%s\n' "$bold" "$1" "$reset" "$2" "${3:+  $dim($3)$reset}"; }
+
+# What the install does, before it does it.  A new release replaces the tool
+# and its package database (packages from miso install are installed again by
+# the next miso build).
+say "$new_version will be installed in $(tilde "$home"):"
+for f in "$new"/bin/*; do
+  b=$(basename "$f")
+  if [ -e "$home/bin/$b" ]; then plan replace "$(tilde "$home/bin/$b")" "$(size "$f")"
+  else plan create "$(tilde "$home/bin/$b")" "$(size "$f")"; fi
+done
+for d in "$new"/mhs-*; do
+  b=$(basename "$d")
+  if [ -e "$home/$b" ]; then plan replace "$(tilde "$home/$b")/" "the package database, $(size "$d")"
+  else plan create "$(tilde "$home/$b")/" "the package database, $(size "$d")"; fi
+done
+for d in "$home"/mhs-*; do
+  if [ -e "$d" ] && [ ! -e "$new/$(basename "$d")" ]; then
+    plan remove "$(tilde "$d")/" "the package database of another version"
+  fi
+done
+for f in "$home"/bin/*; do
+  if [ -e "$f" ] && [ ! -e "$new/bin/$(basename "$f")" ]; then plan remove "$(tilde "$f")"; fi
+done
+if ! ask "Install miso?" y; then
+  printf '\nNothing was changed.\n'
+  exit 0
+fi
+
 mkdir -p "$home"
-# A new release replaces the tool and its package database (packages from
-# miso install are installed again by the next miso build).
 # (Windows cannot delete a running miso.exe, as during miso upgrade, but can rename it.)
 [ -f "$home/bin/miso.exe" ] && mv -f "$home/bin/miso.exe" "$home/miso.exe.old" 2>/dev/null || true
 rm -rf "${home:?}/bin" "$home"/mhs-* 2>/dev/null || true
-cp -R "$tmp/miso-$system/." "$home/"
-done_ "Installed $("$home/bin/miso" version)"
+cp -R "$new/." "$home/"
+done_ "Installed $("$home/bin/miso" version) in $(tilde "$home"):"
+for f in "$home"/bin/* "$home"/mhs-*; do
+  case "$f" in */mhs-*) printf '      %-40s %s\n' "$(tilde "$f")/" "$(size "$f")" ;;
+               *) printf '      %-40s %s\n' "$(tilde "$f")" "$(size "$f")" ;; esac
+done
 
 # PATH: the startup file of the user's shell
 case "$home" in
@@ -149,25 +193,25 @@ case "$(basename "${SHELL:-sh}")" in
 esac
 on_path=
 case ":$PATH:" in *":$home/bin:"*) on_path=1 ;; esac
+printf '\n'
 if [ -n "$on_path" ]; then
   :
 elif [ -f "$rc" ] && { grep -qsF "$home/bin" "$rc" || grep -qsF "$shown/bin" "$rc"; }; then
-  note "$rc adds miso to PATH: open a new shell to use it"
-elif [ -n "$modify_path" ] && ask "Add miso to your PATH in $rc?" y; then
+  note "$(tilde "$rc") adds miso to PATH: open a new shell to use it"
+elif [ -n "$modify_path" ] && ask "Add miso to your PATH in $(tilde "$rc")?" y; then
   mkdir -p "$(dirname "$rc")"
   printf '\n# miso (https://haskell-miso.org)\n%s\n' "$line" >> "$rc"
-  done_ "Added miso to PATH in $rc: open a new shell, or run"
-  printf '\n    %s\n' "$line"
+  done_ "Added these lines to the end of $(tilde "$rc"):"
+  printf '\n      # miso (https://haskell-miso.org)\n      %s\n\n' "$line"
+  printf '  Open a new shell to use miso, or run the export line in this one.\n'
 else
-  printf '\nAdd miso to your PATH (in %s):\n\n    %s\n' "$rc" "$line"
+  printf 'Add miso to your PATH (in %s):\n\n    %s\n' "$(tilde "$rc")" "$line"
 fi
+printf '  %sTo remove miso: miso uninstall (it lists the PATH lines to delete).%s\n' "$dim" "$reset"
 
-# What miso needs to build programs
+# Check the installation, and the tools miso needs to build programs
+# (a C compiler, and emcc for the browser).
 printf '\n'
-if [ "$os" = windows ]; then
-  command -v gcc >/dev/null || note "miso builds programs with gcc: pacman -S gcc"
-else
-  command -v cc >/dev/null || note "miso builds programs with a C compiler (cc): install one (Xcode command line tools, or gcc/clang)"
-fi
-command -v emcc >/dev/null || printf '%s(for the browser, target: browser, miso needs emscripten: https://emscripten.org; miso doctor checks the rest)%s\n' "$dim" "$reset"
+say "Checking the installation (miso doctor)"
+"$home/bin/miso" doctor || true
 printf '\n%sNext:%s\n\n    miso new hello && cd hello && miso dev\n\n' "$bold" "$reset"
