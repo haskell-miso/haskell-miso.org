@@ -68,6 +68,17 @@ jobs:
             --remap '^https://haskell-miso\.org/(.*)$ file://${{ github.workspace }}/public/$1'
             'public/**/*.html'
 
+      # Show the broken links on the pull request's checks, not only in the
+      # job log.
+      - name: Annotate broken links
+        if: failure()
+        run: |
+          report=$(sed -n '/^## Errors per input/,$p' lychee/out.md | sed 's#file://${{ github.workspace }}/public#https://haskell-miso.org#')
+          report=${report//'%'/'%25'}
+          report=${report//$'\r'/'%0D'}
+          report=${report//$'\n'/'%0A'}
+          echo "::error title=Broken links::${report}"
+
   # The same site built with MicroHs (mhs) instead of GHC
   build-mhs:
     runs-on: ubuntu-latest
