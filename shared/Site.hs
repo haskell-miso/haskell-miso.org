@@ -396,7 +396,7 @@ footer ctx =
             [ internal Examples "Examples"
             , internal Blog "Blog"
             , external "https://ui.haskell-miso.org" "miso.ui"
-            , external "https://lynxjs.haskell-miso.org" "miso-lynx"
+            , external "https://github.com/haskell-miso/miso-lynx" "miso-lynx"
             , external "https://try.haskell-miso.org" "Try miso"
             ]
         ]
