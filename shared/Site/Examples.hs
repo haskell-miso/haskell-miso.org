@@ -3,6 +3,8 @@
 -- organisation, grouped by what each repository demonstrates.
 module Site.Examples
   ( examplesPage
+  , Example (..)
+  , catalogue
   ) where
 -----------------------------------------------------------------------------
 import           Miso hiding (Key)

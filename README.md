@@ -18,6 +18,11 @@
   `(+>)`; the docs shell receives the current route as props; the language
   (with a translation table), and the theme live on the app-global context,
   persisted to `localStorage`.
+- **Readable by LLMs.** The generator also writes
+  [`llms.txt`](https://llmstxt.org) (an index of the docs), `llms-full.txt`
+  (all of them in one file) and a Markdown copy of each docs page, blog post
+  and the examples page at `<path>/index.html.md`, rendered from the same
+  `View`s as the HTML, so they never drift from the site.
 - **Live docs.** Documentation pages embed running examples next to their
   source. `bun scripts/check-demos.ts` verifies the displayed source is
   exactly the code that executes (see `shared/Site/Demos.hs`).
@@ -27,7 +32,8 @@
 ```
 assets/logo/       the lambda logo (SVG + rendered PNGs, OG images)
 client/Main.hs     WASM/JS entry point (misoWithContext + hydration)
-server/Main.hs     static site generator (HTML, sitemap, RSS, manifest, motion.css)
+server/Main.hs     static site generator (HTML, sitemap, robots, RSS, manifest, motion.css, llms.txt)
+server/Markdown.hs docs and blog Views rendered to Markdown for llms.txt
 shared/Site.hs     root component: top bar, router dispatch, footer
 shared/Site/       pages, docs content, demos, i18n, search, styles
 static/            style.css, index.js (WASM loader)

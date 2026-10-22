@@ -83,12 +83,15 @@ common shared-modules
     Site.Syntax
     Site.Types
 
--- Generates public/**/index.html, sitemap.xml, robots.txt, manifest.json
+-- Generates public/**/index.html, sitemap.xml, robots.txt, manifest.json,
+-- llms.txt, llms-full.txt and public/**/index.html.md
 executable prerender
   import:
     server-only, common-options, shared-modules
   main-is:
     Main.hs
+  other-modules:
+    Markdown
   hs-source-dirs:
     server
   build-depends:

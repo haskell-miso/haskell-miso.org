@@ -1,7 +1,10 @@
 -----------------------------------------------------------------------------
 -- | Static site generator. Renders every route of the site to
 -- @public/<path>/index.html@ with 'toHtmlWith', plus @404.html@,
--- @sitemap.xml@, @robots.txt@ and @manifest.json@.
+-- @sitemap.xml@, @robots.txt@ and @manifest.json@, and for LLMs
+-- (<https://llmstxt.org>) @llms.txt@, @llms-full.txt@ and a Markdown copy
+-- of every docs page, blog post and the examples page at
+-- @public/<path>/index.html.md@.
 --
 -- Built with vanilla GHC and miso's @ssr@ flag; depends on @base@, @miso@
 -- and the @directory@ boot library (to create output folders).
@@ -10,6 +13,7 @@ module Main (main) where
 import           Control.Monad (forM_)
 import           Data.Bits (xor)
 import qualified Data.ByteString.Lazy as BL
+import           Data.List (intercalate)
 import           Data.Word (Word64)
 import           System.Directory (createDirectoryIfMissing, doesFileExist)
 import           System.IO (hSetEncoding, utf8, withFile, IOMode (..), hPutStr)
@@ -23,11 +27,15 @@ import           Miso.Router (emptyURI, toURI)
 import           Miso.String (MisoString, ms, fromMisoString)
 import qualified Miso.String as MS
 -----------------------------------------------------------------------------
+import           Markdown (escape, markdown)
 import           Site
 import           Site.Blog
-import           Site.Docs.Content (allPages)
+import           Site.Docs.Content (allPages, groupKey, groupPages, groups)
 import           Site.Docs.Types
-import           Site.I18n (catalog)
+import           Site.Examples (Example (..), catalogue)
+import           Site.I18n (catalog, translate)
+import qualified Site.I18n as I18n
+import           Site.Prose (Doc)
 import           Site.Route
 import           Site.Styles (motionCss)
 import           Site.Types
@@ -46,24 +54,33 @@ main = do
   writeUtf8 "public/404.html" (render ver emptyURI { uriPath = "404" } "/404" notFoundMeta)
   writeUtf8 "public/sitemap.xml" sitemap
   writeUtf8 "public/robots.txt" robots
+  writeUtf8 "public/llms.txt" llmsTxt
+  writeUtf8 "public/llms-full.txt" llmsFullTxt
+  forM_ markdownPages $ \(route, contents) ->
+    writeUtf8 ("public/" <> markdownPath route) contents
   writeUtf8 "public/manifest.json" manifest
   writeUtf8 "public/blog/feed.xml" rss
   -- Motion design (keyframes, transitions, transforms) is written with
   -- Miso.CSS and rendered to an external stylesheet.
   writeUtf8 "public/motion.css" (fromMisoString motionCss)
-  putStrLn ("Done: " <> show (length pages + 1) <> " pages.")
+  putStrLn ("Done: " <> show (length pages + 1) <> " pages, " <> show (length markdownPages) <> " Markdown copies.")
 -----------------------------------------------------------------------------
 -- | Every route on the site, with its SEO metadata.
 pages :: [(Route, Meta)]
 pages =
-  [ (Index,    website "The React framework for Haskell"
-                       "miso is a small, fast and composable Haskell library for building web and native user interfaces. Compiles to WebAssembly or JavaScript." [ "functional programming", "UI framework" ])
+  [ (Index,    website "The React framework for Haskell" siteDescription [ "functional programming", "UI framework" ])
   , (Docs,     website "Documentation — miso" "The miso documentation: from your first Component to the native dual-thread runtime, with live examples." [ "documentation", "guide" ])
-  , (Examples, website "Examples — miso" "Real applications built with miso: games, browser API demos, integrations and libraries from the haskell-miso organisation." [ "examples", "demos", "games" ])
+  , (Examples, website "Examples — miso" examplesDescription [ "examples", "demos", "games" ])
   , (Blog,     website "Blog — miso" "Notes from the miso maintainers." [ "blog" ])
   ] ++
   [ (pageRoute p, website (pageTitle p <> " — miso docs") (pageBlurb p) (pageKeywords p)) | p <- allPages ] ++
   [ (blogPost (postSlug p), (website (postTitle (english p) <> " — miso blog") (postBlurb (english p)) [ "blog" ]) { metaPublished = Just (postDate p) }) | p <- allPosts ]
+-----------------------------------------------------------------------------
+siteDescription :: MisoString
+siteDescription = "miso is a small, fast and composable Haskell library for building web and native user interfaces. Compiles to WebAssembly or JavaScript."
+
+examplesDescription :: MisoString
+examplesDescription = "Real applications built with miso: games, browser API demos, integrations and libraries from the haskell-miso organisation."
 -----------------------------------------------------------------------------
 data Meta = Meta
   { metaTitle       :: MisoString
@@ -142,6 +159,10 @@ render ver uri path Meta {..} =
         , H.meta_ [ P.name_ "apple-mobile-web-app-title", P.content_ "miso" ]
         , H.meta_ [ P.name_ "application-name", P.content_ "miso" ]
         , H.link_ [ P.rel_ "canonical", P.href_ canonical ]
+          -- Markdown copy of the page, for LLMs (see llmsTxt)
+        , if hasMarkdown path
+            then H.link_ [ P.rel_ "alternate", P.type_ "text/markdown", P.href_ (markdownHref path) ]
+            else vfrag []
           -- Open Graph (iMessage, Slack, Discord, LinkedIn, Facebook, …)
         , og "og:type" (maybe "website" (const "article") metaPublished)
         , og "og:site_name" "miso"
@@ -291,8 +312,10 @@ sitemap = unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   , "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"
   ] ++
-  [ "  <url><loc>" <> fromMisoString (pageUrl (routeHref route)) <> "</loc><changefreq>weekly</changefreq><priority>" <> priority route <> "</priority></url>"
-  | (route, _) <- pages
+  [ "  <url><loc>" <> fromMisoString (pageUrl (routeHref route)) <> "</loc>"
+      <> maybe "" (\d -> "<lastmod>" <> fromMisoString d <> "</lastmod>") (metaPublished meta)
+      <> "<changefreq>weekly</changefreq><priority>" <> priority route <> "</priority></url>"
+  | (route, meta) <- pages
   ] ++
   [ "</urlset>" ]
   where
@@ -309,7 +332,137 @@ robots = unlines
   , "Disallow:"
   , ""
   , "Sitemap: https://haskell-miso.org/sitemap.xml"
+  , ""
+  , "# Documentation for LLMs (https://llmstxt.org):"
+  , "#   https://haskell-miso.org/llms.txt"
+  , "#   https://haskell-miso.org/llms-full.txt"
   ]
+-----------------------------------------------------------------------------
+-- | The pages with a Markdown copy, and that copy. Docs pages and blog
+-- posts are rendered from the same prose the HTML is ("Markdown"); the
+-- examples page from its catalogue.
+markdownPages :: [(Route, String)]
+markdownPages =
+  [ (pageRoute p, docMarkdown p) | p <- allPages ] ++
+  [ (blogPost (postSlug p), postMarkdown p) | p <- allPosts ] ++
+  [ (Examples, examplesMarkdown) ]
+-----------------------------------------------------------------------------
+-- | @\/docs\/components\/@ → @docs\/components\/index.html.md@, the
+-- llms.txt convention for a page served from a directory.
+markdownPath :: Route -> String
+markdownPath route = dropWhile (== '/') (fromMisoString (markdownHref (routeHref route)))
+
+markdownHref :: MisoString -> MisoString
+markdownHref path
+  | "/" `MS.isSuffixOf` path = path <> "index.html.md"
+  | otherwise = path <> "/index.html.md"
+
+markdownUrl :: Route -> String
+markdownUrl = fromMisoString . (siteUrl <>) . markdownHref . routeHref
+
+hasMarkdown :: MisoString -> Bool
+hasMarkdown path = path `elem` [ routeHref route | (route, _) <- markdownPages ]
+-----------------------------------------------------------------------------
+-- | Every page of a Markdown document starts with its title, summary and
+-- address, so a page read on its own (or inside llms-full.txt) says what
+-- it is and where it lives.
+pageHeader :: MisoString -> MisoString -> Route -> [String]
+pageHeader title blurb route =
+  [ "# " <> md title
+  , "> " <> md blurb
+  , "Source: " <> fromMisoString (pageUrl (routeHref route))
+  ]
+
+docMarkdown :: DocPage -> String
+docMarkdown p =
+  paragraphs (pageHeader (pageTitle p) (pageBlurb p) (pageRoute p) ++ [ prose (pageBody p) ])
+
+postMarkdown :: Post -> String
+postMarkdown p =
+  paragraphs (pageHeader (postTitle content) (postBlurb content) (blogPost (postSlug p))
+    ++ [ "Published " <> fromMisoString (postDate p), prose (postBody content) ])
+  where
+    content = english p
+
+examplesMarkdown :: String
+examplesMarkdown =
+  paragraphs $
+    pageHeader "Examples" examplesDescription Examples ++
+    concat
+      [ [ "## " <> en key
+        , unlines' [ "- [" <> md exName <> "](" <> fromMisoString exRepo <> "): "
+                       <> md exBlurb
+                       <> maybe "" (\url -> " Live demo: " <> fromMisoString url) exLive
+                   | Example {..} <- items
+                   ]
+        ]
+      | (key, items) <- catalogue
+      ]
+
+prose :: [Doc] -> String
+prose = markdown (fromMisoString siteUrl) (mkCtx catalog)
+-----------------------------------------------------------------------------
+-- | @\/llms.txt@: what miso is and an index of the Markdown pages, grouped
+-- the way the docs sidebar is.
+llmsTxt :: String
+llmsTxt =
+  paragraphs $
+    [ "# miso"
+    , "> " <> md siteDescription
+    , unlines'
+        [ "miso is a Haskell UI framework in the Elm / React tradition: an application is a tree of `Component`s, each a model, an `update` function and a `view` built from a virtual DOM. It runs in the browser (WebAssembly or JavaScript) and natively on iOS and Android through Lynx."
+        , ""
+        , "Each link below is a Markdown copy of a page on " <> fromMisoString siteUrl <> ". All of the documentation in one file: " <> fromMisoString siteUrl <> "/llms-full.txt"
+        ]
+    ] ++
+    concat
+      [ [ "## " <> en (groupKey g)
+        , unlines' [ link (pageTitle p) (markdownUrl (pageRoute p)) (pageBlurb p) | p <- groupPages g ]
+        ]
+      | g <- groups
+      ] ++
+    [ "## Examples"
+    , link "Examples" (markdownUrl Examples) examplesDescription
+    , "## Blog"
+    , unlines' [ link (postTitle (english p)) (markdownUrl (blogPost (postSlug p))) (postBlurb (english p)) | p <- allPosts ]
+    , "## Optional"
+    , unlines'
+        [ link "API reference (Haddock)" "https://haddocks.haskell-miso.org/miso/Miso.html" "Every module, type and function in miso."
+        , link "miso on GitHub" "https://github.com/dmjio/miso" "Source code, issues and releases."
+        , link "haskell-miso on GitHub" "https://github.com/haskell-miso" "The example applications, libraries and tooling."
+        ]
+    ]
+  where
+    link :: MisoString -> String -> MisoString -> String
+    link title url note = "- [" <> md title <> "](" <> url <> "): " <> md note
+-----------------------------------------------------------------------------
+-- | @\/llms-full.txt@: the llms.txt introduction followed by every docs
+-- page in reading order, the examples and the blog posts, in full.
+llmsFullTxt :: String
+llmsFullTxt =
+  intercalate "\n\n---\n\n" $
+    paragraphs
+      [ "# miso"
+      , "> " <> md siteDescription
+      , "The complete documentation of miso, from " <> fromMisoString siteUrl <> ", as Markdown. An index of the individual pages is at " <> fromMisoString siteUrl <> "/llms.txt"
+      ] :
+    map docMarkdown allPages ++
+    [ examplesMarkdown ] ++
+    map postMarkdown allPosts
+-----------------------------------------------------------------------------
+-- | Plain text (a title, a blurb) escaped for Markdown.
+md :: MisoString -> String
+md = escape . fromMisoString
+
+-- | English text for a translation key.
+en :: I18n.Key -> String
+en = md . translate (mkCtx catalog)
+
+paragraphs :: [String] -> String
+paragraphs = (<> "\n") . intercalate "\n\n" . filter (not . null)
+
+unlines' :: [String] -> String
+unlines' = intercalate "\n"
 -----------------------------------------------------------------------------
 manifest :: String
 manifest = unlines
