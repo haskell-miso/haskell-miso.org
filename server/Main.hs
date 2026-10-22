@@ -30,7 +30,7 @@ import qualified Miso.String as MS
 import           Markdown (escape, markdown)
 import           Site
 import           Site.Blog
-import           Site.Docs.Content (allPages, groupKey, groupPages, groups)
+import           Site.Docs.Content (allPages, firstPage, groupKey, groupPages, groups)
 import           Site.Docs.Types
 import           Site.Examples (Example (..), catalogue)
 import           Site.I18n (catalog, translate)
@@ -69,7 +69,10 @@ main = do
 pages :: [(Route, Meta)]
 pages =
   [ (Index,    website "The React framework for Haskell" siteDescription [ "functional programming", "UI framework" ])
-  , (Docs,     website "Documentation — miso" "The miso documentation: from your first Component to the native dual-thread runtime, with live examples." [ "documentation", "guide" ])
+    -- /docs/ shows the first docs page, so it names that page as canonical
+    -- and stays out of the sitemap: one URL per page for search engines.
+  , (Docs,     (website "Documentation — miso" "The miso documentation: from your first Component to the native dual-thread runtime, with live examples." [ "documentation", "guide" ])
+                 { metaCanonical = Just (routeHref (pageRoute firstPage)) })
   , (Examples, website "Examples — miso" examplesDescription [ "examples", "demos", "games" ])
   , (Blog,     website "Blog — miso" "Notes from the miso maintainers." [ "blog" ])
   ] ++
@@ -87,16 +90,18 @@ data Meta = Meta
   , metaDescription :: MisoString
   , metaKeywords    :: [MisoString]
   , metaPublished   :: Maybe MisoString   -- ^ ISO date for blog posts (og:type article)
+  , metaCanonical   :: Maybe MisoString   -- ^ Path of the page this one duplicates, if any
+  , metaNoIndex     :: Bool               -- ^ Keep out of search engines (the 404 page)
   }
 
 website :: MisoString -> MisoString -> [MisoString] -> Meta
-website title desc kws = Meta title desc (baseKeywords ++ kws) Nothing
+website title desc kws = Meta title desc (baseKeywords ++ kws) Nothing Nothing False
 
 baseKeywords :: [MisoString]
 baseKeywords = [ "miso", "Haskell", "web framework", "WebAssembly", "virtual DOM", "Elm architecture", "React", "mobile", "Lynx" ]
 -----------------------------------------------------------------------------
 notFoundMeta :: Meta
-notFoundMeta = website "Page not found — miso" "There is nothing at this address." []
+notFoundMeta = (website "Page not found — miso" "There is nothing at this address." []) { metaNoIndex = True }
 -----------------------------------------------------------------------------
 -- | @\/docs\/components\/@ → @docs\/components\/index.html@; @\/@ → @index.html@.
 outputPath :: Route -> String
@@ -152,13 +157,15 @@ render ver uri path Meta {..} =
         , H.meta_ [ P.name_ "description", P.content_ metaDescription ]
         , H.meta_ [ P.name_ "keywords", P.content_ (MS.intercalate ", " metaKeywords) ]
         , H.meta_ [ P.name_ "author", P.content_ "David M. Johnson" ]
-        , H.meta_ [ P.name_ "robots", P.content_ "index, follow, max-image-preview:large" ]
+        , H.meta_ [ P.name_ "robots", P.content_ (if metaNoIndex then "noindex" else "index, follow, max-image-preview:large") ]
         , H.meta_ [ P.name_ "theme-color", P.content_ "#fbfaf7", textProp "media" "(prefers-color-scheme: light)" ]
         , H.meta_ [ P.name_ "theme-color", P.content_ "#0e0d0b", textProp "media" "(prefers-color-scheme: dark)" ]
         , H.meta_ [ P.name_ "color-scheme", P.content_ "light dark" ]
         , H.meta_ [ P.name_ "apple-mobile-web-app-title", P.content_ "miso" ]
         , H.meta_ [ P.name_ "application-name", P.content_ "miso" ]
-        , H.link_ [ P.rel_ "canonical", P.href_ canonical ]
+          -- The 404 page is served at every missing address, so it has no
+          -- URL of its own to name.
+        , unlessNoIndex $ H.link_ [ P.rel_ "canonical", P.href_ canonical ]
           -- Markdown copy of the page, for LLMs (see llmsTxt)
         , if hasMarkdown path
             then H.link_ [ P.rel_ "alternate", P.type_ "text/markdown", P.href_ (markdownHref path) ]
@@ -169,7 +176,7 @@ render ver uri path Meta {..} =
         , og "og:locale" "en_US"
         , og "og:title" metaTitle
         , og "og:description" metaDescription
-        , og "og:url" canonical
+        , unlessNoIndex $ og "og:url" canonical
         , og "og:image" ogImage
         , og "og:image:secure_url" ogImage
         , og "og:image:type" "image/png"
@@ -196,7 +203,7 @@ render ver uri path Meta {..} =
         , H.link_ [ P.rel_ "alternate", P.type_ "application/rss+xml", P.title_ "miso blog", P.href_ "/blog/feed.xml" ]
         , H.link_ [ P.rel_ "sitemap", P.type_ "application/xml", P.href_ "/sitemap.xml" ]
           -- Structured data
-        , H.script_ [ P.type_ "application/ld+json" ] (jsonLd path metaTitle metaDescription metaPublished)
+        , unlessNoIndex $ H.script_ [ P.type_ "application/ld+json" ] (jsonLd canonicalPath metaTitle metaDescription metaPublished)
         , H.link_ [ P.rel_ "preconnect", P.href_ "https://fonts.googleapis.com" ]
         , H.link_ [ P.rel_ "preconnect", P.href_ "https://fonts.gstatic.com", textProp "crossorigin" "" ]
         , H.link_ [ P.rel_ "stylesheet", P.href_ fontsHref ]
@@ -222,7 +229,9 @@ render ver uri path Meta {..} =
     ]
   ]
   where
-    canonical = pageUrl path
+    canonicalPath = maybe path id metaCanonical
+    canonical = pageUrl canonicalPath
+    unlessNoIndex node = if metaNoIndex then vfrag [] else node
     ogImage = siteUrl <> "/assets/logo/og-image.png"
     og k v = H.meta_ [ textProp "property" k, P.content_ v ]
 -----------------------------------------------------------------------------
@@ -316,6 +325,8 @@ sitemap = unlines $
       <> maybe "" (\d -> "<lastmod>" <> fromMisoString d <> "</lastmod>") (metaPublished meta)
       <> "<changefreq>weekly</changefreq><priority>" <> priority route <> "</priority></url>"
   | (route, meta) <- pages
+  , metaCanonical meta == Nothing
+  , not (metaNoIndex meta)
   ] ++
   [ "</urlset>" ]
   where
