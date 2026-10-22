@@ -13,15 +13,15 @@ module Site.Search
   ) where
 -----------------------------------------------------------------------------
 import           Control.Monad (when)
-import           Data.Char (isSpace, toLower)
-import           Data.List (isInfixOf, isPrefixOf, sortOn, tails)
+import           Data.Char (isSpace)
+import           Data.List (sortOn)
 -----------------------------------------------------------------------------
 import           Miso
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
 import           Miso.Lens
-import           Miso.String (MisoString, fromMisoString, ms)
+import qualified Miso.String as MS
 -----------------------------------------------------------------------------
 import           Site.Docs.Content
 import           Site.Docs.Types
@@ -57,9 +57,13 @@ data PageText
   = PageText
   { bodyPath  :: MisoString
   -- ^ The page's 'routeHref'
-  , bodyText  :: String
-  , bodyLower :: String
-  -- ^ 'bodyText' lower-cased, for matching (same length, so indices agree)
+  , bodyText  :: MisoString
+  , bodyLower :: MisoString
+  -- ^ 'bodyText' lower-cased, for matching
+  --
+  -- Kept as 'MisoString' rather than 'String': on the client that is a
+  -- JavaScript string, so matching uses the browser's string search
+  -- instead of walking ~100 KB of linked-list characters per keystroke.
   } deriving Show
 -----------------------------------------------------------------------------
 open :: Lens Model Bool
@@ -214,7 +218,7 @@ viewSearch m = vcontext $ \ctx ->
                 ]
             | (i, hit) <- zip [0 :: Int ..] hits
             ]
-    blank q = all isSpace (fromMisoString q :: String)
+    blank q = MS.all isSpace q
 -----------------------------------------------------------------------------
 -- | Every searchable page: the docs table plus the top-level pages.
 index :: [Hit]
@@ -247,22 +251,22 @@ search loaded q0
       , s > 0
       ]
   where
-    ws = words (map toLower (fromMisoString q0))
+    ws = MS.words (MS.toLower q0)
     scored = [ (hit, score hit) | hit <- index ]
     score hit@Hit {..} =
-      let title = map toLower (fromMisoString hitTitle)
-          blurb = map toLower (fromMisoString hitBlurb)
-          extra = map toLower (unwords (map fromMisoString (keywordsFor hit)))
+      let title = MS.toLower hitTitle
+          blurb = MS.toLower hitBlurb
+          extra = MS.toLower (MS.unwords (keywordsFor hit))
           text' = maybe "" bodyLower (bodyFor hit)
           one w
-            | w `isPrefixOf` title = 10
-            | w `isInfixOf` title = 6
-            | w `isInfixOf` extra = 4
-            | w `isInfixOf` blurb = 2
-            | w `isInfixOf` text' = 1
+            | w `MS.isPrefixOf` title = 10
+            | w `MS.isInfixOf` title = 6
+            | w `MS.isInfixOf` extra = 4
+            | w `MS.isInfixOf` blurb = 2
+            | w `MS.isInfixOf` text' = 1
             | otherwise = 0
           scores = map one ws
-      in if any (== 0) scores then 0 else sum scores
+      in if any (== (0 :: Int)) scores then 0 else sum scores
     keywordsFor hit =
       concat [ pageKeywords p | p <- allPages, pageRoute p == hitRoute hit ]
     bodyFor hit =
@@ -271,52 +275,45 @@ search loaded q0
         _ -> Nothing
     -- Show where the page matched when its title and summary do not say.
     snippet hit
-      | any (\w -> w `isInfixOf` shown) ws = Nothing
+      | any (`MS.isInfixOf` shown) ws = Nothing
       | otherwise = do
           b <- bodyFor hit
-          w <- case filter (`isInfixOf` bodyLower b) ws of
+          w <- case filter (`MS.isInfixOf` bodyLower b) ws of
                  (w : _) -> Just w
                  [] -> Nothing
-          i <- indexOf w (bodyLower b)
-          Just (ms (excerpt i (length w) (bodyText b)))
+          let i = MS.length (fst (MS.breakOn w (bodyLower b)))
+          Just (excerpt i (MS.length w) (bodyText b))
       where
-        shown = map toLower (fromMisoString (hitTitle hit) <> " " <> fromMisoString (hitBlurb hit))
------------------------------------------------------------------------------
--- | Where a needle first occurs in a haystack.
-indexOf :: String -> String -> Maybe Int
-indexOf needle hay =
-  case [ i | (i, rest) <- zip [0 ..] (tails hay), needle `isPrefixOf` rest ] of
-    (i : _) -> Just i
-    [] -> Nothing
+        shown = MS.toLower (hitTitle hit <> " " <> hitBlurb hit)
 -----------------------------------------------------------------------------
 -- | About a line of text around a match, cut at word boundaries. The match
 -- sits near the start, since the result row is one line and is truncated.
-excerpt :: Int -> Int -> String -> String
-excerpt i n s = lead <> middle <> trail
+excerpt :: Int -> Int -> MisoString -> MisoString
+excerpt i n s = lead <> before' <> hit <> after' <> trail
   where
+    len = MS.length s
     from = max 0 (i - 30)
-    to = min (length s) (i + n + 110)
-    raw = take (to - from) (drop from s)
-    (before, rest) = splitAt (i - from) raw
-    (hit, after) = splitAt n rest
+    to = min len (i + n + 110)
+    (before, rest) = MS.splitAt (i - from) (MS.take (to - from) (MS.drop from s))
+    (hit, after) = MS.splitAt n rest
     -- drop the partial words at either end, never the match itself
     before'
-      | from > 0 && any isSpace before = drop 1 (dropWhile (not . isSpace) before)
+      | from > 0 && MS.any isSpace before = MS.drop 1 (MS.dropWhile (not . isSpace) before)
       | otherwise = before
     after'
-      | to < length s && any isSpace after = reverse (dropWhile (not . isSpace) (reverse after))
+      | to < len && MS.any isSpace after = MS.dropWhileEnd (not . isSpace) after
       | otherwise = after
-    middle = before' <> hit <> after'
     lead = if from > 0 then "…" else ""
-    trail = if to < length s then "…" else ""
+    trail = if to < len then "…" else ""
 -----------------------------------------------------------------------------
 -- | @path\ttext@ lines, as written by the prerenderer.
 parseIndex :: MisoString -> [PageText]
 parseIndex txt =
-  [ PageText (ms path) (drop 1 rest) (map toLower (drop 1 rest))
-  | line <- lines (fromMisoString txt)
-  , let (path, rest) = break (== '\t') line
-  , not (null rest)
+  [ PageText path text' (MS.toLower text')
+  | line <- MS.lines txt
+  , let (path, rest) = MS.breakOn "\t" line
+  , not (MS.null rest)
+  , let text' = MS.drop 1 rest
   ]
 -----------------------------------------------------------------------------
 indexFailed :: Response MisoString -> Action
