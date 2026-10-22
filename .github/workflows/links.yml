@@ -1,0 +1,51 @@
+name: Weekly link check
+
+# Links rot without anyone touching the site, so the live site is checked
+# every week too (pull requests are checked by the links job in main.yml).
+# Failures open an issue labelled broken-links, or update the open one.
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"   # Mondays, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: List the live pages
+        run: |
+          curl -fsSL https://haskell-miso.org/sitemap.xml \
+            | grep -o '<loc>[^<]*</loc>' | sed -e 's/<loc>//' -e 's/<\/loc>//' > pages.txt
+          wc -l < pages.txt
+
+      - name: Check links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.toml --no-progress $(cat pages.txt)
+          fail: false
+
+      - name: Find the open broken-links issue
+        if: steps.lychee.outputs.exit_code != 0
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "number=$(gh issue list --repo '${{ github.repository }}' --label broken-links --state open --json number --jq '.[0].number' || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Report broken links
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v6
+        with:
+          title: Broken links on haskell-miso.org
+          content-filepath: ./lychee/out.md
+          labels: broken-links
+          issue-number: ${{ steps.issue.outputs.number }}
