@@ -2,19 +2,26 @@
 -- | The search palette (⌘K / Ctrl+K). A self-contained component: it
 -- renders the trigger button that lives in the top bar and the modal
 -- itself, keeps its own model, and navigates with 'pushRoute'.
+--
+-- Pages are matched on their title, keywords and summary, and on their full
+-- text: the first time the palette opens it loads @/search-index.txt@,
+-- which the prerenderer writes from the same prose as the pages. Until it
+-- arrives (or if it cannot be loaded) search falls back to titles,
+-- keywords and summaries.
 module Site.Search
   ( searchPalette
   ) where
 -----------------------------------------------------------------------------
-import           Data.Char (isSpace, toLower)
-import           Data.List (isInfixOf, isPrefixOf, sortOn)
+import           Control.Monad (when)
+import           Data.Char (isSpace)
+import           Data.List (sortOn)
 -----------------------------------------------------------------------------
 import           Miso
 import qualified Miso.Html.Element as H
 import qualified Miso.Html.Event as E
 import qualified Miso.Html.Property as P
 import           Miso.Lens
-import           Miso.String (MisoString, fromMisoString)
+import qualified Miso.String as MS
 -----------------------------------------------------------------------------
 import           Site.Docs.Content
 import           Site.Docs.Types
@@ -28,7 +35,36 @@ data Model
   { _open   :: Bool
   , _query  :: MisoString
   , _cursor :: Int
+  , _bodies :: Bodies
   } deriving (Show, Eq)
+-----------------------------------------------------------------------------
+-- | The full text of the docs pages, from @/search-index.txt@.
+data Bodies
+  = NotLoaded
+  | Loading
+  | Loaded [PageText]
+  deriving Show
+-----------------------------------------------------------------------------
+-- | Loaded once and never changed afterwards, so comparing lengths is enough
+-- (and avoids comparing ~100 KB of text on every keystroke).
+instance Eq Bodies where
+  NotLoaded == NotLoaded = True
+  Loading == Loading = True
+  Loaded xs == Loaded ys = length xs == length ys
+  _ == _ = False
+-----------------------------------------------------------------------------
+data PageText
+  = PageText
+  { bodyPath  :: MisoString
+  -- ^ The page's 'routeHref'
+  , bodyText  :: MisoString
+  , bodyLower :: MisoString
+  -- ^ 'bodyText' lower-cased, for matching
+  --
+  -- Kept as 'MisoString' rather than 'String': on the client that is a
+  -- JavaScript string, so matching uses the browser's string search
+  -- instead of walking ~100 KB of linked-list characters per keystroke.
+  } deriving Show
 -----------------------------------------------------------------------------
 open :: Lens Model Bool
 open = lens _open $ \m x -> m { _open = x }
@@ -39,6 +75,9 @@ query = lens _query $ \m x -> m { _query = x }
 cursor :: Lens Model Int
 cursor = lens _cursor $ \m x -> m { _cursor = x }
 -----------------------------------------------------------------------------
+bodies :: Lens Model Bodies
+bodies = lens _bodies $ \m x -> m { _bodies = x }
+-----------------------------------------------------------------------------
 data Action
   = Open
   | Close
@@ -47,6 +86,8 @@ data Action
   | Choose
   | HotKey KeyInfo
   | Pick Route
+  | IndexLoaded MisoString
+  | IndexFailed
   | NoOp
   deriving (Show, Eq)
 -----------------------------------------------------------------------------
@@ -58,10 +99,12 @@ data Hit
   , hitBlurb :: MisoString
   , hitRoute :: Route
   , hitScore :: Int
+  , hitSnippet :: Maybe MisoString
+  -- ^ The passage that matched, when the title and summary did not
   }
 -----------------------------------------------------------------------------
 searchPalette :: Component Ctx () Model Action
-searchPalette = (component (Model False "" 0) updateSearch viewSearch)
+searchPalette = (component (Model False "" 0 NotLoaded) updateSearch viewSearch)
   { useContext = True
   , subs = [ windowSub "keydown" keyInfoDecoder HotKey ]
   }
@@ -72,6 +115,15 @@ updateSearch = \case
     open .= True
     cursor .= 0
     io_ (focus "site-search-input")
+    loaded <- use bodies
+    when (loaded == NotLoaded) $ do
+      bodies .= Loading
+      getText "/search-index.txt" [] (IndexLoaded . body) indexFailed
+  IndexLoaded txt ->
+    bodies .= Loaded (parseIndex txt)
+  IndexFailed ->
+    -- Titles and summaries still work; try again the next time it opens.
+    bodies .= NotLoaded
   Close -> do
     open .= False
     query .= ""
@@ -80,12 +132,14 @@ updateSearch = \case
     cursor .= 0
   Move d -> do
     q <- use query
-    let n = length (search q)
+    b <- use bodies
+    let n = length (search b q)
     cursor %= \i -> if n == 0 then 0 else (i + d) `mod` n
   Choose -> do
     q <- use query
+    b <- use bodies
     i <- use cursor
-    case drop i (search q) of
+    case drop i (search b q) of
       (hit:_) -> issue (Pick (hitRoute hit))
       [] -> pure ()
   Pick r -> do
@@ -141,7 +195,7 @@ viewSearch m = vcontext $ \ctx ->
           ]
     ]
   where
-    hits = search (m ^. query)
+    hits = search (m ^. bodies) (m ^. query)
     results ctx
       | null hits && not (blank (m ^. query)) =
           H.div_ [ P.class_ "search-empty" ]
@@ -159,21 +213,21 @@ viewSearch m = vcontext $ \ctx ->
                     ]
                     [ H.span_ [ P.class_ "search-hit-group" ] [ text (hitGroup hit) ]
                     , H.span_ [ P.class_ "search-hit-title" ] [ text (hitTitle hit) ]
-                    , H.span_ [ P.class_ "search-hit-blurb" ] [ text (hitBlurb hit) ]
+                    , H.span_ [ P.class_ "search-hit-blurb" ] [ text (maybe (hitBlurb hit) id (hitSnippet hit)) ]
                     ]
                 ]
             | (i, hit) <- zip [0 :: Int ..] hits
             ]
-    blank q = all isSpace (fromMisoString q :: String)
+    blank q = MS.all isSpace q
 -----------------------------------------------------------------------------
 -- | Every searchable page: the docs table plus the top-level pages.
 index :: [Hit]
 index =
-  [ Hit "Home" "Site" "The miso homepage." Index 0
-  , Hit "Examples" "Site" "Applications, games and libraries built with miso." Examples 0
-  , Hit "Blog" "Site" "Notes from the miso maintainers." Blog 0
+  [ Hit "Home" "Site" "The miso homepage." Index 0 Nothing
+  , Hit "Examples" "Site" "Applications, games and libraries built with miso." Examples 0 Nothing
+  , Hit "Blog" "Site" "Notes from the miso maintainers." Blog 0 Nothing
   ] ++
-  [ Hit (pageTitle p) (groupLabel (pageGroup p)) (pageBlurb p) (pageRoute p) 0
+  [ Hit (pageTitle p) (groupLabel (pageGroup p)) (pageBlurb p) (pageRoute p) 0 Nothing
   | p <- allPages
   ]
   where
@@ -185,30 +239,83 @@ index =
       Thinking -> "Thinking in miso"
 -----------------------------------------------------------------------------
 -- | Rank pages against a query. Empty query shows the first few pages.
-search :: MisoString -> [Hit]
-search q0
+-- Every word must match somewhere; a match in the title counts most, then
+-- the keywords, the summary and finally the page's text.
+search :: Bodies -> MisoString -> [Hit]
+search loaded q0
   | null ws = take 8 index
   | otherwise =
       take 8
-      [ hit { hitScore = s }
+      [ hit { hitScore = s, hitSnippet = snippet hit }
       | (hit, s) <- sortOn (negate . snd) scored
       , s > 0
       ]
   where
-    ws = words (map toLower (fromMisoString q0))
+    ws = MS.words (MS.toLower q0)
     scored = [ (hit, score hit) | hit <- index ]
     score hit@Hit {..} =
-      let title = map toLower (fromMisoString hitTitle)
-          blurb = map toLower (fromMisoString hitBlurb)
-          extra = map toLower (unwords (map fromMisoString (keywordsFor hit)))
+      let title = MS.toLower hitTitle
+          blurb = MS.toLower hitBlurb
+          extra = MS.toLower (MS.unwords (keywordsFor hit))
+          text' = maybe "" bodyLower (bodyFor hit)
           one w
-            | w `isPrefixOf` title = 10
-            | w `isInfixOf` title = 6
-            | w `isInfixOf` extra = 4
-            | w `isInfixOf` blurb = 2
+            | w `MS.isPrefixOf` title = 10
+            | w `MS.isInfixOf` title = 6
+            | w `MS.isInfixOf` extra = 4
+            | w `MS.isInfixOf` blurb = 2
+            | w `MS.isInfixOf` text' = 1
             | otherwise = 0
           scores = map one ws
-      in if any (== 0) scores then 0 else sum scores
+      in if any (== (0 :: Int)) scores then 0 else sum scores
     keywordsFor hit =
       concat [ pageKeywords p | p <- allPages, pageRoute p == hitRoute hit ]
+    bodyFor hit =
+      case loaded of
+        Loaded bs -> lookup (routeHref (hitRoute hit)) [ (bodyPath b, b) | b <- bs ]
+        _ -> Nothing
+    -- Show where the page matched when its title and summary do not say.
+    snippet hit
+      | any (`MS.isInfixOf` shown) ws = Nothing
+      | otherwise = do
+          b <- bodyFor hit
+          w <- case filter (`MS.isInfixOf` bodyLower b) ws of
+                 (w : _) -> Just w
+                 [] -> Nothing
+          let i = MS.length (fst (MS.breakOn w (bodyLower b)))
+          Just (excerpt i (MS.length w) (bodyText b))
+      where
+        shown = MS.toLower (hitTitle hit <> " " <> hitBlurb hit)
+-----------------------------------------------------------------------------
+-- | About a line of text around a match, cut at word boundaries. The match
+-- sits near the start, since the result row is one line and is truncated.
+excerpt :: Int -> Int -> MisoString -> MisoString
+excerpt i n s = lead <> before' <> hit <> after' <> trail
+  where
+    len = MS.length s
+    from = max 0 (i - 30)
+    to = min len (i + n + 110)
+    (before, rest) = MS.splitAt (i - from) (MS.take (to - from) (MS.drop from s))
+    (hit, after) = MS.splitAt n rest
+    -- drop the partial words at either end, never the match itself
+    before'
+      | from > 0 && MS.any isSpace before = MS.drop 1 (MS.dropWhile (not . isSpace) before)
+      | otherwise = before
+    after'
+      | to < len && MS.any isSpace after = MS.dropWhileEnd (not . isSpace) after
+      | otherwise = after
+    lead = if from > 0 then "…" else ""
+    trail = if to < len then "…" else ""
+-----------------------------------------------------------------------------
+-- | @path\ttext@ lines, as written by the prerenderer.
+parseIndex :: MisoString -> [PageText]
+parseIndex txt =
+  [ PageText path text' (MS.toLower text')
+  | line <- MS.lines txt
+  , let (path, rest) = MS.breakOn "\t" line
+  , not (MS.null rest)
+  , let text' = MS.drop 1 rest
+  ]
+-----------------------------------------------------------------------------
+indexFailed :: Response MisoString -> Action
+indexFailed _ = IndexFailed
 -----------------------------------------------------------------------------
