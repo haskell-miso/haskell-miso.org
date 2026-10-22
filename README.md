@@ -26,6 +26,11 @@
 - **Live docs.** Documentation pages embed running examples next to their
   source. `bun scripts/check-demos.ts` verifies the displayed source is
   exactly the code that executes (see `shared/Site/Demos.hs`).
+- **Checked in CI.** Every pull request runs the demo check above and a link
+  check of the built site with [lychee](https://lychee.cli.rs) (external
+  links, pages, assets and `#anchors`; settings in `lychee.toml`). The live
+  site's links are also checked weekly, and failures open a `broken-links`
+  issue.
 
 ## Layout
 

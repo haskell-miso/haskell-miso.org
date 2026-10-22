@@ -2,6 +2,9 @@
 // string) is exactly the code that runs (between `-- >>> <name>` and
 // `-- <<< <name>` markers) in shared/Site/Demos.hs.
 //
+// The running code may branch on `__MHS__` for the MicroHs build; the
+// displayed source is the GHC branch, so `__MHS__` is taken as undefined.
+//
 //   bun scripts/check-demos.ts
 import { readFileSync } from "fs";
 
@@ -12,7 +15,26 @@ function region(name: string): string {
   const start = lines.indexOf(`-- >>> ${name}`);
   const end = lines.indexOf(`-- <<< ${name}`);
   if (start < 0 || end < 0) throw new Error(`markers for ${name} not found`);
-  return lines.slice(start + 1, end).join("\n").trimEnd();
+  return ghcBranch(name, lines.slice(start + 1, end)).join("\n").trimEnd();
+}
+
+// Keep the lines GHC compiles: drop `#ifdef __MHS__` blocks, keep their
+// `#else` and any `#ifndef __MHS__` block. Any other CPP is an error, since
+// the displayed source could not be compared against it.
+function ghcBranch(name: string, src: string[]): string[] {
+  const keep: boolean[] = []; // one entry per open #if: is this branch compiled?
+  const out: string[] = [];
+  for (const line of src) {
+    const d = line.trim();
+    if (d === "#ifdef __MHS__") keep.push(false);
+    else if (d === "#ifndef __MHS__") keep.push(true);
+    else if (d === "#else" && keep.length) keep.push(!keep.pop()!);
+    else if (d === "#endif" && keep.length) keep.pop();
+    else if (d.startsWith("#")) throw new Error(`${name}: unsupported CPP line: ${d}`);
+    else if (keep.every((k) => k)) out.push(line);
+  }
+  if (keep.length) throw new Error(`${name}: unterminated #ifdef`);
+  return out;
 }
 
 // Re-implement GHC MultilineStrings: strip common indentation, drop the

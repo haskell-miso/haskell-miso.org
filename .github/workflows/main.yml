@@ -29,6 +29,45 @@ jobs:
         with:
           path: ./public
 
+  # Every demo's displayed source is the code that actually runs.
+  check-demos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Check demo sources
+        run: bun scripts/check-demos.ts
+
+  # Dead links in the site this change builds: external links, pages and
+  # assets, and #anchors. Links to haskell-miso.org itself are checked
+  # against the build, so new pages are found before they are deployed.
+  # Settings are in lychee.toml. Does not block deploy.
+  links:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+
+      - name: Unpack the built site
+        run: mkdir public && tar -xf artifact.tar -C public
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --config lychee.toml --no-progress
+            --root-dir '${{ github.workspace }}/public'
+            --remap '^https://haskell-miso\.org/(.*)$ file://${{ github.workspace }}/public/$1'
+            'public/**/*.html'
+
   # The same site built with MicroHs (mhs) instead of GHC
   build-mhs:
     runs-on: ubuntu-latest

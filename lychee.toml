@@ -1,0 +1,29 @@
+# Link checker settings (https://lychee.cli.rs), used by
+# .github/workflows/main.yml (every PR, on the built site) and
+# .github/workflows/links.yml (weekly, on the live site).
+
+# /docs/components/ resolves to docs/components/index.html.
+index_files = ["index.html"]
+
+# Check that #anchors exist on the page they point to.
+include_fragments = "anchor-only"
+
+# Links inside code blocks (localhost, example URLs) are not links.
+include_verbatim = false
+
+max_retries = 3
+retry_wait_time = 5
+timeout = 30
+max_concurrency = 16
+
+# 403 and 429: sites that refuse bots or rate-limit them are not dead.
+accept = ["200..=299", "403", "429"]
+
+exclude = [
+  # Rejects anonymous requests outright.
+  '^https://(www\.)?(x|twitter)\.com/',
+  # Preconnect hints point at the bare host, which is not a page.
+  '^https://fonts\.(googleapis|gstatic)\.com/?$',
+  # A client-side route in the fragment, not an anchor.
+  '^https://matrix\.to/',
+]
