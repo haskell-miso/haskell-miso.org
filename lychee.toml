@@ -11,6 +11,9 @@ include_fragments = "anchor-only"
 # Links inside code blocks (localhost, example URLs) are not links.
 include_verbatim = false
 
+# Local addresses, e.g. "open http://localhost:8080" in the install guide.
+exclude_loopback = true
+
 max_retries = 3
 retry_wait_time = 5
 timeout = 30
