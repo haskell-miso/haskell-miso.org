@@ -124,7 +124,7 @@ siteTour = Post
   where
     postEn = PostContent
       { postTitle = "A tour of the new haskell-miso.org"
-      , postBlurb = "The site is rebuilt in miso itself: 41 pages of docs with live examples, a native section, 55 examples, full-text search and docs your AI tools can read."
+      , postBlurb = "The site is rebuilt in miso itself: 41 pages of docs with live examples, a native section, 55 examples, search and docs your AI tools can read."
       , postBody =
         [ lead [ "haskell-miso.org has been rebuilt from the ground up, in miso. Every page is a miso ", c "Component", ", prerendered to static HTML and then hydrated by the same code compiled to WebAssembly. Here is a tour of what is new." ]
         , h2 "Documentation with live examples"
@@ -138,7 +138,7 @@ siteTour = Post
         , h2 "Examples"
         , para [ "The ", goto Examples [ "examples page" ], " collects 55 applications and libraries from the ", a "https://github.com/haskell-miso" "haskell-miso organisation", ": games, browser API demos, integrations with JavaScript libraries, and tooling. Most of them have a live demo one click away." ]
         , h2 "Finding things"
-        , para [ "Press ", c "⌘K", " (or ", c "Ctrl+K", ") on any page to search. Search covers the full text of the documentation, so a function name such as ", c "startSub", " finds every page that uses it, not just the page named after it." ]
+        , para [ "Press ", c "⌘K", " (or ", c "Ctrl+K", ") on any page to search the documentation by page title, keyword and summary." ]
         , h2 "Docs your tools can read"
         , para [ "Every documentation page also has a Markdown copy, linked from the page and listed in ", a "/llms.txt" "llms.txt", ". The whole documentation is in a single file, ", a "/llms-full.txt" "llms-full.txt", ", ready to hand to an AI assistant. All of it is generated from the same source as the pages, so it is never out of date." ]
         , h2 "Get involved"
