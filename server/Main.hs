@@ -4,8 +4,7 @@
 -- @sitemap.xml@, @robots.txt@ and @manifest.json@, and for LLMs
 -- (<https://llmstxt.org>) @llms.txt@, @llms-full.txt@ and a Markdown copy
 -- of every docs page, blog post and the examples page at
--- @public/<path>/index.html.md@, and @search-index.txt@ for the search
--- palette.
+-- @public/<path>/index.html.md@.
 --
 -- Built with vanilla GHC and miso's @ssr@ flag; depends on @base@, @miso@
 -- and the @directory@ boot library (to create output folders).
@@ -28,7 +27,7 @@ import           Miso.Router (emptyURI, toURI)
 import           Miso.String (MisoString, ms, fromMisoString)
 import qualified Miso.String as MS
 -----------------------------------------------------------------------------
-import           Markdown (escape, markdown, plainText)
+import           Markdown (escape, markdown)
 import           Site
 import           Site.Blog
 import           Site.Docs.Content (allPages, firstPage, groupKey, groupPages, groups)
@@ -57,7 +56,6 @@ main = do
   writeUtf8 "public/robots.txt" robots
   writeUtf8 "public/llms.txt" llmsTxt
   writeUtf8 "public/llms-full.txt" llmsFullTxt
-  writeUtf8 "public/search-index.txt" searchIndex
   forM_ markdownPages $ \(route, contents) ->
     writeUtf8 ("public/" <> markdownPath route) contents
   writeUtf8 "public/manifest.json" manifest
@@ -467,17 +465,6 @@ llmsFullTxt =
 md :: MisoString -> String
 md = escape . fromMisoString
 
--- | @\/search-index.txt@: the full text of every docs page, which the
--- search palette ("Site.Search") loads the first time it opens. One page
--- per line: its path, a tab, then its text on one line.
-searchIndex :: String
-searchIndex = unlines
-  [ fromMisoString (routeHref (pageRoute p)) <> "\t" <> map oneLine (plainText (mkCtx catalog) (pageBody p))
-  | p <- allPages
-  ]
-  where
-    oneLine ch = if ch == '\t' || ch == '\n' || ch == '\r' then ' ' else ch
------------------------------------------------------------------------------
 -- | English text for a translation key.
 en :: I18n.Key -> String
 en = md . translate (mkCtx catalog)

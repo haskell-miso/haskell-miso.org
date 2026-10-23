@@ -9,12 +9,8 @@
 -- to its Markdown form here. Interactive widgets (buttons, inputs, canvases)
 -- and SVG / MathML diagrams have no Markdown form and are dropped; a live
 -- demo keeps its title and source code.
---
--- 'plainText' flattens the same prose to one line of text, for the search
--- index the docs search palette reads.
 module Markdown
   ( markdown
-  , plainText
   , escape
   ) where
 -----------------------------------------------------------------------------
@@ -30,19 +26,6 @@ import           Miso.Types
 -- image sources absolute, since the Markdown is read outside the site.
 markdown :: String -> context -> [View context () () action] -> String
 markdown site ctx = blocks site . concatMap (flatten ctx () ())
------------------------------------------------------------------------------
--- | The words of the prose, code included, on one line: what a reader can
--- search for. Blocks are separated by a space so that text from adjacent
--- paragraphs, list items or table cells does not run together.
-plainText :: context -> [View context () () action] -> String
-plainText ctx = squash . go . concatMap (flatten ctx () ())
-  where
-    go = concatMap $ \n -> case n of
-      Txt s -> s
-      El tag _ _ kids
-        | dropped n -> " "
-        | isBlock n || tag `elem` [ "br", "td", "th", "dt", "dd" ] -> " " <> go kids <> " "
-        | otherwise -> go kids
 -----------------------------------------------------------------------------
 -- | A 'View' with every ambient accessor, fragment and mounted component
 -- resolved, leaving only HTML elements and text.
