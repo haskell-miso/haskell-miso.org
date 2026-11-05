@@ -65,6 +65,7 @@ common shared-modules
     Site.Blog
     Site.Demos
     Site.Docs
+    Site.Docs.Cli
     Site.Docs.Content
     Site.Docs.Native
     Site.Docs.Thinking

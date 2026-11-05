@@ -52,7 +52,7 @@ data Key
   -- footer
   | FooterTagline | FooterDocs | FooterCommunity | FooterMore | FooterLicense
   -- docs
-  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupConcepts | DocsGroupPlatform | DocsGroupNative | DocsGroupThinking
+  | DocsTitle | DocsIntro | DocsGroupStart | DocsGroupCli | DocsGroupConcepts | DocsGroupPlatform | DocsGroupNative | DocsGroupThinking
   | DocsPrev | DocsNext | DocsEnglishOnly | DocsSidebarToggle | DocsHaddocks
   -- examples
   | ExTitle | ExSubtitle | ExLive | ExSource | ExStars
@@ -181,6 +181,7 @@ en = \case
   DocsTitle -> "Documentation"
   DocsIntro -> "Everything from your first Component to the native dual-thread runtime."
   DocsGroupStart -> "Getting started"
+  DocsGroupCli -> "The miso CLI"
   DocsGroupConcepts -> "Core concepts"
   DocsGroupPlatform -> "Platform"
   DocsGroupNative -> "Native (mobile)"

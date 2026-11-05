@@ -233,6 +233,7 @@ index =
   where
     groupLabel = \case
       Start    -> "Getting started"
+      Cli      -> "The miso CLI"
       Concepts -> "Core concepts"
       Platform -> "Platform"
       Native   -> "Native"

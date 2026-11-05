@@ -13,6 +13,7 @@ module Site.Docs.Content
 -----------------------------------------------------------------------------
 import Miso.Router (Capture (..))
 -----------------------------------------------------------------------------
+import Site.Docs.Cli
 import Site.Docs.Native
 import Site.Docs.Thinking
 import Site.Docs.Types
@@ -30,6 +31,7 @@ groups = [minBound .. maxBound]
 groupPages :: Group -> [DocPage]
 groupPages = \case
   Start    -> startPages
+  Cli      -> cliPages
   Concepts -> conceptPages
   Platform -> platformPages
   Native   -> nativePages
@@ -39,6 +41,7 @@ groupPages = \case
 groupKey :: Group -> Key
 groupKey = \case
   Start    -> DocsGroupStart
+  Cli      -> DocsGroupCli
   Concepts -> DocsGroupConcepts
   Platform -> DocsGroupPlatform
   Native   -> DocsGroupNative

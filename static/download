@@ -155,13 +155,10 @@ for d in "$new"/mhs-*; do
   if [ -e "$home/$b" ]; then plan replace "$(tilde "$home/$b")/" "the package database, $(size "$d")"
   else plan create "$(tilde "$home/$b")/" "the package database, $(size "$d")"; fi
 done
-for d in "$home"/mhs-*; do
+for d in "$home"/mhs-[0-9]*; do
   if [ -e "$d" ] && [ ! -e "$new/$(basename "$d")" ]; then
     plan remove "$(tilde "$d")/" "the package database of another version"
   fi
-done
-for f in "$home"/bin/*; do
-  if [ -e "$f" ] && [ ! -e "$new/bin/$(basename "$f")" ]; then plan remove "$(tilde "$f")"; fi
 done
 if ! ask "Install miso?" y; then
   printf '\nNothing was changed.\n'
@@ -171,10 +168,14 @@ fi
 mkdir -p "$home"
 # (Windows cannot delete a running miso.exe, as during miso upgrade, but can rename it.)
 [ -f "$home/bin/miso.exe" ] && mv -f "$home/bin/miso.exe" "$home/miso.exe.old" 2>/dev/null || true
-rm -rf "${home:?}/bin" "$home"/mhs-* 2>/dev/null || true
+# Only miso's own files: $MISO_HOME may be a folder with other things in it
+# (MISO_HOME=$HOME puts miso in ~/bin, next to the user's own programs).
+for f in miso miso.exe cpphs cpphs.exe; do rm -f "${home:?}/bin/$f"; done
+rm -rf "${home:?}"/mhs-[0-9]* 2>/dev/null || true
 cp -R "$new/." "$home/"
 done_ "Installed $("$home/bin/miso" version) in $(tilde "$home"):"
-for f in "$home"/bin/* "$home"/mhs-*; do
+for f in "$new"/bin/* "$new"/mhs-*; do
+  f=$home/$(basename "$(dirname "$f")" | sed -n 's,^bin$,bin/,p')$(basename "$f")
   case "$f" in */mhs-*) printf '      %-40s %s\n' "$(tilde "$f")/" "$(size "$f")" ;;
                *) printf '      %-40s %s\n' "$(tilde "$f")" "$(size "$f")" ;; esac
 done

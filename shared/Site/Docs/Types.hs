@@ -16,6 +16,7 @@ import Site.Route
 -- | Sidebar groups, in display order.
 data Group
   = Start
+  | Cli
   | Concepts
   | Platform
   | Native

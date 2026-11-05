@@ -79,48 +79,94 @@ hero ctx =
         ]
     ]
 -----------------------------------------------------------------------------
--- The getting-started terminal, with a copy-to-clipboard button --------------
+-- The getting-started terminal: MicroHs (the miso CLI) or GHC (nix), with a
+-- copy-to-clipboard button for the commands of the tab shown --------------
 -----------------------------------------------------------------------------
-installCmds :: [MisoString]
-installCmds =
-  [ "git clone https://github.com/haskell-miso/miso-sampler && cd miso-sampler"
-  , "nix develop .#wasm --command bash -c 'make all && make serve'"
-  ]
+data Toolchain = MicroHs | GHC
+  deriving (Show, Eq, Enum, Bounded)
 -----------------------------------------------------------------------------
-data TermAction = CopyCmds | Copied | CopyFailed | CopyDone
+installCmds :: Toolchain -> [MisoString]
+installCmds = \case
+  MicroHs ->
+    [ "curl -fsSL https://haskell-miso.org/download | sh"
+    , "miso new my-app && cd my-app"
+    , "miso dev"
+    ]
+  GHC ->
+    [ "git clone https://github.com/haskell-miso/miso-sampler && cd miso-sampler"
+    , "nix develop .#wasm --command bash -c 'make all && make serve'"
+    ]
+-----------------------------------------------------------------------------
+installNote :: Toolchain -> View Ctx () Term TermAction
+installNote = \case
+  MicroHs -> vfrag
+    [ "The miso CLI: one binary with MicroHs inside, no GHC. Browser builds need "
+    , H.a_ [ P.href_ "https://emscripten.org", P.target_ "_blank", P.rel_ "noopener" ] [ "emscripten" ]
+    , "."
+    ]
+  GHC -> vfrag
+    [ "The GHC WebAssembly backend, from "
+    , H.a_ [ P.href_ "https://nixos.org", P.target_ "_blank", P.rel_ "noopener" ] [ "nix" ]
+    , ", building the sampler app."
+    ]
+-----------------------------------------------------------------------------
+data Term = Term
+  { _termTab    :: Toolchain
+  , _termCopied :: Bool
+  } deriving (Show, Eq)
+-----------------------------------------------------------------------------
+termTab :: Lens Term Toolchain
+termTab = lens _termTab $ \m x -> m { _termTab = x }
+-----------------------------------------------------------------------------
+termCopied :: Lens Term Bool
+termCopied = lens _termCopied $ \m x -> m { _termCopied = x }
+-----------------------------------------------------------------------------
+data TermAction = PickTab Toolchain | CopyCmds Toolchain | Copied | CopyFailed | CopyDone
   deriving (Show, Eq)
 -----------------------------------------------------------------------------
-heroTerminal :: Component Ctx () Bool TermAction
-heroTerminal = component False update view
+heroTerminal :: Component Ctx () Term TermAction
+heroTerminal = component (Term MicroHs False) update view
   where
     update = \case
-      CopyCmds   -> copyClipboard (MS.intercalate "\n" installCmds) Copied (const CopyFailed)
-      Copied     -> do
-        this .= True
+      PickTab tc  -> termTab .= tc
+      CopyCmds tc -> copyClipboard (MS.intercalate "\n" (installCmds tc)) Copied (const CopyFailed)
+      Copied      -> do
+        termCopied .= True
         io (threadDelay 1600000 >> pure CopyDone)
-      CopyFailed -> pure ()
-      CopyDone   -> this .= False
+      CopyFailed  -> pure ()
+      CopyDone    -> termCopied .= False
 
-    view copied =
+    view Term {..} =
       H.div_ [ P.class_ "hero-install" ]
-        [ H.button_
-            [ P.classList_ [ ("hero-copy", True), ("copied", copied) ]
-            , P.type_ "button", E.onClick CopyCmds
+        [ H.div_ [ P.class_ "hero-tabs", P.role_ "tablist", P.aria_ "label" "Toolchain" ]
+            [ H.button_
+                [ P.classList_ [ ("hero-tab", True), ("active", tc == _termTab) ]
+                , P.type_ "button", P.role_ "tab"
+                , P.aria_ "selected" (if tc == _termTab then "true" else "false")
+                , E.onClick (PickTab tc)
+                ]
+                [ text (ms (show tc)) ]
+            | tc <- [ minBound .. maxBound ]
+            ]
+        , H.button_
+            [ P.classList_ [ ("hero-copy", True), ("copied", _termCopied) ]
+            , P.type_ "button", E.onClick (CopyCmds _termTab)
             , P.aria_ "label" "Copy commands", P.title_ "Copy"
             ]
-            [ if copied then checkIcon else copyIcon ]
+            [ if _termCopied then checkIcon else copyIcon ]
         , H.span_
-            [ P.classList_ [ ("copy-toast", True), ("show", copied) ]
+            [ P.classList_ [ ("copy-toast", True), ("show", _termCopied) ]
             , P.role_ "status"
             ]
             [ checkIcon, "Copied" ]
-        , vfrag
-            [ H.div_ [ P.class_ "hero-install-line", key_ cmd ]
+        , H.div_ [ P.class_ "hero-install-cmds", P.role_ "tabpanel" ]
+            [ H.div_ [ P.class_ "hero-install-line", key_ (ms (show _termTab) <> cmd) ]
                 [ H.span_ [ P.class_ "hero-install-prompt" ] [ "$" ]
                 , H.code_ [] [ text cmd ]
                 ]
-            | cmd <- installCmds
+            | cmd <- installCmds _termTab
             ]
+        , H.p_ [ P.class_ "hero-install-note" ] [ installNote _termTab ]
         ]
 -----------------------------------------------------------------------------
 -- The GitHub star count, fetched client-side on mount ------------------------
