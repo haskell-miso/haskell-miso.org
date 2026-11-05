@@ -129,7 +129,7 @@ overview = DocPage
     , para
       [ "The ", a "https://github.com/haskell-miso/setup-miso" "setup-miso", " GitHub Action installs a release and builds and tests a project with it:" ]
     , pre """
-      - uses: haskell-miso/setup-miso@main
+      - uses: haskell-miso/setup-miso@v1
         with:
           version: latest
       """
