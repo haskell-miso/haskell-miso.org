@@ -305,6 +305,19 @@ html[data-theme="dark"] .btn-primary { background: var(--accent); color: #1a1208
   border: 5px solid transparent; border-top-color: #1aa889;
 }
 .hero-install-prompt { color: var(--accent); }
+.hero-install { min-width: min(92vw, 560px); }
+.hero-tabs { display: flex; gap: 4px; margin: -4px 0 4px; font-family: var(--font-body); }
+.hero-tab {
+  padding: 4px 11px; border-radius: 7px; border: 1px solid transparent;
+  font-size: 0.78rem; font-weight: 600; color: var(--muted);
+}
+.hero-tab:hover { color: var(--ink); }
+.hero-tab.active { color: var(--ink); background: var(--bg-sunk); border-color: var(--line); }
+.hero-install-cmds { display: flex; flex-direction: column; gap: 7px; }
+.hero-install-note {
+  margin: 4px 0 0; font-family: var(--font-body); font-size: 0.78rem; color: var(--muted); white-space: normal;
+}
+.hero-install-note a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
 
 /* the interactive logo */
 .hero-logo { position: relative; width: 210px; height: 210px; perspective: 900px; }

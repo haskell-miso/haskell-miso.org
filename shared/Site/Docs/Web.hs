@@ -125,6 +125,11 @@ installation = DocPage
       [ "miso applications compile to WebAssembly (the primary target) with the GHC WASM backend, or to JavaScript with the GHC JS backend. "
       , "The quickest way to a working toolchain is the ", a "https://github.com/dmjio/miso/blob/master/flake.nix" "miso flake", "."
       ]
+    , tip
+      [ "To build miso apps with MicroHs instead of GHC, without nix, install the miso CLI: "
+      , c "curl -fsSL https://haskell-miso.org/download | sh", ", then ", c "miso new my-app", " and ", c "miso dev", ". See "
+      , goto (docsPage "cli") [ "The miso CLI" ], "."
+      ]
     , h2 "1. Build and serve the sampler"
     , para [ "With ", a "https://nixos.org" "nix", " installed (flakes enabled), clone the ", a "https://github.com/haskell-miso/miso-sampler" "sampler", " and run it — the flake provides the whole WASM toolchain (", c "wasm32-wasi-cabal", ", ", c "wasm32-wasi-ghc", ", ", c "http-server", ", ", c "ghciwatch", "):" ]
     , shCopy "install-copy" """
