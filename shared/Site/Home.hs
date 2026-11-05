@@ -89,8 +89,6 @@ installCmds :: Toolchain -> [MisoString]
 installCmds = \case
   MicroHs ->
     [ "curl -fsSL https://haskell-miso.org/download | sh"
-    , "miso new my-app && cd my-app"
-    , "miso dev"
     ]
   GHC ->
     [ "git clone https://github.com/haskell-miso/miso-sampler && cd miso-sampler"
